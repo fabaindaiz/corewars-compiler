@@ -7,6 +7,7 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.plist
 
 # ocamlbuild working directory
 _build/
@@ -27,3 +28,10 @@ setup.log
 
 # Local OPAM switch
 _opam/
+
+# Build results
+*.s
+*.run
+
+# Segmentation fault
+core
