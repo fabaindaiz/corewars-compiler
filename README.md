@@ -3,7 +3,16 @@ This software aims to be an easier way to write and optimize code for corewars. 
 
 work in progress
 
-###  references
-- https://vyznev.net/corewar/guide.html
-- https://corewar.co.uk/standards/icws94.txt
-- https://corewa.rs/reference/pmars-redcode-94.txt
+### references
+
+#### standard
+- [beginners' guide](https://vyznev.net/corewar/guide.html)
+- [1994 Core War Standard](https://corewar.co.uk/standards/icws94.txt)
+- [REDCODE REFERENCE](https://corewa.rs/reference/pmars-redcode-94.txt)
+
+#### wariors
+- [warriors sorted by type](http://moscova.inria.fr/~doligez/corewar/by-types/idx.htm)
+- [warriors sorted by name](http://moscova.inria.fr/~doligez/corewar/by-name/complete.htm)
+
+#### validation
+- [ICWS94 validate](http://www.koth.org/planar/post/Validate1.1R.txt)
