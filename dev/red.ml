@@ -4,8 +4,8 @@ open Printf
 
 (* addressing modes *)
 type rmode =
-| Imm (* immediate *)
-| Dir (* direct *)
+| MImm (* immediate *)
+| MDir (* direct *)
 | AInd (* A-field indirect *)
 | BInd (* B-field indirect *)
 | APre (* A-field indirect with predecrement *)
@@ -15,9 +15,10 @@ type rmode =
 
 (* red arguments for opcodes *)
 type rarg =
-| Const of int
-| Ref of rmode * int
-| Label of rmode * string
+| RNum of int
+| RId of string
+| RRef of rmode * int
+| RLab of rmode * string
 
 (* instruction modifiers *)
 type rmod = 
@@ -49,14 +50,15 @@ type instruction =
 | ISPL of string * rarg (* split *)
 | ILDP of string * rmod * rarg * rarg (* load from p-space *)
 | ISTP of string * rmod * rarg * rarg (* save to p-space *)
-| INOP (* no operation *)
+| INOP of string (* no operation *)
+| ILabel of string
 
 
 (* addressing modes to string *)
 let pp_mode (mode : rmode) : string =
   match mode with
-  | Imm  -> "#"
-  | Dir  -> "$"
+  | MImm -> "#"
+  | MDir -> "$"
   | AInd -> "*"
   | BInd -> "@"
   | APre -> "{"
@@ -67,9 +69,10 @@ let pp_mode (mode : rmode) : string =
 (* rarguments for instruction to string *)
 let pp_rarg (rarg : rarg) : string =
   match rarg with
-  | Const (n)    -> sprintf " %-6s"  (Int.to_string n)
-  | Ref (m, n)   -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
-  | Label (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)
+  | RNum (n)    -> sprintf " %-6s"  (Int.to_string n)
+  | RId  (l)    -> sprintf " %-6s"  (l)
+  | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
+  | RLab (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)
 
 (* instruction modifiers to string *)
 let pp_rmod (rmod : rmod) : string = 
@@ -103,7 +106,8 @@ let pp_instr (opcode : instruction) : string =
   | ISPL (l, e1)        -> sprintf "%-6s SPL    %s"     (l)             (pp_rarg e1)
   | ILDP (l, m, e1, e2) -> sprintf "%-6s LDP%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | ISTP (l, m, e1, e2) -> sprintf "%-6s STP%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | INOP ->                sprintf "NOP"
+  | INOP (l)            -> sprintf "%-6s NOP"           (l)
+  | ILabel (l)          -> sprintf "%-6s"               (l)
 
 (* red instruction list to string *)
 let pp_instrs (instrs : instruction list) : string =

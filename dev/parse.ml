@@ -6,17 +6,41 @@ open CCSexp
 exception CTError of string
 
 
-let rec parse_arg (sexp : sexp) : arg =
+let parse_mode (sexp : sexp) : mode =
+  match sexp with
+  | `Atom "Dir" -> Dir
+  | `Atom "Ind" -> Ind
+  | _ -> raise (CTError (sprintf "Not a valid mode: %s" (to_string sexp)))
+
+let parse_arg (sexp : sexp) : arg =
   match sexp with
   | `Atom s -> (
-    match Int64.of_string_opt s with Some n -> Num (Int64.to_int n) | None -> Id s )
-  | _ -> raise (CTError (sprintf "Not a valid expr: %s" (to_string sexp)))
+    match Int64.of_string_opt s with
+    |Some n -> Num (Int64.to_int n) | None -> Id (s) )
+  | `List [m; `Atom s] -> (
+    let m = (parse_mode m) in
+    match Int64.of_string_opt s with Some n -> Ref (m, (Int64.to_int n)) | None -> Lab (m, s) )
+  | _ -> raise (CTError (sprintf "Not a valid arg: %s" (to_string sexp)))
 
-let rec parse_expr (sexp : sexp) : expr =
+let parse_aarg (sexp : sexp) : aarg =
   match sexp with
+  | `List [`Atom "Dec"; e] -> Dec (parse_arg e)
+  | `List [`Atom "Inc"; e] -> Inc (parse_arg e)
+  | e -> Not (parse_arg e)
+
+let rec parse_exp (sexp : sexp) : expr =
+  match sexp with
+  | `List [eop; e] -> (
+    match eop with
+    | `Atom "repeat" -> Repeat (parse_exp e)
+    | _ -> raise (CTError (sprintf "Not a valid expr: %s" (to_string sexp))) )
   | `List [eop; e1; e2] -> (
     match eop with 
-    | `Atom "MOV" -> Mov(parse_arg e1, parse_arg e2)
+    | `Atom "let" -> 
+      (match e1 with
+      | `List [`Atom id; e] -> Let (id, parse_aarg e, parse_exp e2)
+      | _ -> raise (CTError (sprintf "Not a valid let assignment: %s" (to_string e1))) )
+    | `Atom "MOV" -> Mov(parse_aarg e1, parse_aarg e2)
     | _ -> raise (CTError (sprintf "Not a valid expr: %s" (to_string sexp))) )
   | _ -> raise (CTError (sprintf "Not a valid expr: %s" (to_string sexp)))
 
