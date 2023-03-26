@@ -1,3 +1,3 @@
 (executables
- (names run_interp run_compile run_test)
+ (names run_compile)
  (libraries dev alcotest containers bbctester))

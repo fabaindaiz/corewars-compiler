@@ -1,7 +1,15 @@
 (** AST **)
 open Printf
 
+type mode =
+| Ind
+| Pre
+| Pos
 
-type op
+type arg =
+| Num of int
+| Id of string
 
-type expr
+
+type expr =
+| Mov of arg * arg
