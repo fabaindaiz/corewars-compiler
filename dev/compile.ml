@@ -28,7 +28,7 @@ let compile_arg (arg : arg) (act : act) (aenv : aenv) : rarg =
   | Id (s) ->
     (match List.assoc_opt s aenv with
     | Some arg -> RLab ((compile_mode Ind act), arg)
-    | None ->  RId (s) )
+    | None ->  RLab ((compile_mode Dir act), s) )
   | Ref (m, n) -> RRef ((compile_mode m act), n)
   | Lab (m, s) ->
     (match List.assoc_opt s aenv with

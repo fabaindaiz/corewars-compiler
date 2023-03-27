@@ -40,3 +40,4 @@ type expr =
 | If of cond * expr
 | While of cond * expr
 | Dowhile of cond * expr
+| Label of string

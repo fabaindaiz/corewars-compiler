@@ -5,6 +5,9 @@ work in progress
 
 ### references
 
+#### compiler
+- [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester)
+
 #### standard
 - [beginners' guide](https://vyznev.net/corewar/guide.html)
 - [1994 Core War Standard](https://corewar.co.uk/standards/icws94.txt)

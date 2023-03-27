@@ -16,10 +16,13 @@ let parse_arg (sexp : sexp) : arg =
   match sexp with
   | `Atom s ->
     (match Int64.of_string_opt s with
-    |Some n -> Num (Int64.to_int n) | None -> Id (s) )
+    | Some n -> Num (Int64.to_int n)
+    | _ -> raise (CTError (sprintf "Not a valid arg: %s" (to_string sexp))) )
   | `List [m; `Atom s] ->
     (let m = (parse_mode m) in
-    match Int64.of_string_opt s with Some n -> Ref (m, (Int64.to_int n)) | None -> Lab (m, s) )
+    match Int64.of_string_opt s with
+    | Some n -> Ref (m, (Int64.to_int n))
+    | None -> Lab (m, s) )
   | _ -> raise (CTError (sprintf "Not a valid arg: %s" (to_string sexp)))
 
 let parse_aarg (sexp : sexp) : aarg =

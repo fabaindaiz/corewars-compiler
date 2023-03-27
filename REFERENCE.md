@@ -83,6 +83,8 @@ In order to test your whole compiler pipeline, from a source file down to the ex
 
 You should follow the instructions from that repo to install `bbctester`, and look at the documentation for how to write `.bbc` files (to be placed in the `bbctests` directory).
 
+Instead of using `bbctester`, in this compiler we will use [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester)
+
 ## Interactive execution
 
 Remember that to execute your code interactively, use `dune utop` in a terminal, and then load the modules you want to interact with (e.g. `open Dev.Interp;;`).

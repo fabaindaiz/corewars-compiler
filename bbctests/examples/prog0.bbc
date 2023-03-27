@@ -1,0 +1,9 @@
+NAME: prog0
+DESCRIPTION: evaluates a function declaration
+SRC:
+(MOV 0 1)
+EXPECTED:
+;redcode
+
+       MOV.I  #0     , #1     
+finish NOP
