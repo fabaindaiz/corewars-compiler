@@ -1,0 +1,6 @@
+(repeat
+    (seq
+        (MOV 0 1)
+        (MOV 0 1)
+        (MOV 0 1)
+        (MOV 0 -1) ))

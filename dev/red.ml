@@ -69,7 +69,7 @@ let pp_mode (mode : rmode) : string =
 (* rarguments for instruction to string *)
 let pp_rarg (rarg : rarg) : string =
   match rarg with
-  | RNum (n)    -> sprintf " %-6s"  (Int.to_string n)
+  | RNum (n)    -> sprintf "#%-6s"  (Int.to_string n)
   | RId  (l)    -> sprintf " %-6s"  (l)
   | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
   | RLab (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)

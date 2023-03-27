@@ -1,0 +1,4 @@
+(let (x finish)
+    (let (y 100)
+        (do-while (DN (Dir y))
+            (MOV (Dir x) (Inc x)) )))
