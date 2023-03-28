@@ -2,8 +2,10 @@
 
 
 type mode =
-| Dir
-| Ind
+| ADir
+| AInd
+| ADec
+| AInc
 
 type arg =
 | Num of int
@@ -11,33 +13,29 @@ type arg =
 | Ref of mode * int
 | Lab of mode * string
 
-type act =
-| ANot
-| ADec
-| AInc
-
-type aarg =
-| Not of arg
-| Dec of arg
-| Inc of arg
-
 type cond =
-| Cjz of aarg
-| Cjn of aarg
-| Cdn of aarg
-| Ceq of aarg * aarg
-| Cne of aarg * aarg
-| Cgt of aarg * aarg
-| Clt of aarg * aarg
+| Cjz of arg
+| Cjn of arg
+| Cdn of arg
+| Ceq of arg * arg
+| Cne of arg * arg
+| Cgt of arg * arg
+| Clt of arg * arg
 
 type expr =
 (*| Dat of aarg * aarg*)
-| Mov of aarg * aarg
-| Sub of aarg * aarg
-| Let of string * aarg * expr
-| Repeat of expr
+| Label of string * expr
+| Mov of arg * arg
+| Add of arg * arg
+| Sub of arg * arg
+| Mul of arg * arg
+| Div of arg * arg
+| Mod of arg * arg
+| Spl of arg
+| Nop
+| Let of string * arg * expr
 | Seq of expr list
+| Repeat of expr
 | If of cond * expr
 | While of cond * expr
 | Dowhile of cond * expr
-| Label of string

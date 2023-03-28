@@ -4,14 +4,14 @@ open Printf
 
 (* addressing modes *)
 type rmode =
-| MImm (* immediate *)
-| MDir (* direct *)
-| AInd (* A-field indirect *)
-| BInd (* B-field indirect *)
-| APre (* A-field indirect with predecrement *)
-| BPre (* B-field indirect with predecrement *)
-| APos (* A-field indirect with postincrement *)
-| BPos (* B-field indirect with postincrement *)
+| RImm (* immediate *)
+| RDir (* direct *)
+| RAInd (* A-field indirect *)
+| RBInd (* B-field indirect *)
+| RAPre (* A-field indirect with predecrement *)
+| RBPre (* B-field indirect with predecrement *)
+| RAPos (* A-field indirect with postincrement *)
+| RBPos (* B-field indirect with postincrement *)
 
 (* red arguments for opcodes *)
 type rarg =
@@ -22,92 +22,92 @@ type rarg =
 
 (* instruction modifiers *)
 type rmod = 
-| MA
-| MB
-| MAB
-| MBA
-| MF
-| MX
-| MI
+| RA
+| RB
+| RAB
+| RBA
+| RF
+| RX
+| RI
 
 (* red opcode *)
 type instruction =
-| IDAT of string * rarg * rarg (* data *)
-| IMOV of string * rmod * rarg * rarg (* move *)
-| IADD of string * rmod * rarg * rarg (* add *)
-| ISUB of string * rmod * rarg * rarg (* subtract *)
-| IMUL of string * rmod * rarg * rarg (* multiply *)
-| IDIV of string * rmod * rarg * rarg (* divide *)
-| IMOD of string * rmod * rarg * rarg (* modulus *)
-| IJMP of string * rarg (* jump *)
-| IJMZ of string * rmod * rarg * rarg (* jump if zero *)
-| IJMN of string * rmod * rarg * rarg (* jump if not zero *)
-| IDJN of string * rmod * rarg * rarg (* decrement and jump if not zero *)
-| ICMP of string * rmod * rarg * rarg (* skip if equal *)
-| ISEQ of string * rmod * rarg * rarg (* skip if equal *)
-| ISNE of string * rmod * rarg * rarg (* skip if not equal *)
-| ISLT of string * rmod * rarg * rarg (* skip if lower than *)
-| ISPL of string * rarg (* split *)
-| ILDP of string * rmod * rarg * rarg (* load from p-space *)
-| ISTP of string * rmod * rarg * rarg (* save to p-space *)
-| INOP of string (* no operation *)
 | ILabel of string
+| IDAT of rarg * rarg        (* data *)
+| IMOV of rmod * rarg * rarg (* move *)
+| IADD of rmod * rarg * rarg (* add *)
+| ISUB of rmod * rarg * rarg (* subtract *)
+| IMUL of rmod * rarg * rarg (* multiply *)
+| IDIV of rmod * rarg * rarg (* divide *)
+| IMOD of rmod * rarg * rarg (* modulus *)
+| IJMP of rarg               (* jump *)
+| IJMZ of rmod * rarg * rarg (* jump if zero *)
+| IJMN of rmod * rarg * rarg (* jump if not zero *)
+| IDJN of rmod * rarg * rarg (* decrement and jump if not zero *)
+| ICMP of rmod * rarg * rarg (* skip if equal *)
+| ISEQ of rmod * rarg * rarg (* skip if equal *)
+| ISNE of rmod * rarg * rarg (* skip if not equal *)
+| ISLT of rmod * rarg * rarg (* skip if lower than *)
+| ISPL of rarg               (* split *)
+| ILDP of rmod * rarg * rarg (* load from p-space *)
+| ISTP of rmod * rarg * rarg (* save to p-space *)
+| INOP                       (* no operation *)
 
 
 (* addressing modes to string *)
 let pp_mode (mode : rmode) : string =
   match mode with
-  | MImm -> "#"
-  | MDir -> "$"
-  | AInd -> "*"
-  | BInd -> "@"
-  | APre -> "{"
-  | BPre -> "<"
-  | APos -> "}"
-  | BPos -> ">"
+  | RImm -> "#"
+  | RDir -> "$"
+  | RAInd -> "*"
+  | RBInd -> "@"
+  | RAPre -> "{"
+  | RBPre -> "<"
+  | RAPos -> "}"
+  | RBPos -> ">"
 
 (* rarguments for instruction to string *)
 let pp_rarg (rarg : rarg) : string =
   match rarg with
   | RNum (n)    -> sprintf "#%-6s"  (Int.to_string n)
-  | RId  (l)    -> sprintf " %-6s"  (l)
+  | RId (l)     -> sprintf "#%-6s"  (l)
   | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
   | RLab (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)
 
 (* instruction modifiers to string *)
 let pp_rmod (rmod : rmod) : string = 
   match rmod with
-  | MA  -> ".A "
-  | MB  -> ".B "
-  | MAB -> ".AB"
-  | MBA -> ".BA"
-  | MF  -> ".F "
-  | MX  -> ".X "
-  | MI  -> ".I "
+  | RA  -> ".A "
+  | RB  -> ".B "
+  | RAB -> ".AB"
+  | RBA -> ".BA"
+  | RF  -> ".F "
+  | RX  -> ".X "
+  | RI  -> ".I "
 
 (* red opcode to string *)
 let pp_instr (opcode : instruction) : string =
   match opcode with
-  | IDAT (l, e1, e2)    -> sprintf "%-6s DAT    %s, %s" (l)             (pp_rarg e1) (pp_rarg e2)
-  | IMOV (l, m, e1, e2) -> sprintf "%-6s MOV%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IADD (l, m, e1, e2) -> sprintf "%-6s ADD%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISUB (l, m, e1, e2) -> sprintf "%-6s SUB%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IMUL (l, m, e1, e2) -> sprintf "%-6s MUL%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IDIV (l, m, e1, e2) -> sprintf "%-6s DIV%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IMOD (l, m, e1, e2) -> sprintf "%-6s MOD%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IJMP (l, e1)        -> sprintf "%-6s JMP    %s"     (l)             (pp_rarg e1)
-  | IJMZ (l, m, e1, e2) -> sprintf "%-6s JMZ%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IJMN (l, m, e1, e2) -> sprintf "%-6s JMN%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IDJN (l, m, e1, e2) -> sprintf "%-6s DJN%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ICMP (l, m, e1, e2) -> sprintf "%-6s CMP%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISEQ (l, m, e1, e2) -> sprintf "%-6s SEQ%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISNE (l, m, e1, e2) -> sprintf "%-6s SNE%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISLT (l, m, e1, e2) -> sprintf "%-6s SLT%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISPL (l, e1)        -> sprintf "%-6s SPL    %s"     (l)             (pp_rarg e1)
-  | ILDP (l, m, e1, e2) -> sprintf "%-6s LDP%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISTP (l, m, e1, e2) -> sprintf "%-6s STP%s %s, %s"  (l) (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | INOP (l)            -> sprintf "%-6s NOP"           (l)
-  | ILabel (l)          -> sprintf "%-6s"               (l)
+  | ILabel (l)       -> sprintf "%-6s" (l)
+  | IDAT (e1, e2)    -> sprintf "  DAT    %s, %s"            (pp_rarg e1) (pp_rarg e2)
+  | IMOV (m, e1, e2) -> sprintf "  MOV%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IADD (m, e1, e2) -> sprintf "  ADD%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ISUB (m, e1, e2) -> sprintf "  SUB%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IMUL (m, e1, e2) -> sprintf "  MUL%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IDIV (m, e1, e2) -> sprintf "  DIV%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IMOD (m, e1, e2) -> sprintf "  MOD%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IJMP (e1)        -> sprintf "  JMP    %s"                (pp_rarg e1)
+  | IJMZ (m, e1, e2) -> sprintf "  JMZ%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IJMN (m, e1, e2) -> sprintf "  JMN%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | IDJN (m, e1, e2) -> sprintf "  DJN%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ICMP (m, e1, e2) -> sprintf "  CMP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ISEQ (m, e1, e2) -> sprintf "  SEQ%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ISNE (m, e1, e2) -> sprintf "  SNE%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ISLT (m, e1, e2) -> sprintf "  SLT%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ISPL (e1)        -> sprintf "  SPL    %s"                (pp_rarg e1)
+  | ILDP (m, e1, e2) -> sprintf "  LDP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | ISTP (m, e1, e2) -> sprintf "  STP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
+  | INOP             -> sprintf "  NOP"
 
 (* red instruction list to string *)
 let pp_instrs (instrs : instruction list) : string =
