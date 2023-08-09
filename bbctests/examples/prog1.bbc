@@ -1,18 +1,18 @@
-NAME: prog0
+NAME: test dwarf
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x hola)
+(let (x B dest)
   (seq
       (MOV (Dir -1) (place x))
       (ADD  4 x)
       (JMP x)
-      (label hola) ))
+      (label dest) ))
 EXPECTED:
 ;redcode-94b
 
-l1    
-  MOV.AB $-1    , $hola  
-  ADD.AB #4     , $l1    
-  JMP    $l1    
-hola  
+L1    
+  MOV.I  $-1    , $dest  
+  ADD.AB #4     , $L1    
+  JMP.B  #0     , $L1    
+dest  
   DAT    #0     , #0

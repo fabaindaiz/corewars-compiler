@@ -1,9 +1,9 @@
-NAME: prog0
+NAME: test imp
 DESCRIPTION: evaluates a function declaration
 SRC:
 (MOV 0 1)
 EXPECTED:
 ;redcode-94b
 
-  MOV.AB #0     , #1     
+  MOV.I  #0     , #1     
   DAT    #0     , #0

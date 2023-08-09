@@ -50,13 +50,13 @@ let compile_label (args : arg list) (lenv : lenv) : instruction list =
   List.fold_left (fun res i -> res @ (compile_label_aux i lenv)) [] args
 
 let compile_mod_mov (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  RAB
+  RI
 
 let compile_mod_sum (arg1 : arg) (arg2 : arg) (env : env) : rmod =
   RAB
 
 let compile_mod_jmp (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  RAB
+  RB
 
 let compile_precond (instrs : instruction list) (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with
@@ -81,23 +81,22 @@ let compile_postcond (cond : cond) (label : string ) (env : env) : instruction l
 let rec compile_expr (e : expr) (env : env) : instruction list =
   let aenv, penv, lenv = env in
   match e with
-  | Dat (e1, e2) -> (compile_label [e1; e2] lenv) @ [IDAT ((compile_arg e1 env), (compile_arg e2 env))]
   | Label (l) -> [ILabel (l)]
-  | Point (s) -> 
-    (match List.assoc_opt s lenv with
-    | Some l -> [ILabel (l)]
-    | None -> failwith (sprintf "unbound variable %s in lenv" s) )
-  | Mov (e1, e2) -> (compile_label [e1; e2] lenv) @ [IMOV ((compile_mod_mov e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Add (e1, e2) -> (compile_label [e1; e2] lenv) @ [IADD ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Sub (e1, e2) -> (compile_label [e1; e2] lenv) @ [ISUB ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Mul (e1, e2) -> (compile_label [e1; e2] lenv) @ [IMUL ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Div (e1, e2) -> (compile_label [e1; e2] lenv) @ [IDIV ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Mod (e1, e2) -> (compile_label [e1; e2] lenv) @ [IMOD ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Jmp (e1, e2) -> (compile_label [e1; e2] lenv) @ [IJMP ((compile_mod_jmp e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
-  | Spl (e1, e2) -> (compile_label [e1; e2] lenv) @ [ISPL ((compile_mod_jmp e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Prim2 (op, e1, e2) ->
+    (compile_label [e1; e2] lenv) @ 
+    (match op with
+    | Dat -> [IDAT ((compile_arg e1 env), (compile_arg e2 env))]
+    | Mov -> [IMOV ((compile_mod_mov e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Add -> [IADD ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Sub -> [ISUB ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Mul -> [IMUL ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Div -> [IDIV ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Mod -> [IMOD ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Jmp -> [IJMP ((compile_mod_jmp e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+    | Spl -> [ISPL ((compile_mod_jmp e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))] )
   | Nop -> [INOP]
   | Let (id, place, arg, body) ->
-    let label = (gensym "l") in
+    let label = (gensym "L") in
     let aenv' = (extend_aenv id arg aenv) in
     let penv' = (extend_penv id place penv) in
     let lenv' = (extend_lenv id label lenv) in
@@ -106,17 +105,17 @@ let rec compile_expr (e : expr) (env : env) : instruction list =
   | Seq (exprs) ->
     List.fold_left (fun res e -> res @ (compile_expr e env)) [] exprs
   | Repeat (e) ->
-    let ini = (gensym "l") in
+    let ini = (gensym "L") in
     [ILabel (ini)] @ (compile_expr e env) @ [IJMP (RB, RNone, RLab(RDir, ini))]
   | If (c, e) ->
-    let fin = (gensym "l") in
+    let fin = (gensym "L") in
     (compile_precond (compile_expr e env) c fin env) @ [ILabel (fin)]
   | While (c, e) ->
-    let ini = (gensym "l") in
-    let fin = (gensym "l") in
+    let ini = (gensym "L") in
+    let fin = (gensym "L") in
     [ILabel (ini)] @ (compile_precond (compile_expr e env) c fin env) @ [IJMP (RB, RNone, RLab(RDir, ini))] @ [ILabel (fin)]
   | Dowhile (c, e) ->
-    let ini = (gensym "l") in
+    let ini = (gensym "L") in
     [ILabel (ini)] @ (compile_expr e env) @ (compile_postcond c ini env)
 
 

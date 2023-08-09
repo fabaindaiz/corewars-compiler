@@ -5,7 +5,11 @@ work in progress
 
 ### references
 
-#### compiler
+#### intepreter
+- [A.R.E.S.](https://corewar.co.uk/ares.htm)
+- [PyMARS](https://github.com/rodrigosetti/corewar)
+
+#### libraries
 - [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester)
 
 #### standard

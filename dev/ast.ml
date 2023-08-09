@@ -28,18 +28,20 @@ type cond =
 | Cgt of arg * arg
 | Clt of arg * arg
 
+type prim2 =
+| Dat
+| Mov
+| Add
+| Sub
+| Mul
+| Div
+| Mod
+| Jmp
+| Spl
+
 type expr =
-| Dat of arg * arg
 | Label of string
-| Point of string
-| Mov of arg * arg
-| Add of arg * arg
-| Sub of arg * arg
-| Mul of arg * arg
-| Div of arg * arg
-| Mod of arg * arg
-| Jmp of arg * arg
-| Spl of arg * arg
+| Prim2 of prim2 * arg * arg
 | Nop
 | Let of string * place *arg * expr
 | Seq of expr list
