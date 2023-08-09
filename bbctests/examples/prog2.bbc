@@ -1,0 +1,34 @@
+NAME: test indirection
+DESCRIPTION: evaluates a function declaration
+SRC:
+(let (x A 1)
+  (let (y B 2)
+    (let (a A 0)
+      (let (b B 0)
+        (seq
+          (JMP (Dir 2))
+          (DAT (place x) (place y))
+          (ADD x y)
+          (ADD y y)
+          (ADD y x)
+          (MOV x a)
+          (MOV a b)
+          (DAT (place a) 0)
+          (DAT 0 (place b)) )))))
+EXPECTED:
+;redcode-94b
+
+  JMP.I  $2     , #0     
+L1    
+L2    
+  DAT    #1     , #2     
+  ADD.AB $L1    , $L2    
+  ADD.B  $L2    , $L2    
+  ADD.BA $L2    , $L1    
+  MOV.A  $L1    , $L3    
+  MOV.AB $L3    , $L4    
+L3    
+  DAT    #0     , #0     
+L4    
+  DAT    #0     , #0     
+  DAT    #0     , #0

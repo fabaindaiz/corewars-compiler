@@ -12,6 +12,6 @@ pp_instructions (Instr("", MOV(I, Ref(Imm, 0), Ref(Imm, 1))));;
 
 ### Compilation example
 ```bash
-make compile src=examples/prog0.src
-make compile src=examples/prog1.src
+make compile src=code/prog0.src
+make compile src=code/prog1.src
 ```

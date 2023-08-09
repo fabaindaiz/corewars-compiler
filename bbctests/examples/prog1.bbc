@@ -13,6 +13,6 @@ EXPECTED:
 L1    
   MOV.I  $-1    , $dest  
   ADD.AB #4     , $L1    
-  JMP.B  #0     , $L1    
+  JMP.B  $L1    , #0     
 dest  
   DAT    #0     , #0

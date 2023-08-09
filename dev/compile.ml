@@ -7,13 +7,6 @@ open Lib
 exception CTError of string
 
 
-let gensym =
-  let a_counter = ref 0 in
-  (fun basename ->
-    a_counter := !a_counter + 1;
-    sprintf "%s%d" basename !a_counter);;
-
-
 let compile_mode (mode: mode) : rmode =
   match mode with
   | ADir -> RDir
@@ -48,15 +41,6 @@ let compile_label (args : arg list) (lenv : lenv) : instruction list =
       | None -> failwith (sprintf "unbound variable %s in lenv" s) )
     | _ -> [] in
   List.fold_left (fun res i -> res @ (compile_label_aux i lenv)) [] args
-
-let compile_mod_mov (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  RI
-
-let compile_mod_sum (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  RAB
-
-let compile_mod_jmp (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  RB
 
 let compile_precond (instrs : instruction list) (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with
@@ -124,5 +108,6 @@ let prelude = sprintf "
 "
 
 let compile_prog (e : expr) : string =
+  let _ = (gensym "") in
   let instrs = (compile_expr e empty_env) @ [IDAT (RNum 0, RNum 0)] in
   (prelude) ^ (pp_instrs instrs)

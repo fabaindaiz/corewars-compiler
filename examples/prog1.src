@@ -1,6 +1,6 @@
 (let (x B hola)
   (seq
-      (MOV (Dir -1) (place x))
-      (ADD  4 x)
-      (JMP x)
-      (label hola) ))
+    (MOV (Dir -1) (place x))
+    (ADD  4 x)
+    (JMP x)
+    (label hola) ))

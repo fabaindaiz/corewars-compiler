@@ -1,6 +1,18 @@
 (* Lib *)
 open Printf
 open Ast
+open Red
+
+
+let gensym =
+  let a_counter = ref 0 in
+  (fun basename ->
+    if (compare basename "") == 0 then
+      a_counter := 0
+    else
+      incr a_counter;
+      sprintf "%s%d" basename !a_counter);;
+
 
 type aenv = (string * arg) list
 type penv = (string * place) list
@@ -24,3 +36,72 @@ let extend_penv (x : string) (place : place) (penv : penv) : penv =
 
 let extend_lenv (x : string) (label : string) (lenv : lenv) : lenv =
   ((x, label) :: lenv)
+
+
+type opmod =
+| TNum
+| TRef
+| TA
+| TB
+
+let rec compile_opmod (arg : arg) (env : env) : opmod =
+  let aenv, penv, _ = env in
+  match arg with
+  | ANone -> TNum
+  | Num _ -> TNum
+  | Ref (_, _) -> TRef
+  | Id s | Lab (_, s) ->
+    (match List.assoc_opt s penv with
+    | Some place ->
+      (match place with
+      | A -> TA
+      | B -> TB )
+    | None -> TRef )
+  | Place (s) -> 
+    let arg = (translate_aenv s aenv) in
+    (compile_opmod arg env)
+
+let compile_mod_mov (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+  let mod1 = (compile_opmod arg1 env) in
+  let mod2 = (compile_opmod arg2 env) in
+  match mod1, mod2 with
+  | TNum, TNum -> RI
+  | TNum, TA -> RA
+  | TNum, TB -> RAB
+  | TA, TNum -> RAB
+  | TA, TA -> RA
+  | TA, TB -> RAB
+  | TB, TNum -> RB
+  | TB, TA -> RBA
+  | TB, TB -> RB
+  | _, _ -> RI
+    
+let compile_mod_sum (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+  let mod1 = (compile_opmod arg1 env) in
+  let mod2 = (compile_opmod arg2 env) in
+  match mod1, mod2 with
+  | TNum, TNum -> RI
+  | TNum, TA -> RA
+  | TNum, TB -> RAB
+  | TA, TNum -> RAB
+  | TA, TA -> RA
+  | TA, TB -> RAB
+  | TB, TNum -> RB
+  | TB, TA -> RBA
+  | TB, TB -> RB
+  | _, _ -> RF
+    
+let compile_mod_jmp (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+  let mod1 = (compile_opmod arg1 env) in
+  let mod2 = (compile_opmod arg2 env) in
+  match mod1, mod2 with
+  | TNum, TNum -> RI
+  | TNum, TA -> RA
+  | TNum, TB -> RAB
+  | TA, TNum -> RAB
+  | TA, TA -> RA
+  | TA, TB -> RAB
+  | TB, TNum -> RB
+  | TB, TA -> RBA
+  | TB, TB -> RB
+  | _, _ -> RI
