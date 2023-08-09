@@ -12,6 +12,7 @@ let parse_mode (sexp : sexp) : mode =
   | `Atom "Ind" -> AInd
   | `Atom "Dec" -> ADec
   | `Atom "Inc" -> AInc
+  | `Atom "Place" -> APlace
   | _ -> raise (CTError (sprintf "Not a valid mode: %s" (to_string sexp)))
 
 let parse_arg (sexp : sexp) : arg =
@@ -40,7 +41,8 @@ let parse_cond (sexp : sexp) : cond =
 let rec parse_exp (sexp : sexp) : expr =
   match sexp with
   | `List [`Atom "NOP"] -> Nop
-  | `List [`Atom "label"; `Atom s; e] -> Label (s, ( parse_exp e))
+  | `List [`Atom "label"; `Atom s] -> Label (s)
+  | `List [`Atom "point"; `Atom s] -> Point (s)
   | `List (`Atom "seq" :: exps) -> Seq (List.map parse_exp exps)
   | `List [eop; e] ->
     (match eop with

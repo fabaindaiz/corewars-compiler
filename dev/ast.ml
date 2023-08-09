@@ -6,6 +6,7 @@ type mode =
 | AInd
 | ADec
 | AInc
+| APlace
 
 type arg =
 | Num of int
@@ -23,8 +24,9 @@ type cond =
 | Clt of arg * arg
 
 type expr =
-(*| Dat of aarg * aarg*)
-| Label of string * expr
+| Dat of arg * arg
+| Label of string
+| Point of string
 | Mov of arg * arg
 | Add of arg * arg
 | Sub of arg * arg

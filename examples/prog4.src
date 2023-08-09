@@ -1,8 +1,6 @@
 (seq
-    (let (x finish)
+   (let (x finish)
         (let (y 100)
-            (while (GT (Ind y) 0)
-                (seq
-                    (MOV (Dir x) (Inc x))
-                    (SUB 1 (Dir y)) ))))
+            (do-while (DN (Dir y))
+                (MOV (Dir x) (Inc x)) )))
     (label finish (NOP)) )
