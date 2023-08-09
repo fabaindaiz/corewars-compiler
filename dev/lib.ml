@@ -1,7 +1,7 @@
 (* Lib *)
 open Printf
-open Ast
 open Red
+open Ast
 
 
 let gensym =
@@ -11,7 +11,7 @@ let gensym =
       a_counter := 0
     else
       incr a_counter;
-      sprintf "%s%d" basename !a_counter);;
+      (sprintf "%s%d" basename !a_counter) );;
 
 
 type aenv = (string * arg) list
@@ -26,16 +26,17 @@ let empty_env : env = ([], [], [])
 let extend_aenv (x : string) (arg : arg) (aenv : aenv) : aenv =
   ((x, arg) :: aenv)
 
-let translate_aenv (x : string) (aenv : aenv) : arg =
-  (match List.assoc_opt x aenv with
-  | Some arg -> arg
-  | None -> failwith (sprintf "unbound variable %s in aenv" x) )
-
 let extend_penv (x : string) (place : place) (penv : penv) : penv =
   ((x, place) :: penv)
 
 let extend_lenv (x : string) (label : string) (lenv : lenv) : lenv =
   ((x, label) :: lenv)
+
+
+let translate_aenv (x : string) (aenv : aenv) : arg =
+  (match List.assoc_opt x aenv with
+  | Some arg -> arg
+  | None -> failwith (sprintf "unbound variable %s in aenv" x) )
 
 
 type opmod =
@@ -60,6 +61,7 @@ let rec compile_opmod (arg : arg) (env : env) : opmod =
   | Place (s) -> 
     let arg = (translate_aenv s aenv) in
     (compile_opmod arg env)
+
 
 let compile_mod_mov (arg1 : arg) (arg2 : arg) (env : env) : rmod =
   let mod1 = (compile_opmod arg1 env) in
