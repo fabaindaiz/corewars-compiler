@@ -1,0 +1,18 @@
+NAME: prog0
+DESCRIPTION: evaluates a function declaration
+SRC:
+(let (x hola)
+  (seq
+      (MOV (Dir -1) (place x))
+      (ADD  4 x)
+      (JMP x)
+      (label hola) ))
+EXPECTED:
+;redcode-94b
+
+l1    
+  MOV.AB $-1    , $hola  
+  ADD.AB #4     , $l1    
+  JMP    $l1    
+hola  
+  DAT    #0     , #0

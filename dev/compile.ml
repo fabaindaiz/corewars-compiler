@@ -20,83 +20,104 @@ let compile_mode (mode: mode) : rmode =
   | AInd -> RBInd
   | ADec -> RBPre
   | AInc -> RBPos
-  | APlace -> raise (CTError ("Not a valid red mode: Place"))
 
-let rec compile_arg (arg : arg) (aenv : aenv) (lenv : lenv) : rarg =
+let rec compile_arg (arg : arg) (env : env) : rarg =
+  let aenv, _, lenv = env in
   match arg with
+  | ANone -> RNone
   | Num (n) -> RNum (n)
   | Id (s) ->
     (match List.assoc_opt s lenv with
     | Some l -> RLab ((compile_mode ADir), l)
     | None -> RLab ((compile_mode ADir), s) )
-  | Ref (m, n) -> RRef ((compile_mode m), n)
   | Lab (m, s) ->
-    (match m with
-    | APlace ->
-      (match List.assoc_opt s aenv with
-      | Some arg -> (compile_arg arg aenv lenv)
-      | None -> failwith (sprintf "unbound variable %s in aenv" s) )
-    | _ ->
+    (match List.assoc_opt s lenv with
+    | Some arg -> RLab ((compile_mode m), arg)
+    | None ->  RLab ((compile_mode m), s) )
+  | Ref (m, n) -> RRef ((compile_mode m), n)
+  | Place (s) ->
+    let arg = (translate_aenv s aenv) in
+    (compile_arg arg env)
+
+let compile_label (args : arg list) (lenv : lenv) : instruction list =
+  let compile_label_aux (arg : arg) (lenv: lenv) : instruction list =
+    match arg with
+    | Place (s) ->
       (match List.assoc_opt s lenv with
-      | Some arg -> RLab ((compile_mode m), arg)
-      | None ->  RLab ((compile_mode m), s) ))
+      | Some l -> [ILabel (l)]
+      | None -> failwith (sprintf "unbound variable %s in lenv" s) )
+    | _ -> [] in
+  List.fold_left (fun res i -> res @ (compile_label_aux i lenv)) [] args
 
-let compile_precond (instrs : instruction list) (cond : cond) (label : string ) (aenv : aenv) (lenv : lenv) : instruction list =
+let compile_mod_mov (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+  RAB
+
+let compile_mod_sum (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+  RAB
+
+let compile_mod_jmp (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+  RAB
+
+let compile_precond (instrs : instruction list) (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with
-  | Cjz (e) -> [IJMN (RB, RLab(RDir, label), (compile_arg e aenv lenv))] @ instrs
-  | Cjn (e) -> [IJMZ (RB, RLab(RDir, label), (compile_arg e aenv lenv))] @ instrs
+  | Cjz (e) -> [IJMN (RB, RLab(RDir, label), (compile_arg e env))] @ instrs
+  | Cjn (e) -> [IJMZ (RB, RLab(RDir, label), (compile_arg e env))] @ instrs
   | Cdn (_) -> raise (CTError (sprintf "DN cond is not available on precondition"))
-  | Ceq (e1, e2) -> [ISEQ (RB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv)) ; IJMP (RLab(RDir, label))] @ instrs
-  | Cne (e1, e2) -> [ISNE (RB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv)) ; IJMP (RLab(RDir, label))] @ instrs
-  | Cgt (e1, e2) -> [ISLT (RB, (compile_arg e2 aenv lenv), (compile_arg e1 aenv lenv)) ; IJMP (RLab(RDir, label))] @ instrs
-  | Clt (e1, e2) -> [ISLT (RB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv)) ; IJMP (RLab(RDir, label))] @ instrs
+  | Ceq (e1, e2) -> [ISEQ (RB, (compile_arg e1 env), (compile_arg e2 env)) ; IJMP (RB, RNone, RLab(RDir, label))] @ instrs
+  | Cne (e1, e2) -> [ISNE (RB, (compile_arg e1 env), (compile_arg e2 env)) ; IJMP (RB, RNone, RLab(RDir, label))] @ instrs
+  | Cgt (e1, e2) -> [ISLT (RB, (compile_arg e2 env), (compile_arg e1 env)) ; IJMP (RB, RNone, RLab(RDir, label))] @ instrs
+  | Clt (e1, e2) -> [ISLT (RB, (compile_arg e1 env), (compile_arg e2 env)) ; IJMP (RB, RNone, RLab(RDir, label))] @ instrs
 
-let compile_postcond (cond : cond) (label : string ) (aenv: aenv) (lenv : lenv) : instruction list =
+let compile_postcond (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with
-  | Cjz (e) -> [IJMZ (RB, RLab(RDir, label), (compile_arg e aenv lenv))]
-  | Cjn (e) -> [IJMN (RB, RLab(RDir, label), (compile_arg e aenv lenv))]
-  | Cdn (e) -> [IDJN (RB, RLab(RDir, label), (compile_arg e aenv lenv))]
-  | Ceq (e1, e2) -> [ISNE (RB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv)) ; IJMP (RLab(RDir, label))]
-  | Cne (e1, e2) -> [ISEQ (RB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv)) ; IJMP (RLab(RDir, label))]
-  | Cgt (e1, e2) -> [ISLT (RB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv)) ; IJMP (RLab(RDir, label))]
-  | Clt (e1, e2) -> [ISLT (RB, (compile_arg e2 aenv lenv), (compile_arg e1 aenv lenv)) ; IJMP (RLab(RDir, label))]
+  | Cjz (e) -> [IJMZ (RB, RLab(RDir, label), (compile_arg e env))]
+  | Cjn (e) -> [IJMN (RB, RLab(RDir, label), (compile_arg e env))]
+  | Cdn (e) -> [IDJN (RB, RLab(RDir, label), (compile_arg e env))]
+  | Ceq (e1, e2) -> [ISNE (RB, (compile_arg e1 env), (compile_arg e2 env)) ; IJMP (RB, RNone, RLab(RDir, label))]
+  | Cne (e1, e2) -> [ISEQ (RB, (compile_arg e1 env), (compile_arg e2 env)) ; IJMP (RB, RNone, RLab(RDir, label))]
+  | Cgt (e1, e2) -> [ISLT (RB, (compile_arg e1 env), (compile_arg e2 env)) ; IJMP (RB, RNone, RLab(RDir, label))]
+  | Clt (e1, e2) -> [ISLT (RB, (compile_arg e2 env), (compile_arg e1 env)) ; IJMP (RB, RNone, RLab(RDir, label))]
 
-let rec compile_expr (e : expr) (aenv : aenv) (lenv : lenv) : instruction list =
+let rec compile_expr (e : expr) (env : env) : instruction list =
+  let aenv, penv, lenv = env in
   match e with
-  | Dat (e1, e2) -> [IDAT ((compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
+  | Dat (e1, e2) -> (compile_label [e1; e2] lenv) @ [IDAT ((compile_arg e1 env), (compile_arg e2 env))]
   | Label (l) -> [ILabel (l)]
   | Point (s) -> 
     (match List.assoc_opt s lenv with
     | Some l -> [ILabel (l)]
     | None -> failwith (sprintf "unbound variable %s in lenv" s) )
-  | Mov (e1, e2) -> [IMOV (RAB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
-  | Add (e1, e2) -> [IADD (RAB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
-  | Sub (e1, e2) -> [ISUB (RAB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
-  | Mul (e1, e2) -> [IMUL (RAB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
-  | Div (e1, e2) -> [IDIV (RAB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
-  | Mod (e1, e2) -> [IMOD (RAB, (compile_arg e1 aenv lenv), (compile_arg e2 aenv lenv))]
-  | Spl (e) -> [ISPL ((compile_arg e aenv lenv))]
+  | Mov (e1, e2) -> (compile_label [e1; e2] lenv) @ [IMOV ((compile_mod_mov e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Add (e1, e2) -> (compile_label [e1; e2] lenv) @ [IADD ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Sub (e1, e2) -> (compile_label [e1; e2] lenv) @ [ISUB ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Mul (e1, e2) -> (compile_label [e1; e2] lenv) @ [IMUL ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Div (e1, e2) -> (compile_label [e1; e2] lenv) @ [IDIV ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Mod (e1, e2) -> (compile_label [e1; e2] lenv) @ [IMOD ((compile_mod_sum e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Jmp (e1, e2) -> (compile_label [e1; e2] lenv) @ [IJMP ((compile_mod_jmp e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
+  | Spl (e1, e2) -> (compile_label [e1; e2] lenv) @ [ISPL ((compile_mod_jmp e1 e2 env), (compile_arg e1 env), (compile_arg e2 env))]
   | Nop -> [INOP]
-  | Let (id, arg, body) ->
+  | Let (id, place, arg, body) ->
     let label = (gensym "l") in
     let aenv' = (extend_aenv id arg aenv) in
+    let penv' = (extend_penv id place penv) in
     let lenv' = (extend_lenv id label lenv) in
-    (compile_expr body aenv' lenv')
+    let env' = (aenv', penv', lenv') in
+    (compile_expr body env')
   | Seq (exprs) ->
-    List.fold_left (fun res e -> res @ (compile_expr e aenv lenv)) [] exprs
+    List.fold_left (fun res e -> res @ (compile_expr e env)) [] exprs
   | Repeat (e) ->
     let ini = (gensym "l") in
-    [ILabel (ini)] @ (compile_expr e aenv lenv) @ [IJMP (RLab(RDir, ini))]
+    [ILabel (ini)] @ (compile_expr e env) @ [IJMP (RB, RNone, RLab(RDir, ini))]
   | If (c, e) ->
     let fin = (gensym "l") in
-    (compile_precond (compile_expr e aenv lenv) c fin aenv lenv) @ [ILabel (fin)]
+    (compile_precond (compile_expr e env) c fin env) @ [ILabel (fin)]
   | While (c, e) ->
     let ini = (gensym "l") in
     let fin = (gensym "l") in
-    [ILabel (ini)] @ (compile_precond (compile_expr e aenv lenv) c fin aenv lenv) @ [IJMP (RLab(RDir, ini))] @ [ILabel (fin)]
+    [ILabel (ini)] @ (compile_precond (compile_expr e env) c fin env) @ [IJMP (RB, RNone, RLab(RDir, ini))] @ [ILabel (fin)]
   | Dowhile (c, e) ->
     let ini = (gensym "l") in
-    [ILabel (ini)] @ (compile_expr e aenv lenv) @ (compile_postcond c ini aenv lenv)
+    [ILabel (ini)] @ (compile_expr e env) @ (compile_postcond c ini env)
 
 
 let prelude = sprintf "
@@ -104,5 +125,5 @@ let prelude = sprintf "
 "
 
 let compile_prog (e : expr) : string =
-  let instrs = (compile_expr e empty_aenv empty_lenv) in
+  let instrs = (compile_expr e empty_env) @ [IDAT (RNum 0, RNum 0)] in
   (prelude) ^ (pp_instrs instrs)

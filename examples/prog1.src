@@ -1,7 +1,6 @@
-(let (x hola)
-    (seq
-        (MOV (Dir -1) (Place x))
-        (ADD  4 x)
-        (SPL x)
-        (label hola) ))
-(label finish (NOP))
+(let (x B hola)
+  (seq
+      (MOV (Dir -1) (place x))
+      (ADD  4 x)
+      (JMP x)
+      (label hola) ))

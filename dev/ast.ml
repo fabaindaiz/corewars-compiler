@@ -1,18 +1,23 @@
 (** AST **)
 
 
+type place =
+| A
+| B
+
 type mode =
 | ADir
 | AInd
 | ADec
 | AInc
-| APlace
 
 type arg =
+| ANone
 | Num of int
 | Id of string
 | Ref of mode * int
 | Lab of mode * string
+| Place of string
 
 type cond =
 | Cjz of arg
@@ -33,9 +38,10 @@ type expr =
 | Mul of arg * arg
 | Div of arg * arg
 | Mod of arg * arg
-| Spl of arg
+| Jmp of arg * arg
+| Spl of arg * arg
 | Nop
-| Let of string * arg * expr
+| Let of string * place *arg * expr
 | Seq of expr list
 | Repeat of expr
 | If of cond * expr
