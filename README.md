@@ -1,4 +1,6 @@
 # corewars-compiler
+#### By fabaindaiz
+
 This software aims to be an easier way to write and optimize code for corewars. corewars-compiler uses its own mini functional language which can then be compiled into optimized redcode.
 
 work in progress
@@ -6,10 +8,21 @@ work in progress
 ### Requirements
 - [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester)
 
+### TODO
+- Test all op modifiers cases
+- Document how to execute compiler
+
+## Instructions of use
+
+Lorem ipsum
+
 ### Intepreters
 - [A.R.E.S.](https://corewar.co.uk/ares.htm)
 - [PyMARS](https://github.com/rodrigosetti/corewar)
 
+
+## Acknowledgements
+- Pleiad for [BBCTester](https://github.com/pleiad/BBCTester)
 
 ## References
 
@@ -32,6 +45,6 @@ work in progress
 - [REDCODE REFERENCE](https://corewa.rs/reference/pmars-redcode-94.txt)
 - [ICWS94 validate](http://www.koth.org/planar/post/Validate1.1R.txt)
 
-#### Coreward koth
+#### Corewars koth
 - [KotH](http://www.koth.org/koth.html)
 - [hills](https://corewar.co.uk/hills.htm)
