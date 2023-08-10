@@ -49,6 +49,22 @@ let translate_lenv (x : string) (lenv : lenv) : string =
   | None -> failwith (sprintf "unbound variable %s in lenv" x) )
 
 
+let compile_mode (mode : mode) (dest : place) : rmode =
+  match dest with
+  | A ->
+    (match mode with
+    | ADir -> RDir
+    | AInd -> RAInd
+    | ADec -> RAPre
+    | AInc -> RAPos )
+  | B -> 
+    (match mode with
+    | ADir -> RDir
+    | AInd -> RBInd
+    | ADec -> RBPre
+    | AInc -> RBPos )
+
+
 type opmod =
 | TNum
 | TRef
@@ -62,48 +78,32 @@ let rec compile_opmod (arg : arg) (env : env) : opmod =
   | Num _ -> TNum
   | Ref (_, _) -> TRef
   | Id s | Lab (_, s) ->
-    (match List.assoc_opt s penv with
-    | Some place ->
-      (match place with
-      | A -> TA
-      | B -> TB )
+    (match List.assoc_opt s aenv with
+    | Some arg ->
+      (match arg with
+      | Id (x) | Lab (_, x) ->
+        (match List.assoc_opt x penv with
+        | Some place -> 
+          (match place with
+          | A -> TA
+          | B -> TB )
+        | None -> 
+          let place = (translate_penv s penv) in
+          (match place with
+          | A -> TA
+          | B -> TB ))
+      | _ ->
+        let place = (translate_penv s penv) in
+        (match place with
+        | A -> TA
+        | B -> TB ))
     | None -> TRef )
   | Place (s) -> 
     let arg = (translate_aenv s aenv) in
     (compile_opmod arg env)
 
 
-let compile_mod_mov (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  let mod1 = (compile_opmod arg1 env) in
-  let mod2 = (compile_opmod arg2 env) in
-  match mod1, mod2 with
-  | TNum, TNum -> RI
-  | TNum, TA -> RA
-  | TNum, TB -> RAB
-  | TA, TNum -> RAB
-  | TA, TA -> RA
-  | TA, TB -> RAB
-  | TB, TNum -> RB
-  | TB, TA -> RBA
-  | TB, TB -> RB
-  | _, _ -> RI
-    
-let compile_mod_sum (arg1 : arg) (arg2 : arg) (env : env) : rmod =
-  let mod1 = (compile_opmod arg1 env) in
-  let mod2 = (compile_opmod arg2 env) in
-  match mod1, mod2 with
-  | TNum, TNum -> RI
-  | TNum, TA -> RA
-  | TNum, TB -> RAB
-  | TA, TNum -> RAB
-  | TA, TA -> RA
-  | TA, TB -> RAB
-  | TB, TNum -> RB
-  | TB, TA -> RBA
-  | TB, TB -> RB
-  | _, _ -> RF
-    
-let compile_mod_jmp (arg1 : arg) (arg2 : arg) (env : env) : rmod =
+let compile_mod (arg1 : arg) (arg2 : arg) (env : env) : rmod =
   let mod1 = (compile_opmod arg1 env) in
   let mod2 = (compile_opmod arg2 env) in
   match mod1, mod2 with

@@ -1,0 +1,19 @@
+NAME: test do-while
+DESCRIPTION: evaluates a function declaration
+SRC:
+(let (x B 10)
+  (seq
+    (JMP (Dir 2))
+    (DAT 0 (place x))
+    (do-while (DN 100)
+      (MOV (Dir -1) (Inc x)) )))
+EXPECTED:
+;redcode-94b
+
+  JMP    $2     , #0     
+L1    
+  DAT    #0     , #10    
+L2    
+  MOV.I  $-1    , >L1    
+  DJN.B  $L2    , #100   
+  DAT    #0     , #0

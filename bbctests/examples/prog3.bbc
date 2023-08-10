@@ -1,4 +1,4 @@
-NAME: test multiple indirection
+NAME: test indirection
 DESCRIPTION: evaluates a function declaration
 SRC:
 (let (x A dest)
@@ -16,7 +16,7 @@ SRC:
 EXPECTED:
 ;redcode-94b
 
-  JMP.I  $2     , #0     
+  JMP    $2     , #0     
 L1    
   DAT    $dest  , #0     
 L2    

@@ -1,5 +1,0 @@
-(seq
-    (let (x finish)
-        (repeat
-            (MOV (Dir x) (Inc x)) ))
-    (label finish (NOP)) )
