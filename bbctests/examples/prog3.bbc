@@ -1,0 +1,29 @@
+NAME: test multiple indirection
+DESCRIPTION: evaluates a function declaration
+SRC:
+(let (x A dest)
+  (let (y B (Ind x))
+    (seq
+      (JMP (Dir 2))
+      (DAT (place x) 0)
+      (MOV from (place y))
+      
+      (DAT 0 0)
+      (label from)
+      (ADD 1 1)
+      (label dest)
+      (ADD 0 0) )))
+EXPECTED:
+;redcode-94b
+
+  JMP.I  $2     , #0     
+L1    
+  DAT    $dest  , #0     
+L2    
+  MOV.I  $from  , *L1    
+  DAT    #0     , #0     
+from  
+  ADD.I  #1     , #1     
+dest  
+  ADD.I  #0     , #0     
+  DAT    #0     , #0

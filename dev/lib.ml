@@ -38,6 +38,16 @@ let translate_aenv (x : string) (aenv : aenv) : arg =
   | Some arg -> arg
   | None -> failwith (sprintf "unbound variable %s in aenv" x) )
 
+let translate_penv (x : string) (penv : penv) : place =
+  (match List.assoc_opt x penv with
+  | Some place -> place
+  | None -> failwith (sprintf "unbound variable %s in penv" x) )
+
+let translate_lenv (x : string) (lenv : lenv) : string =
+  (match List.assoc_opt x lenv with
+  | Some label -> label
+  | None -> failwith (sprintf "unbound variable %s in lenv" x) )
+
 
 type opmod =
 | TNum

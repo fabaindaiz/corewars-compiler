@@ -7,15 +7,30 @@ open Lib
 exception CTError of string
 
 
-let compile_mode (mode: mode) : rmode =
+let compile_mode (mode : mode) : rmode =
   match mode with
   | ADir -> RDir
   | AInd -> RBInd
   | ADec -> RBPre
   | AInc -> RBPos
 
+let compile_mode_id (mode : mode) (dest : place) : rmode =
+  match dest with
+  | A ->
+    (match mode with
+    | ADir -> RDir
+    | AInd -> RAInd
+    | ADec -> RAPre
+    | AInc -> RAPos )
+  | B -> 
+    (match mode with
+    | ADir -> RDir
+    | AInd -> RBInd
+    | ADec -> RBPre
+    | AInc -> RBPos )
+
 let rec compile_arg (arg : arg) (env : env) : rarg =
-  let aenv, _, lenv = env in
+  let aenv, penv, lenv = env in
   match arg with
   | ANone -> RNone
   | Num (n) -> RNum (n)
@@ -23,14 +38,28 @@ let rec compile_arg (arg : arg) (env : env) : rarg =
     (match List.assoc_opt s lenv with
     | Some l -> RLab ((compile_mode ADir), l)
     | None -> RLab ((compile_mode ADir), s) )
+  | Ref (m, n) -> RRef ((compile_mode m), n)
   | Lab (m, s) ->
     (match List.assoc_opt s lenv with
-    | Some arg -> RLab ((compile_mode m), arg)
+    | Some arg ->
+      let dest = (translate_penv s penv) in
+      RLab ((compile_mode_id m dest), arg)
     | None ->  RLab ((compile_mode m), s) )
-  | Ref (m, n) -> RRef ((compile_mode m), n)
   | Place (s) ->
     let arg = (translate_aenv s aenv) in
-    (compile_arg arg env)
+    (match arg with
+    | Id (s) ->
+      (match List.assoc_opt s lenv with
+      | Some label -> RLab ((compile_mode ADir), label)
+      | None -> (compile_arg arg env) )
+    | Lab (m, s) ->
+      (match List.assoc_opt s lenv with
+      | Some label ->
+        let dest = (translate_penv s penv) in
+        RLab ((compile_mode_id m dest), label)
+      | None -> (compile_arg arg env) )
+    | _ -> (compile_arg arg env) )
+
 
 let compile_label (args : arg list) (lenv : lenv) : instruction list =
   let compile_label_aux (arg : arg) (lenv: lenv) : instruction list =
@@ -41,6 +70,7 @@ let compile_label (args : arg list) (lenv : lenv) : instruction list =
       | None -> failwith (sprintf "unbound variable %s in lenv" s) )
     | _ -> [] in
   List.fold_left (fun res i -> res @ (compile_label_aux i lenv)) [] args
+
 
 let compile_precond (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with

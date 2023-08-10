@@ -44,8 +44,8 @@ interp:
 %.exe:
 	dune build execs/$@
 
-clean: clean-tests
+clean: clean-test
 	rm -Rf _build
 
-clean-tests:
+clean-test:
 	find bbctests/ -type f -regex '.*\.\(o\|s\|run\|result\)' -delete
