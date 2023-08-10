@@ -1,6 +1,12 @@
-(repeat
+(let (x A dest)
+  (let (y B (Ind x))
     (seq
-        (MOV 0 1)
-        (MOV 0 1)
-        (MOV 0 1)
-        (MOV 0 -1) ))
+      (JMP (Dir 2))
+      (DAT (place x) 0)
+      (MOV from (place y))
+      
+      (DAT 0 0)
+      (label from)
+      (ADD 1 1)
+      (label dest)
+      (ADD 0 0) )))

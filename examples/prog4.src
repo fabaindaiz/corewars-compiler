@@ -1,8 +1,15 @@
-(seq
-    (let (x finish)
-        (let (y 100)
-            (while (GT (Ind y) 0)
-                (seq
-                    (MOV (Dir x) (Inc x))
-                    (SUB 1 (Dir y)) ))))
-    (label finish (NOP)) )
+(let (a A dest1)
+  (let (b B dest2)
+    (let (c B dest3)
+      (let (d B dest4)
+        (seq
+          (JMP (Ind d))
+          (label dest2)
+          (JMP (Ind a) (place c))
+          (label dest3)
+          (JMP (Ind b) (place d))
+          (DAT (place a) (place b))
+          (label dest4)
+          (JMP (Ind c))
+          (label dest1)
+          (MOV (Dir 0) (Dir 1)) )))))

@@ -1,0 +1,30 @@
+NAME: test sum indirection
+DESCRIPTION: evaluates a function declaration
+SRC:
+(let (x B 2)
+  (let (rx A x)
+    (let (y A 3)
+      (let (ry B y)
+        (seq
+          (JMP start)
+          (SUB (place y) 0)
+          (SUB 0 (place x))
+          (SUB (place rx) (place ry))
+          (label start)
+          (ADD 4 (Ind rx))
+          (ADD 5 (Ind ry)) )))))
+EXPECTED:
+;redcode-94b
+
+  JMP    $start , #0     
+L3    
+  SUB.I  #3     , #0     
+L1    
+  SUB.I  #0     , #2     
+L2    
+L4    
+  SUB.BA $L1    , $L3    
+start 
+  ADD.AB #4     , *L2    
+  ADD.A  #5     , @L4    
+  DAT    #0     , #0

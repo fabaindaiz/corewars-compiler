@@ -15,6 +15,7 @@ type rmode =
 
 (* red arguments for opcodes *)
 type rarg =
+| RNone
 | RNum of int
 | RId of string
 | RRef of rmode * int
@@ -40,7 +41,8 @@ type instruction =
 | IMUL of rmod * rarg * rarg (* multiply *)
 | IDIV of rmod * rarg * rarg (* divide *)
 | IMOD of rmod * rarg * rarg (* modulus *)
-| IJMP of rarg               (* jump *)
+| ISPL of rarg * rarg        (* split *)
+| IJMP of rarg * rarg        (* jump *)
 | IJMZ of rmod * rarg * rarg (* jump if zero *)
 | IJMN of rmod * rarg * rarg (* jump if not zero *)
 | IDJN of rmod * rarg * rarg (* decrement and jump if not zero *)
@@ -48,7 +50,6 @@ type instruction =
 | ISEQ of rmod * rarg * rarg (* skip if equal *)
 | ISNE of rmod * rarg * rarg (* skip if not equal *)
 | ISLT of rmod * rarg * rarg (* skip if lower than *)
-| ISPL of rarg               (* split *)
 | ILDP of rmod * rarg * rarg (* load from p-space *)
 | ISTP of rmod * rarg * rarg (* save to p-space *)
 | INOP                       (* no operation *)
@@ -69,6 +70,7 @@ let pp_mode (mode : rmode) : string =
 (* rarguments for instruction to string *)
 let pp_rarg (rarg : rarg) : string =
   match rarg with
+  | RNone       -> sprintf "#%-6s"  (Int.to_string 0)
   | RNum (n)    -> sprintf "#%-6s"  (Int.to_string n)
   | RId (l)     -> sprintf "#%-6s"  (l)
   | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
@@ -96,7 +98,8 @@ let pp_instr (opcode : instruction) : string =
   | IMUL (m, e1, e2) -> sprintf "  MUL%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | IDIV (m, e1, e2) -> sprintf "  DIV%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | IMOD (m, e1, e2) -> sprintf "  MOD%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | IJMP (e1)        -> sprintf "  JMP    %s"                (pp_rarg e1)
+  | ISPL (e1, e2)    -> sprintf "  SPL    %s, %s"            (pp_rarg e1) (pp_rarg e2)
+  | IJMP (e1, e2)    -> sprintf "  JMP    %s, %s"            (pp_rarg e1) (pp_rarg e2)
   | IJMZ (m, e1, e2) -> sprintf "  JMZ%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | IJMN (m, e1, e2) -> sprintf "  JMN%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | IDJN (m, e1, e2) -> sprintf "  DJN%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
@@ -104,11 +107,10 @@ let pp_instr (opcode : instruction) : string =
   | ISEQ (m, e1, e2) -> sprintf "  SEQ%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | ISNE (m, e1, e2) -> sprintf "  SNE%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | ISLT (m, e1, e2) -> sprintf "  SLT%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | ISPL (e1)        -> sprintf "  SPL    %s"                (pp_rarg e1)
   | ILDP (m, e1, e2) -> sprintf "  LDP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | ISTP (m, e1, e2) -> sprintf "  STP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | INOP             -> sprintf "  NOP"
 
 (* red instruction list to string *)
 let pp_instrs (instrs : instruction list) : string =
-  List.fold_left (fun res i -> res ^ "\n" ^ (pp_instr i)) "" instrs
+  List.fold_left (fun res i -> res ^ "\r\n" ^ (pp_instr i)) "" instrs

@@ -1,0 +1,18 @@
+NAME: test dwarf
+DESCRIPTION: evaluates a function declaration
+SRC:
+(let (x B dest)
+  (seq
+      (MOV (Dir -1) (place x))
+      (ADD  4 x)
+      (JMP x)
+      (label dest) ))
+EXPECTED:
+;redcode-94b
+
+L1    
+  MOV.I  $-1    , $dest  
+  ADD.AB #4     , $L1    
+  JMP    $L1    , #0     
+dest  
+  DAT    #0     , #0

@@ -1,0 +1,5 @@
+(let (x B (Dir 3))
+    (repeat
+      (seq
+        (MOV (Dir -1) (place x))
+        (ADD 1 x) )))

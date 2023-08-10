@@ -1,0 +1,12 @@
+(let (x B 2)
+  (let (rx A x)
+    (let (y A 3)
+      (let (ry B y)
+        (seq
+          (JMP start)
+          (SUB (place y) 0)
+          (SUB 0 (place x))
+          (SUB (place rx) (place ry))
+          (label start)
+          (ADD 4 (Ind rx))
+          (ADD 5 (Ind ry)) )))))
