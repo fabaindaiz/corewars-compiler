@@ -19,8 +19,8 @@ open Dev.Compile;
 
 ## bbctests & examples
 ```bash
-make test
-make clean-test
+make tests
+make clean-tests
 
 make compile src=examples/prog0.src
 ```

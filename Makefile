@@ -17,7 +17,7 @@ src = # nothing by default
 init:
 	dune build @check
 
-test:
+tests:
 	dune exec execs/run_test.exe -- test '$(F)'
 
 ctest:
@@ -47,5 +47,5 @@ interp:
 clean: clean-test
 	rm -Rf _build
 
-clean-test:
+clean-tests:
 	find bbctests/ -type f -regex '.*\.\(o\|s\|run\|result\)' -delete

@@ -30,7 +30,7 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
   
 - `make clean-tests`: cleans the tests output in the `bbctests` directory 
 
-- `make test`: execute the tests for the compiler defined in `execs/test.ml` (see below).
+- `make tests`: execute the tests for the compiler defined in `execs/test.ml` (see below).
   Variants include: 
   * `make ctest` for compact representation of the tests execution
   * you can also add `F=<pat>` where `<pat>` is a pattern to filter which tests should be executed (eg. `make test F=arith` to run only test files whose name contains `arith`)
