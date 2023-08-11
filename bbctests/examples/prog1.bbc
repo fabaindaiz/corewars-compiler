@@ -10,9 +10,9 @@ SRC:
 EXPECTED:
 ;redcode-94b
 
-L1    
+LET1  
   MOV.I  $-1    , $dest  
-  ADD.AB #4     , $L1    
-  JMP    $L1    , #0     
+  ADD.AB #4     , $LET1  
+  JMP    $LET1  , #0     
 dest  
   DAT    #0     , #0

@@ -17,10 +17,10 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-L1    
+LET1  
   DAT    $dest  , #0     
-L2    
-  MOV.I  $from  , *L1    
+LET2  
+  MOV.I  $from  , *LET1  
   DAT    #0     , #0     
 from  
   ADD.I  #1     , #1     

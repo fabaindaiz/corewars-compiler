@@ -1,6 +1,6 @@
-(let (x hola)
+(let (x dest)
   (seq
     (MOV (Dir -1) (store x))
     (ADD  4 x)
     (JMP x)
-    (label hola) ))
+    (label dest) ))

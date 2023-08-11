@@ -17,14 +17,14 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $start , #0     
-L3    
+LET3  
   SUB.I  #3     , #0     
-L1    
+LET1  
   SUB.I  #0     , #2     
-L2    
-L4    
-  SUB.BA $L1    , $L3    
+LET2  
+LET4  
+  SUB.BA $LET1  , $LET3  
 start 
-  ADD.AB #4     , *L2    
-  ADD.A  #5     , @L4    
+  ADD.AB #4     , *LET2  
+  ADD.A  #5     , @LET4  
   DAT    #0     , #0

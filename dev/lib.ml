@@ -4,16 +4,6 @@ open Red
 open Ast
 
 
-let gensym =
-  let a_counter = ref 0 in
-  (fun basename ->
-    if (compare basename "") == 0 then
-      a_counter := 0
-    else
-      incr a_counter;
-      (sprintf "%s%d" basename !a_counter) );;
-
-
 type aenv = (string * arg) list
 type penv = (string * place) list
 type lenv = (string * string) list
@@ -83,18 +73,18 @@ let rec compile_opmod (arg : arg) (env : env) : opmod =
       (match arg with
       | AId (x) | ALab (_, x) ->
         (match List.assoc_opt x penv with
-        | Some place -> 
-          (match place with
+        | Some store -> 
+          (match store with
           | PA -> TA
           | PB -> TB )
         | None -> 
-          let place = (translate_penv s penv) in
-          (match place with
+          let store = (translate_penv s penv) in
+          (match store with
           | PA -> TA
           | PB -> TB ))
       | _ ->
-        let place = (translate_penv s penv) in
-        (match place with
+        let store = (translate_penv s penv) in
+        (match store with
         | PA -> TA
         | PB -> TB ))
     | None -> TRef )

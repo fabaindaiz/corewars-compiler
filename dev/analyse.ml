@@ -1,42 +1,45 @@
-(** Analysis **)
-open Printf
+(** Analyser **)
+open String
 open Ast
 open Lib
+open Verify
 
 exception CTError of string
 
 
-let verify_arg_let (arg : arg) =
-  match arg with
-  | AStore (s) -> raise (CTError (sprintf "Not a valid store for var: %s" s))
-  | _ -> None
-
-let analyse_arg (arg : arg) (place : place) (env) : env =
-  let aenv, penv, lenv = env in
+let analyse_store_arg (arg : arg) (id : string) (place : place) (penv : penv) : penv =
   match arg with
   | AStore (s) ->
-    let penv' = (extend_penv s place penv) in
-    (aenv, penv', lenv)
-  | _ -> env
+    (match (equal id s) with
+    | true -> (extend_penv s place penv)
+    | _ -> penv)
+  | _ -> penv
 
-let analyse_cond (pcond : cond) (env : env) : env =
-  match pcond with
-  | Cond1 (_, a) -> (analyse_arg a PB env)
+let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
+  match cond with
+  | Cond1 (_, a) -> (analyse_store_arg a id PB penv)
   | Cond2 (_, a1, a2) -> 
-    let env' = (analyse_arg a1 PA env) in
-    (analyse_arg a2 PB env')
+    let penv' = (analyse_store_arg a1 id PA penv) in
+    (analyse_store_arg a2 id PB penv')
 
-let rec analyse_expr (expr : expr) (env : env) : env =
-  match expr with
-  | Prim2 (_, a1, a2) ->
-    let env' = (analyse_arg a1 PA env) in
-    (analyse_arg a2 PB env')
-  | Let (_, a, e) ->
-    let _ = (verify_arg_let a) in
-    (analyse_expr e env)
-  | Cont1 (_, cond, expr) ->
-    let env' = (analyse_cond cond env) in
-    (analyse_expr expr env')
-  | Repeat (expr) ->(analyse_expr expr env)
-  | Seq (exprs) -> List.fold_left (fun res e -> (analyse_expr e res)) env exprs
-  | _ -> env
+let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
+  match e with
+  | EPrim2 (_, a1, a2, _) ->
+    let env' = (analyse_store_arg a1 id PA penv) in
+    (analyse_store_arg a2 id PB env')
+  | ELet (_, _, e, _) ->
+    (analyse_store_expr e id penv)
+  | ECont1 (_, cond, expr, _) ->
+    let env' = (analyse_store_cond cond id penv) in
+    (analyse_store_expr expr id env')
+  | ERepeat (e, _) -> (analyse_store_expr e id penv)
+  | ESeq (exprs, _) -> List.fold_left (fun penv' e -> (analyse_store_expr e id penv')) penv exprs
+  | _ -> penv
+
+let analyse_let (id : string) (arg : arg) (body : tag eexpr) (label : string) (env : env) : env =
+  let _ = (verify_let arg) in
+  let aenv, penv, lenv = env in
+  let aenv' = (extend_aenv id arg aenv) in
+  let penv' = (analyse_store_expr body id penv) in
+  let lenv' = (extend_lenv id label lenv) in
+  (aenv', penv', lenv')
