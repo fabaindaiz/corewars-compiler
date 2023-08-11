@@ -1,10 +1,10 @@
 NAME: test do-while
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x B 10)
+(let (x 10)
   (seq
     (JMP (Dir 2))
-    (DAT 0 (place x))
+    (DAT 0 (store x))
     (do-while (DN 100)
       (MOV (Dir -1) (Inc x)) )))
 EXPECTED:

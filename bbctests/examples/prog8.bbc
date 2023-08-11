@@ -1,11 +1,11 @@
 NAME: test while comparation
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x A 100)
-  (let (y B 10)
+(let (x 100)
+  (let (y 10)
     (seq
       (JMP (Dir 2))
-      (DAT (place x) (place y))
+      (DAT (store x) (store y))
       (while (LT y x)
         (seq
           (MOV x (Dec x)) )))))

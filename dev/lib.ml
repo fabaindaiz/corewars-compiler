@@ -51,18 +51,18 @@ let translate_lenv (x : string) (lenv : lenv) : string =
 
 let compile_mode (mode : mode) (dest : place) : rmode =
   match dest with
-  | A ->
+  | PA ->
     (match mode with
-    | ADir -> RDir
-    | AInd -> RAInd
-    | ADec -> RAPre
-    | AInc -> RAPos )
-  | B -> 
+    | MDir -> RDir
+    | MInd -> RAInd
+    | MDec -> RAPre
+    | MInc -> RAPos )
+  | PB -> 
     (match mode with
-    | ADir -> RDir
-    | AInd -> RBInd
-    | ADec -> RBPre
-    | AInc -> RBPos )
+    | MDir -> RDir
+    | MInd -> RBInd
+    | MDec -> RBPre
+    | MInc -> RBPos )
 
 
 type opmod =
@@ -75,30 +75,30 @@ let rec compile_opmod (arg : arg) (env : env) : opmod =
   let aenv, penv, _ = env in
   match arg with
   | ANone -> TNum
-  | Num _ -> TNum
-  | Ref (_, _) -> TRef
-  | Id s | Lab (_, s) ->
+  | ANum _ -> TNum
+  | ARef (_, _) -> TRef
+  | AId s | ALab (_, s) ->
     (match List.assoc_opt s aenv with
     | Some arg ->
       (match arg with
-      | Id (x) | Lab (_, x) ->
+      | AId (x) | ALab (_, x) ->
         (match List.assoc_opt x penv with
         | Some place -> 
           (match place with
-          | A -> TA
-          | B -> TB )
+          | PA -> TA
+          | PB -> TB )
         | None -> 
           let place = (translate_penv s penv) in
           (match place with
-          | A -> TA
-          | B -> TB ))
+          | PA -> TA
+          | PB -> TB ))
       | _ ->
         let place = (translate_penv s penv) in
         (match place with
-        | A -> TA
-        | B -> TB ))
+        | PA -> TA
+        | PB -> TB ))
     | None -> TRef )
-  | Place (s) -> 
+  | AStore (s) -> 
     let arg = (translate_aenv s aenv) in
     (compile_opmod arg env)
 

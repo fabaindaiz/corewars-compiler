@@ -2,31 +2,40 @@
 
 
 type place =
-| A
-| B
+| PA
+| PB
+
 
 type mode =
-| ADir
-| AInd
-| ADec
-| AInc
+| MDir
+| MInd
+| MDec
+| MInc
 
 type arg =
 | ANone
-| Num of int
-| Id of string
-| Ref of mode * int
-| Lab of mode * string
-| Place of string
+| AStore of string
+| ANum of int
+| AId of string
+| ARef of mode * int
+| ALab of mode * string
+
+
+type cond1 =
+| Cjz
+| Cjn
+| Cdn
+
+type cond2 =
+| Ceq
+| Cne
+| Cgt
+| Clt
 
 type cond =
-| Cjz of arg
-| Cjn of arg
-| Cdn of arg
-| Ceq of arg * arg
-| Cne of arg * arg
-| Cgt of arg * arg
-| Clt of arg * arg
+| Cond1 of cond1 * arg
+| Cond2 of cond2 * arg * arg
+
 
 type prim2 =
 | Dat
@@ -39,13 +48,17 @@ type prim2 =
 | Jmp
 | Spl
 
+type cont1 =
+| If
+| While
+| Dowhile
+
+
 type expr =
+| Nop
 | Label of string
 | Prim2 of prim2 * arg * arg
-| Nop
-| Let of string * place *arg * expr
-| Seq of expr list
+| Cont1 of cont1 * cond * expr
+| Let of string * arg * expr
 | Repeat of expr
-| If of cond * expr
-| While of cond * expr
-| Dowhile of cond * expr
+| Seq of expr list

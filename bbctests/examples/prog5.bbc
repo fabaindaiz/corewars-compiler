@@ -1,15 +1,15 @@
 NAME: test sum indirection
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x B 2)
-  (let (rx A x)
-    (let (y A 3)
-      (let (ry B y)
+(let (x 2)
+  (let (rx x)
+    (let (y 3)
+      (let (ry y)
         (seq
           (JMP start)
-          (SUB (place y) 0)
-          (SUB 0 (place x))
-          (SUB (place rx) (place ry))
+          (SUB (store y) 0)
+          (SUB 0 (store x))
+          (SUB (store rx) (store ry))
           (label start)
           (ADD 4 (Ind rx))
           (ADD 5 (Ind ry)) )))))

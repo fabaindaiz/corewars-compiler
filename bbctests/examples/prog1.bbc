@@ -1,9 +1,9 @@
 NAME: test dwarf
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x B dest)
+(let (x dest)
   (seq
-      (MOV (Dir -1) (place x))
+      (MOV (Dir -1) (store x))
       (ADD  4 x)
       (JMP x)
       (label dest) ))
