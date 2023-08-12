@@ -26,18 +26,6 @@ ctest:
 compile: 
 	dune exec execs/run_compile.exe $(src)
 
-compile-run: $(subst .src,.run,$(src))
-	./$<
-
-interp: 
-	dune exec execs/run_interp.exe $(src)
-
-%.run: %.o rt/sys.c
-	clang -o $@ $(CFLAGS) rt/sys.c $<
-
-%.o: %.s
-	nasm -f $(BIN_FORMAT) -o $@ $<
-
 %.s: %.src 
 	dune exec execs/run_compile.exe $< > $@
 
