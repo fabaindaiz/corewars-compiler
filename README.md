@@ -5,6 +5,7 @@ This software aims to be an easier way to write and optimize code for corewars. 
 
 work in progress
 
+
 ### Instructions of use
 - See REFERENCE.md for develop and run
 - See LANGUAGE.md for RED language reference
@@ -17,6 +18,7 @@ To execute the resulting redcode you can use one of these redcode interpreters
 - [PyMARS](https://github.com/rodrigosetti/corewar)
 
 #### TODO
+
 - Test all op modifiers cases
 - Document how to execute compiler
 

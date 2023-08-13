@@ -1,8 +1,4 @@
-# Reference Code for Main Structure
-
-Starter code for compilers homework, [deliverable 1](https://users.dcc.uchile.cl/~etanter/CC5116/hw_1_enunciado.html)
-
-## Requirements & Setup
+# Requirements & Setup
 
 To develop and run the compiler, you will need to use the following:
 
