@@ -3,25 +3,31 @@
 
 This software aims to be an easier way to write and optimize code for corewars. corewars-compiler uses its own mini functional language called RED which can then be compiled into optimized redcode.
 
-work in progress
+work in progress.
 
 
 ### Instructions of use
-- See REFERENCE.md for develop and run
-- See LANGUAGE.md for RED language reference
+- See REFERENCE.md for develop and run.
+- See LANGUAGE.md for RED language reference.
+- See TUTORIAL.md for a RED language tutorial.
 
 #### Intepreters
 
-To execute the resulting redcode you can use one of these redcode interpreters
+To execute the resulting redcode you can use one of these redcode interpreters.
 
 - [A.R.E.S.](https://corewar.co.uk/ares.htm)
 - [PyMARS](https://github.com/rodrigosetti/corewar)
 
 #### TODO
 
-- Test all op modifiers cases
-- Document how to execute compiler
+- Create a RED language tutorial
+- Improve RED language reference
 
+- Create a abstract representation of some redcode functionalities
+- Fix and test all instructions modifiers and addressing modes
+
+- Change the name to some types for easier understanding
+- Improve control flow instructions and conditions
 
 ## Acknowledgements
 
