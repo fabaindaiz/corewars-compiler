@@ -6,13 +6,18 @@ type place =
 | PB
 
 
+type imod =
+| MI
+| MX
+| MF
+
 type imode =
 | MINone
 | MIInc
 | MIDec
 
 type mode =
-| MIns          (* Instruction *)
+| MIns of imod  (* Instruction *)
 | MImm          (* Immediate *)
 | MDir          (* Direct *)
 | MInd of imode (* Indirect *)
@@ -54,13 +59,14 @@ type prim2 =
 | Jmp
 | Spl
 | Nop
-
 | Jmz
 | Jmn
 | Djn
 | Seq
 | Sne
 | Slt
+| Stp
+| Ldp
 
 type flow =
 | Repeat
@@ -75,6 +81,7 @@ type flow2 =
 
 
 type expr =
+| Comment of string
 | Label of string
 | Prim2 of prim2 * arg * arg
 | Flow of flow * expr
@@ -84,6 +91,7 @@ type expr =
 | Seq of expr list
 
 type 'a eexpr =
+| EComment of string
 | ELabel of string * 'a
 | EPrim2 of prim2 * arg * arg * 'a
 | EFlow of flow * 'a eexpr * 'a
@@ -97,6 +105,8 @@ type tag = int
 
 let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
   match e with
+  | Comment (s) ->
+    EComment (s), cur
   | Label (s) ->
     let (next_tag) = (cur + 1) in
     (ELabel (s, cur), next_tag)

@@ -15,7 +15,7 @@ let compile_label (args : arg list) (env : env) : instruction list =
     | AStore (s) ->
       let _, _, lenv = env in
       (match List.assoc_opt s lenv with
-      | Some l -> [ILabel (l)]
+      | Some l -> [ILAB (l)]
       | None -> raise (CTError (sprintf "unbound variable %s in lenv" s)) )
     | _ -> [] in
   List.fold_left (fun res i -> res @ (compile_label_aux i env)) [] args
@@ -68,7 +68,8 @@ let compile_postcond (cond : cond) (label : string ) (env : env) : instruction l
 
 let rec compile_expr (e : tag eexpr) (env : env) : instruction list =
   match e with
-  | ELabel (l, _) -> [ILabel (l)]
+  | EComment (s) -> [ICOM (s)]
+  | ELabel (l, _) -> [ILAB (l)]
   | EPrim2 (op, arg1, arg2, _) ->
     let carg1, rarg1 = (compile_arg arg1 env) in
     let carg2, rarg2 = (compile_arg arg2 env) in
@@ -90,32 +91,34 @@ let rec compile_expr (e : tag eexpr) (env : env) : instruction list =
     | Djn -> [IDJN (rmod, rarg1, rarg2)]
     | Seq -> [ISEQ (rmod, rarg1, rarg2)]
     | Sne -> [ISNE (rmod, rarg1, rarg2)]
-    | Slt -> [ISLT (rmod, rarg1, rarg2)])
+    | Slt -> [ISLT (rmod, rarg1, rarg2)]
+    | Stp -> [ISTP (rmod, rarg1, rarg2)]
+    | Ldp -> [ILDP (rmod, rarg1, rarg2)] )
   | EFlow (op, exp, tag) ->
     (match op with
     | Repeat ->
       let ini = (sprintf "REP%d" tag) in
-      [ILabel (ini)] @ (compile_expr exp env) @ [IJMP (RLab (RDir, ini), RNone)] )
+      [ILAB (ini)] @ (compile_expr exp env) @ [IJMP (RLab (RDir, ini), RNone)] )
   | EFlow1 (op, cond, exp, tag) ->
     (match op with
     | If ->
       let fin = (sprintf "IF%d" tag) in
-      (compile_precond cond fin env) @ (compile_expr exp env) @ [ILabel (fin)]
+      (compile_precond cond fin env) @ (compile_expr exp env) @ [ILAB (fin)]
     | While ->
       let ini = (sprintf "WHI%d" tag) in
       let fin = (sprintf "WHF%d" tag) in
-      [ILabel (ini)] @ (compile_precond cond fin env) @ (compile_expr exp env) @
-      [IJMP (RLab(RDir, ini), RNone)] @ [ILabel (fin)]
+      [ILAB (ini)] @ (compile_precond cond fin env) @ (compile_expr exp env) @
+      [IJMP (RLab(RDir, ini), RNone)] @ [ILAB (fin)]
     | DoWhile ->
       let ini = (sprintf "DWH%d" tag) in
-      [ILabel (ini)] @ (compile_expr exp env) @ (compile_postcond cond ini env) )
+      [ILAB (ini)] @ (compile_expr exp env) @ (compile_postcond cond ini env) )
   | EFlow2 (op, cond, exp1, exp2, tag) ->
     (match op with
     | IfElse ->
       let mid = (sprintf "IFM%d" tag) in
       let fin = (sprintf "IFF%d" tag) in
       (compile_precond cond mid env) @ (compile_expr exp1 env) @ [IJMP (RLab (RDir, fin), RNone)] @
-      [ILabel (mid)] @ (compile_expr exp2 env) @ [ILabel (fin)] )
+      [ILAB (mid)] @ (compile_expr exp2 env) @ [ILAB (fin)] )
   | ELet (id, arg, body, tag) ->
     let label = (sprintf "LET%d" tag) in
     let env' = (analyse_let id arg body label env) in

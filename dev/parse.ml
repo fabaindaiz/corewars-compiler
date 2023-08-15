@@ -1,6 +1,7 @@
 (** Parser **)
 open CCSexp
 open Printf
+open String
 open Ast
 
 exception CTError of string
@@ -8,7 +9,9 @@ exception CTError of string
 
 let parse_mode (sexp : sexp) : mode =
   match sexp with
-  | `Atom "Ins" | `Atom "%" -> MIns
+  | `Atom "ins" | `Atom "I" -> MIns (MI)
+  | `Atom "sam" | `Atom "F" -> MIns (MF)
+  | `Atom "opp" | `Atom "X" -> MIns (MX)
   | `Atom "Imm" | `Atom "#" -> MImm
   | `Atom "Dir" | `Atom "$" -> MDir
   | `Atom "Ind" | `Atom "@" -> MInd (MINone)
@@ -46,6 +49,8 @@ let parse_cond (sexp : sexp) : cond =
 
 let rec parse_exp (sexp : sexp) : expr =
   match sexp with
+  | `List (`Atom "com" :: s) ->
+    Comment (List.fold_left (fun res s -> res ^ " " ^ (escaped (to_string s))) "" s)
   | `List [`Atom "label"; `Atom s] -> Label (s)
   | `List (`Atom "seq" :: exps) -> Seq (List.map parse_exp exps)
   | `List [eop] ->
@@ -71,6 +76,14 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "JMP" -> Prim2 (Jmp, parse_arg e1, parse_arg e2)
     | `Atom "SPL" -> Prim2 (Spl, parse_arg e1, parse_arg e2)
     | `Atom "NOP" -> Prim2 (Nop, parse_arg e1, parse_arg e2)
+    | `Atom "JMZ" -> Prim2 (Jmz, parse_arg e1, parse_arg e2)
+    | `Atom "JMN" -> Prim2 (Jmn, parse_arg e1, parse_arg e2)
+    | `Atom "DJN" -> Prim2 (Djn, parse_arg e1, parse_arg e2)
+    | `Atom "SEQ" -> Prim2 (Seq, parse_arg e1, parse_arg e2)
+    | `Atom "SNE" -> Prim2 (Sne, parse_arg e1, parse_arg e2)
+    | `Atom "SLT" -> Prim2 (Slt, parse_arg e1, parse_arg e2)
+    | `Atom "STP" -> Prim2 (Stp, parse_arg e1, parse_arg e2)
+    | `Atom "LDP" -> Prim2 (Ldp, parse_arg e1, parse_arg e2)
     | `Atom "if" -> Flow1 (If, parse_cond e1, parse_exp e2)
     | `Atom "while" -> Flow1 (While, parse_cond e1, parse_exp e2)
     | `Atom "do-while" -> Flow1 (DoWhile, parse_cond e1, parse_exp e2)
@@ -93,7 +106,8 @@ let sexp_from_file : string -> CCSexp.sexp =
    | Ok s -> s
    | Error msg -> raise (CTError (sprintf "Unable to parse file %s: %s" filename msg))
  
- let sexp_from_string (src : string) : CCSexp.sexp =
-   match CCSexp.parse_string src with
-   | Ok s -> s
-   | Error msg -> raise (CTError (sprintf "Unable to parse string %s: %s" src msg))
+(* parse a program from a string *)
+let sexp_from_string (src : string) : CCSexp.sexp =
+  match CCSexp.parse_string src with
+  | Ok s -> s
+  | Error msg -> raise (CTError (sprintf "Unable to parse string %s: %s" src msg))
