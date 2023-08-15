@@ -22,12 +22,7 @@ To execute the resulting redcode you can use one of these redcode interpreters.
 #### TODO
 
 - Create a RED language tutorial
-- Improve RED language reference
-
-- Create a abstract representation of some redcode functionalities
-- Fix and test all instructions modifiers and addressing modes
-
-- Change the name to some types for easier understanding
+- Test all instructions modifiers and addressing modes
 - Improve control flow instructions and conditions
 
 ## Acknowledgements
