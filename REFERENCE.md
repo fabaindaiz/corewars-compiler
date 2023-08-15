@@ -1,20 +1,60 @@
-# Reference Code for Deliverable 1
+# Requirements & Setup
 
-Starter code for compilers homework, [deliverable 1](https://users.dcc.uchile.cl/~etanter/CC5116/hw_1_enunciado.html)
+To develop and run the compiler, you will need to use the following:
 
-## Requirements & Setup
+- [OCaml](https://ocaml.org/), version 4.12 (or newer), a programming language well-suited for implementing compilers (see below for the specific installation instructions).
+- [Opam](https://opam.ocaml.org/doc/Install.html), version 2.0 (or newer), a package manager for ocaml libraries and tools.
 
-See the [detailed description](https://users.dcc.uchile.cl/~etanter/CC5116-2020/#(part._materials)) on the page of the course.
+In order to setup your ocaml environment, you should first [install opam](https://opam.ocaml.org/doc/Install.html), following the instructions for your distribution. Then create a switch with the right ocaml version and install the tools and libraries used in the course with the following invocations from the command line. 
+
+```bash
+opam init
+opam update
+opam switch create compilation 5.0.0
+
+# adapt according to your shell -- this is shown for bash
+eval `opam env`
+opam install dune utop merlin containers alcotest
+```
+
+A brief description of the installed tools and libraries:
+
+- [dune](https://dune.build/), version 2.9 (or newer), a build manager for ocaml.
+- [utop](https://github.com/ocaml-community/utop), a rich REPL (Run-Eval-Print-Loop) for ocaml with autocompletion and syntax coloring.
+- [merlin](https://github.com/ocaml/merlin), provides contextual information on ocaml code to various IDEs.
+- [containers](http://c-cube.github.io/ocaml-containers/), an extension to the standard library.
+- [alcotest](https://github.com/mirage/alcotest), a simple and colourful unit test framework.
+
+There is no specific IDE for OCaml. A time-tested solution is to use Emacs (with tuareg and merlin). I’m using the [OCaml Platform for VS Code](https://github.com/ocamllabs/vscode-ocaml-platform), which works pretty well and is under active development. There’s also some community-backed support for [IntelliJ](https://plugins.jetbrains.com/plugin/9440-reasonml), although I haven’t tried it.
+
+For VS Code, you first need to install [OCaml LSP](https://github.com/ocaml/ocaml-lsp):
+
+```bash
+opam install ocaml-lsp-server
+```
+
+Then simply go to VS Code, lookup for the extension named VSCode OCaml Platform, and you should be good to go.
+
+Hint for VS Code: run this in the VS Code integrated terminal for automatic rebuild when a file changes:
+
+```bash
+dune build --watch --terminal-persistence=clear-on-rebuild
+```
+
+We recommend using Linux or macOS, if possible. If you use Windows, then install the [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install). Past experience from students with WSL indicates that:
+
+- When installing opam with add-apt-repository, it’s also necessary to apt install gcc, binutils-dev, make and pkg-config, and
+
+- Call opam init with the switch --disable-sandboxing, as [explained here](https://stackoverflow.com/questions/54987110/installing-ocaml-on-windows-10-using-wsl-ubuntu-problems-with-bwrap-bubblewr).
 
 ## Organization of the repository
 
 The organization of the repository is as follows:
 
-- `dev/`: main OCaml files for the project submodules (ast, parser, interpreter, asm instructions, compiler)
-- `execs/`: OCaml files for top-level executables (interpreter, compiler, tester)
+- `src/`: main OCaml files for the project submodules (ast, parser, red instructions, compiler)
+- `execs/`: OCaml files for top-level executables (compiler, tester)
 - `bbctests/`: folder for black-box compiler tests (uses the BBCTester library, see below)
 - `examples/`: folder for example source code files you may wish to interpret or compile directly
-- `rt/sys.c`: the runtime system implemented in C
 
 Additionally, the root directory contains configuration files for the dune package manager (`dune-workspace`, `dune-project`), and each OCaml subdirectory also contains `dune` files in order to setup the project structure.
 
@@ -30,7 +70,7 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
   
 - `make clean-tests`: cleans the tests output in the `bbctests` directory 
 
-- `make test`: execute the tests for the compiler defined in `execs/test.ml` (see below).
+- `make tests`: execute the tests for the compiler defined in `execs/test.ml` (see below).
   Variants include: 
   * `make ctest` for compact representation of the tests execution
   * you can also add `F=<pat>` where `<pat>` is a pattern to filter which tests should be executed (eg. `make test F=arith` to run only test files whose name contains `arith`)
@@ -39,18 +79,14 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
 - you can build the executables manually with `make <executable_name>.exe`. For instance, `make run_compile.exe` builds the compiler executable.
 
 - you can run the executables manually as follows:
-  * `make interp src=examples/prog.src`: builds/runs the interpreter on the source file `examples/prog.src`, outputs the result
-  * `make compile src=examples/prog.src`: builds/runs the compiler on the source file `examples/prog.src`, outputs the generated assembly code
-  * `make compile-run src=examples/prog.src`: builds/runs the compiler on the source file `examples/prog.src`, generates the program binary (`examples/prog.run`), and runs it.
+  * `make compile src=examples/prog.src`: builds/runs the compiler on the source file `examples/prog.src`, outputs the generated redcode
 
 - you can also ask specific files to be built, eg.:
-  * `make examples/prog.s`: looks up `examples/prog.src`, compiles it, and generates the assembly file `examples/prog.s`
-  * `make examples/prog.o`: looks up `examples/prog.src`, compiles it, and generates the binary module `examples/prog.o` (unlinked)
-  * `make examples/prog.run`: looks up `examples/prog.src`, compiles it, assembles, links, and generates the binary executable `examples/prog.run`
+  * `make examples/prog.s`: looks up `examples/prog.src`, compiles it, and generates the redcode file `examples/prog.s`
 
 You can look at the makefile to see the underlying `dune` commands that are generated, and of course you can use `dune` directly if you find it more convenient.
 
-## Writing tests
+## Tests
 
 Tests are written using the [alcotest](https://github.com/mirage/alcotest) unit-testing framework. 
 
@@ -94,4 +130,8 @@ Remember that to execute your code interactively, use `dune utop` in a terminal,
 Documentation for ocaml libraries:
 - [containers](http://c-cube.github.io/ocaml-containers/last/) for extensions to the standard library
 - [alcotest](https://mirage.github.io/alcotest/alcotest/index.html) for unit-tests
-- [BBCTester](https://github.com/pleiad/BBCTester) for blac-box compiler tests
+- [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester) for blac-box compiler tests
+
+## Acknowledgements
+
+- Document based on [CC5116](https://users.dcc.uchile.cl/~etanter/CC5116/)

@@ -1,25 +1,25 @@
 NAME: test while comparation
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x A 100)
-  (let (y B 10)
+(let (x 100)
+  (let (y 10)
     (seq
       (JMP (Dir 2))
-      (DAT (place x) (place y))
+      (DAT (store x) (store y))
       (while (LT y x)
         (seq
-          (MOV x (Dec x)) )))))
+          (MOV (Ins x) (Dec x)) )))))
 EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-L1    
-L2    
+LET1  
+LET2  
   DAT    #100   , #10    
-L3    
-  SLT.BA $L2    , $L1    
-  JMP    $L4    , #0     
-  MOV.A  $L1    , {L1    
-  JMP    $L3    , #0     
-L4    
+WHI9  
+  SLT.BA $LET2  , $LET1  
+  JMP    $WHF9  , #0     
+  MOV.I  $LET1  , {LET1  
+  JMP    $WHI9  , #0     
+WHF9  
   DAT    #0     , #0

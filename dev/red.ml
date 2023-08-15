@@ -4,32 +4,63 @@ open Printf
 
 (* addressing modes *)
 type rmode =
-| RImm (* immediate *)
-| RDir (* direct *)
+| RImm  (* immediate *)
+| RDir  (* direct *)
 | RAInd (* A-field indirect *)
 | RBInd (* B-field indirect *)
-| RAPre (* A-field indirect with predecrement *)
-| RBPre (* B-field indirect with predecrement *)
-| RAPos (* A-field indirect with postincrement *)
-| RBPos (* B-field indirect with postincrement *)
+| RADec (* A-field indirect with predecrement *)
+| RBDec (* B-field indirect with predecrement *)
+| RAInc (* A-field indirect with postincrement *)
+| RBInc (* B-field indirect with postincrement *)
+
+(* addressing modes to string *)
+let pp_mode (rmode : rmode) : string =
+  match rmode with
+  | RImm -> "#"
+  | RDir -> "$"
+  | RAInd -> "*"
+  | RBInd -> "@"
+  | RADec -> "{"
+  | RBDec -> "<"
+  | RAInc -> "}"
+  | RBInc -> ">"
+
 
 (* red arguments for opcodes *)
 type rarg =
-| RNone
-| RNum of int
-| RId of string
-| RRef of rmode * int
-| RLab of rmode * string
+| RNone                  (* none arg *)
+| RRef of rmode * int    (* number arg *)
+| RLab of rmode * string (* string arg *)
+
+(* rarguments for instruction to string *)
+let pp_rarg (rarg : rarg) : string =
+  match rarg with
+  | RNone       -> sprintf "#%-6s"  (Int.to_string 0)
+  | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
+  | RLab (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)
+
 
 (* instruction modifiers *)
 type rmod = 
-| RA
-| RB
-| RAB
-| RBA
-| RF
-| RX
-| RI
+| RA  (* A to A *)
+| RB  (* B to B *)
+| RAB (* A to B *)
+| RBA (* B to A *)
+| RF  (* AB to AB *)
+| RX  (* AB to BA *)
+| RI  (* instr to instr *)
+
+(* instruction modifiers to string *)
+let pp_rmod (rmod : rmod) : string = 
+  match rmod with
+  | RA  -> ".A "
+  | RB  -> ".B "
+  | RAB -> ".AB"
+  | RBA -> ".BA"
+  | RF  -> ".F "
+  | RX  -> ".X "
+  | RI  -> ".I "
+
 
 (* red opcode *)
 type instruction =
@@ -52,40 +83,7 @@ type instruction =
 | ISLT of rmod * rarg * rarg (* skip if lower than *)
 | ILDP of rmod * rarg * rarg (* load from p-space *)
 | ISTP of rmod * rarg * rarg (* save to p-space *)
-| INOP                       (* no operation *)
-
-
-(* addressing modes to string *)
-let pp_mode (mode : rmode) : string =
-  match mode with
-  | RImm -> "#"
-  | RDir -> "$"
-  | RAInd -> "*"
-  | RBInd -> "@"
-  | RAPre -> "{"
-  | RBPre -> "<"
-  | RAPos -> "}"
-  | RBPos -> ">"
-
-(* rarguments for instruction to string *)
-let pp_rarg (rarg : rarg) : string =
-  match rarg with
-  | RNone       -> sprintf "#%-6s"  (Int.to_string 0)
-  | RNum (n)    -> sprintf "#%-6s"  (Int.to_string n)
-  | RId (l)     -> sprintf "#%-6s"  (l)
-  | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
-  | RLab (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)
-
-(* instruction modifiers to string *)
-let pp_rmod (rmod : rmod) : string = 
-  match rmod with
-  | RA  -> ".A "
-  | RB  -> ".B "
-  | RAB -> ".AB"
-  | RBA -> ".BA"
-  | RF  -> ".F "
-  | RX  -> ".X "
-  | RI  -> ".I "
+| INOP of rarg * rarg        (* no operation *)
 
 (* red opcode to string *)
 let pp_instr (opcode : instruction) : string =
@@ -109,7 +107,8 @@ let pp_instr (opcode : instruction) : string =
   | ISLT (m, e1, e2) -> sprintf "  SLT%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | ILDP (m, e1, e2) -> sprintf "  LDP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | ISTP (m, e1, e2) -> sprintf "  STP%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
-  | INOP             -> sprintf "  NOP"
+  | INOP (e1, e2)    -> sprintf "  NOP    %s, %s"            (pp_rarg e1) (pp_rarg e2)
+
 
 (* red instruction list to string *)
 let pp_instrs (instrs : instruction list) : string =

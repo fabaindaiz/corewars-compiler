@@ -1,34 +1,34 @@
 NAME: test modifiers
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x A 1)
-  (let (y B 2)
-    (let (a A 0)
-      (let (b B 0)
+(let (x 1)
+  (let (y 2)
+    (let (a 0)
+      (let (b 0)
         (seq
           (JMP (Dir 2))
-          (DAT (place x) (place y))
+          (DAT (store x) (store y))
           (ADD x y)
           (ADD y y)
           (ADD y x)
           (MOV x a)
           (MOV a b)
-          (DAT (place a) 0)
-          (DAT 0 (place b)) )))))
+          (DAT (store a) 0)
+          (DAT 0 (store b)) )))))
 EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-L1    
-L2    
+LET1  
+LET2  
   DAT    #1     , #2     
-  ADD.AB $L1    , $L2    
-  ADD.B  $L2    , $L2    
-  ADD.BA $L2    , $L1    
-  MOV.A  $L1    , $L3    
-  MOV.AB $L3    , $L4    
-L3    
+  ADD.AB $LET1  , $LET2  
+  ADD.B  $LET2  , $LET2  
+  ADD.BA $LET2  , $LET1  
+  MOV.A  $LET1  , $LET3  
+  MOV.AB $LET3  , $LET4  
+LET3  
   DAT    #0     , #0     
-L4    
+LET4  
   DAT    #0     , #0     
   DAT    #0     , #0

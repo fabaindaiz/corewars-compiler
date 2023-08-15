@@ -1,12 +1,12 @@
 NAME: test indirection
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x A dest)
-  (let (y B (Ind x))
+(let (x dest)
+  (let (y (Ind x))
     (seq
       (JMP (Dir 2))
-      (DAT (place x) 0)
-      (MOV from (place y))
+      (DAT (store x) 0)
+      (MOV from (store y))
       
       (DAT 0 0)
       (label from)
@@ -17,10 +17,10 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-L1    
+LET1  
   DAT    $dest  , #0     
-L2    
-  MOV.I  $from  , *L1    
+LET2  
+  MOV.I  $from  , *LET1  
   DAT    #0     , #0     
 from  
   ADD.I  #1     , #1     
