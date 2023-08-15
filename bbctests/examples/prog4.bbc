@@ -15,7 +15,7 @@ SRC:
           (label dest4)
           (JMP (Ind c))
           (label dest1)
-          (MOV (Dir 0) (Dir 1)) )))))
+          (MOV (Ins 0) (Dir 1)) )))))
 EXPECTED:
 ;redcode-94b
 

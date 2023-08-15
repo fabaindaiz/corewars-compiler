@@ -15,8 +15,9 @@ work in progress.
 
 To execute the resulting redcode you can use one of these redcode interpreters.
 
+- [pMARS](https://corewar.co.uk/pmars.htm)
 - [A.R.E.S.](https://corewar.co.uk/ares.htm)
-- [PyMARS](https://github.com/rodrigosetti/corewar)
+- [python MARS](https://github.com/rodrigosetti/corewar)
 
 #### TODO
 

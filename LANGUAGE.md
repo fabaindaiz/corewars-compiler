@@ -23,24 +23,31 @@ If you want to store some value, you need to use a argument.
 
 An argument have a addressing mode and a value.
 
-- (mode var) mode can be specified (mode is optional)
+- (none) replaced by immediate 0
+- (var) declare a argument using default mode
+- (mode var) declare a argument using specified mode
 
 ### Variables (var)
 
-Variables are numbers or texts used to store values.
+Variables are numbers or strings used to store values.
+By default, numbers use immediate mode and strings use direct mode.
 
-- Number Immediate mode by default
-- Text Direct mode by default
+- (number) integer signed or unsigned number
+- (string) string reference to let variable or label
+
+If the string corresponds to some variable in scope, the string will be replaced by a reference to this variable, otherwise the string will be kept referencing a label
 
 ### Addresing modes (mode)
 
 Addresing modes are used to specify how the argument is used in the instruction. If the addressing mode is not specified, the default mode is used.
 
-- (Dir var) direct addresing to var
-- (Ind var) indirect addresing to var
-- (Dec var) decrement var and indirect addresing to var
-- (Inc var) indirect addresing to var and increment var
-- (store var) store var value in this place (field is automatic)
+- (Imm var) | (# var) immediate addresing to var
+- (Dir var) | ($ var) direct addresing to var
+- (Ind var) | (@ var) indirect addresing to var
+- (Dec var) | (< var) decrement var and indirect addresing to var
+- (Inc var) | (> var) indirect addresing to var and increment var
+- (instr var) | (% var) points to the instruction instead of the value
+- (store var) | (! var) store var value in this place (field is automatic)
 
 
 ## Conditions (cond)
@@ -53,6 +60,7 @@ Unary conditions are used to specify when the control flow is executed based on 
 
 - (JZ x) x is zero
 - (JN x) x is not zero
+- (DZ x) decrement x and x is zero
 - (DN x) decrement x and x is not zero
 
 ### Binary conditions (cond2)
@@ -71,7 +79,10 @@ Instructions are used to specify the operation to be performed. Instruction modi
 
 ### redcode instructions
 
-All redcode instructions are available for direct use
+All redcode instructions are available for direct use.
+Square brackets '[]' indicates that the argument is optional.
+
+- (NOP [arg1] [arg2]) no operation (arg1 & arg2 only store data)
 
 - (DAT arg1 arg2) data values
 - (MOV arg1 arg2) move arg1 to arg2
@@ -82,12 +93,8 @@ All redcode instructions are available for direct use
 - (DIV arg1 arg2) div arg1 from arg2
 - (MOD arg1 arg2) mod arg1 from arg2
 
-- (JMP arg1 [arg2]) jump to arg1 (arg2 is optional)
-- (SPL arg1 [arg2]) split to arg1 (arg2 is optional)
-
-- (NOP) no operation
-
-Not added yet
+- (JMP arg1 [arg2]) jump to arg1 (arg2 only store data)
+- (SPL arg1 [arg2]) split to arg1 (arg2 only store data)
 
 - (JMZ arg1 arg2) jump to arg1 if arg2 is zero
 - (JMN arg1 arg2) jump to arg1 if arg2 is not zero

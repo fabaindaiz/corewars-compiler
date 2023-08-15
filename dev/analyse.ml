@@ -2,9 +2,6 @@
 open String
 open Ast
 open Lib
-open Verify
-
-exception CTError of string
 
 
 let analyse_store_arg (arg : arg) (id : string) (place : place) (penv : penv) : penv =
@@ -12,7 +9,7 @@ let analyse_store_arg (arg : arg) (id : string) (place : place) (penv : penv) : 
   | AStore (s) ->
     (match (equal id s) with
     | true -> (extend_penv s place penv)
-    | _ -> penv)
+    | false -> penv)
   | _ -> penv
 
 let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
@@ -24,20 +21,23 @@ let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
 
 let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
   match e with
+  | ELabel (_) -> penv
   | EPrim2 (_, a1, a2, _) ->
     let env' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB env')
-  | ELet (_, _, e, _) ->
-    (analyse_store_expr e id penv)
-  | ECont1 (_, cond, expr, _) ->
+  | EFlow (_, exp, _) -> (analyse_store_expr exp id penv)
+  | EFlow1 (_, cond, exp, _) ->
     let env' = (analyse_store_cond cond id penv) in
-    (analyse_store_expr expr id env')
-  | ERepeat (e, _) -> (analyse_store_expr e id penv)
-  | ESeq (exprs, _) -> List.fold_left (fun penv' e -> (analyse_store_expr e id penv')) penv exprs
-  | _ -> penv
+    (analyse_store_expr exp id env')
+  | EFlow2 (_, cond, exp1, exp2, _) ->
+    let penv' = (analyse_store_cond cond id penv) in
+    let penv'' = (analyse_store_expr exp1 id penv') in
+    (analyse_store_expr exp2 id penv'')
+  | ELet (_, _, exp, _) -> (analyse_store_expr exp id penv)
+  | ESeq (exps, _) -> List.fold_left (fun penv' exp -> (analyse_store_expr exp id penv')) penv exps
+
 
 let analyse_let (id : string) (arg : arg) (body : tag eexpr) (label : string) (env : env) : env =
-  let _ = (verify_let arg) in
   let aenv, penv, lenv = env in
   let aenv' = (extend_aenv id arg aenv) in
   let penv' = (analyse_store_expr body id penv) in

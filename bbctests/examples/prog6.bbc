@@ -4,7 +4,7 @@ SRC:
 (let (x (Dir 3))
     (repeat
       (seq
-        (MOV (Dir -1) (store x))
+        (MOV (Ins -1) (store x))
         (ADD 1 x) )))
 EXPECTED:
 ;redcode-94b

@@ -1,18 +1,18 @@
-NAME: test dwarf
+NAME: long labels
 DESCRIPTION: evaluates a function declaration
 SRC:
-(let (x dest)
+(let (x dest_with_some_extra_characters)
   (seq
       (MOV (Ins -1) (store x))
       (ADD 4 x)
       (JMP x)
-      (label dest) ))
+      (label dest_with_some_extra_characters) ))
 EXPECTED:
 ;redcode-94b
 
 LET1  
-  MOV.I  $-1    , $dest  
+  MOV.I  $-1    , $dest_with_some_extra_characters
   ADD.AB #4     , $LET1  
   JMP    $LET1  , #0     
-dest  
+dest_with_some_extra_characters
   DAT    #0     , #0

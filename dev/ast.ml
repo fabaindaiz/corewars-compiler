@@ -6,11 +6,16 @@ type place =
 | PB
 
 
+type imode =
+| MINone
+| MIInc
+| MIDec
+
 type mode =
-| MDir
-| MInd
-| MDec
-| MInc
+| MIns          (* Instruction *)
+| MImm          (* Immediate *)
+| MDir          (* Direct *)
+| MInd of imode (* Indirect *)
 
 type arg =
 | ANone
@@ -24,6 +29,7 @@ type arg =
 type cond1 =
 | Cjz
 | Cjn
+| Cdz
 | Cdn
 
 type cond2 =
@@ -47,55 +53,69 @@ type prim2 =
 | Mod
 | Jmp
 | Spl
+| Nop
 
-type cont1 =
+| Jmz
+| Jmn
+| Djn
+| Seq
+| Sne
+| Slt
+
+type flow =
+| Repeat
+
+type flow1 =
 | If
 | While
-| Dowhile
+| DoWhile
+
+type flow2 =
+| IfElse
 
 
 type expr =
-| Nop
 | Label of string
 | Prim2 of prim2 * arg * arg
-| Cont1 of cont1 * cond * expr
+| Flow of flow * expr
+| Flow1 of flow1 * cond * expr
+| Flow2 of flow2 * cond * expr * expr
 | Let of string * arg * expr
-| Repeat of expr
 | Seq of expr list
 
 type 'a eexpr =
-| ENop of 'a
 | ELabel of string * 'a
 | EPrim2 of prim2 * arg * arg * 'a
-| ECont1 of cont1 * cond * 'a eexpr * 'a
+| EFlow of flow * 'a eexpr * 'a
+| EFlow1 of flow1 * cond * 'a eexpr * 'a
+| EFlow2 of flow2 * cond * 'a eexpr * 'a eexpr * 'a
 | ELet of string * arg * 'a eexpr * 'a
-| ERepeat of 'a eexpr * 'a
 | ESeq of 'a eexpr list * 'a
 
 
 type tag = int
 
-
 let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
   match e with
-  | Nop ->
-    let (next_tag) = (cur + 1) in
-    (ENop (cur), next_tag)
   | Label (s) ->
     let (next_tag) = (cur + 1) in
     (ELabel (s, cur), next_tag)
   | Prim2 (op, a1, a2) ->
     let (next_tag) = (cur + 1) in
     (EPrim2 (op, a1, a2, cur), next_tag)
-  | Cont1 (op, c, expr) ->
+  | Flow (op, expr) ->
     let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
-    (ECont1 (op, c, tag_expr, cur), next_tag)
+    (EFlow (op, tag_expr, cur), next_tag)
+  | Flow1 (op, cond, expr) ->
+    let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
+    (EFlow1 (op, cond, tag_expr, cur), next_tag)
+  | Flow2 (op, cond, expr1, expr2) ->
+    let (tag_expr1, next_tag1) = tag_expr_help expr1 (cur + 1) in
+    let (tag_expr2, next_tag2) = tag_expr_help expr2 next_tag1 in
+    (EFlow2 (op, cond, tag_expr1, tag_expr2, cur), next_tag2)
   | Let (x, a, expr) ->
     let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
     (ELet (x, a, tag_expr, cur), next_tag)
-  | Repeat (expr) ->
-    let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
-    (ERepeat (tag_expr, cur), next_tag)
   | Seq (exprs) ->
     let rec tag_seq (exprs : expr list) (cur : tag) : tag eexpr list * tag =
       (match exprs with
