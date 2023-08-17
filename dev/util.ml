@@ -9,12 +9,12 @@ exception CTError of string
 
 let imode_to_rmode (imode : imode) (place : place) : rmode =
   match imode, place with
-  | MINone, PA -> RAInd
-  | MINone, PB -> RBInd
-  | MIDec, PA -> RADec
-  | MIDec, PB -> RBDec
-  | MIInc, PA -> RAInc
-  | MIInc, PB -> RBInc
+  | MNone, PA -> RAInd
+  | MNone, PB -> RBInd
+  | MDec, PA -> RADec
+  | MDec, PB -> RBDec
+  | MInc, PA -> RAInc
+  | MInc, PB -> RBInc
 
 let compile_mode (mode : mode) (dest : place) : rmode =
   match dest with

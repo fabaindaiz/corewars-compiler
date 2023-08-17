@@ -12,9 +12,9 @@ type imod =
 | MF
 
 type imode =
-| MINone
-| MIInc
-| MIDec
+| MNone
+| MInc
+| MDec
 
 type mode =
 | MIns of imod  (* Instruction *)

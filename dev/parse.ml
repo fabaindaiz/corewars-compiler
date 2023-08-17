@@ -1,7 +1,6 @@
 (** Parser **)
 open CCSexp
 open Printf
-open String
 open Ast
 
 exception CTError of string
@@ -14,9 +13,9 @@ let parse_mode (sexp : sexp) : mode =
   | `Atom "opp" | `Atom "X" -> MIns (MX)
   | `Atom "Imm" | `Atom "#" -> MImm
   | `Atom "Dir" | `Atom "$" -> MDir
-  | `Atom "Ind" | `Atom "@" -> MInd (MINone)
-  | `Atom "Dec" | `Atom "<" -> MInd (MIDec)
-  | `Atom "Inc" | `Atom ">" -> MInd (MIInc)
+  | `Atom "Ind" | `Atom "@" -> MInd (MNone)
+  | `Atom "Dec" | `Atom "<" -> MInd (MDec)
+  | `Atom "Inc" | `Atom ">" -> MInd (MInc)
   | _ -> raise (CTError (sprintf "Not a valid mode: %s" (to_string sexp)))
 
 let parse_arg (sexp : sexp) : arg =
@@ -24,9 +23,12 @@ let parse_arg (sexp : sexp) : arg =
   | `Atom "none" -> ANone
   | `List [`Atom "store"; `Atom s] | `List [`Atom "!"; `Atom s] -> AStore (s)
   | `Atom s ->
-    (match Int64.of_string_opt s with
-    | Some n -> ANum (Int64.to_int n)
-    | None -> AId (s) )
+    (match s with
+    | "none" -> ANone
+    | _ -> 
+      (match Int64.of_string_opt s with
+      | Some n -> ANum (Int64.to_int n)
+      | None -> AId (s) ))
   | `List [m; `Atom s] ->
     (match Int64.of_string_opt s with
     | Some n -> ARef ((parse_mode m), (Int64.to_int n))
@@ -36,29 +38,42 @@ let parse_arg (sexp : sexp) : arg =
 
 let parse_cond (sexp : sexp) : cond =
   match sexp with
-  | `List [`Atom "JZ"; e] -> Cond1 (Cjz, parse_arg e)
-  | `List [`Atom "JN"; e] -> Cond1 (Cjn, parse_arg e)
-  | `List [`Atom "DZ"; e] -> Cond1 (Cdz, parse_arg e)
-  | `List [`Atom "DN"; e] -> Cond1 (Cdn, parse_arg e)
-  | `List [`Atom "EQ"; e1 ; e2] -> Cond2 (Ceq, parse_arg e1, parse_arg e2)
-  | `List [`Atom "NE"; e1 ; e2] -> Cond2 (Cne, parse_arg e1, parse_arg e2)
-  | `List [`Atom "GT"; e1 ; e2] -> Cond2 (Cgt, parse_arg e1, parse_arg e2)
-  | `List [`Atom "LT"; e1 ; e2] -> Cond2 (Clt, parse_arg e1, parse_arg e2)
+  | `List [cop; a] ->
+    let parg = (parse_arg a) in
+    (match cop with
+    | `Atom "JZ" -> Cond1 (Cjz, parg)
+    | `Atom "JN" -> Cond1 (Cjn, parg)
+    | `Atom "DZ" -> Cond1 (Cdz, parg)
+    | `Atom "DN" -> Cond1 (Cdn, parg)
+    | _ -> raise (CTError (sprintf "Not a valid unary cond: %s" (to_string sexp))) )
+  | `List [cop; a1; a2] ->
+    let parg1 = (parse_arg a1) in
+    let parg2 = (parse_arg a2) in
+    (match cop with
+    | `Atom "EQ" -> Cond2 (Ceq, parg1, parg2)
+    | `Atom "NE" -> Cond2 (Cne, parg1, parg2)
+    | `Atom "GT" -> Cond2 (Cgt, parg1, parg2)
+    | `Atom "LT" -> Cond2 (Clt, parg1, parg2)
+    | _ -> raise (CTError (sprintf "Not a valid binary cond: %s" (to_string sexp))) )
   | _ -> raise (CTError (sprintf "Not a valid cond: %s" (to_string sexp)))
 
 
+let parse_com (res : string) (s) : string =
+  res ^ " " ^ (String.escaped (to_string s))
+
 let rec parse_exp (sexp : sexp) : expr =
   match sexp with
-  | `List (`Atom "com" :: s) ->
-    Comment (List.fold_left (fun res s -> res ^ " " ^ (escaped (to_string s))) "" s)
-  | `List [`Atom "label"; `Atom s] -> Label (s)
+  | `List (`Atom "com" :: exps) -> Comment (List.fold_left parse_com "" exps)
   | `List (`Atom "seq" :: exps) -> Seq (List.map parse_exp exps)
+  | `List [`Atom "label"; `Atom s] -> Label (s)
   | `List [eop] ->
     (match eop with
+    | `Atom "DAT" -> Prim2 (Dat, ANone, ANone)
     | `Atom "NOP" -> Prim2 (Nop, ANone, ANone)
     | _ -> raise (CTError (sprintf "Not a valid expr: %s" (to_string sexp))) )
   | `List [eop; e] ->
     (match eop with
+    | `Atom "DAT" -> Prim2 (Dat, ANone, parse_arg e)
     | `Atom "JMP" -> Prim2 (Jmp, parse_arg e, ANone)
     | `Atom "SPL" -> Prim2 (Spl, parse_arg e, ANone)
     | `Atom "NOP" -> Prim2 (Nop, parse_arg e, ANone)

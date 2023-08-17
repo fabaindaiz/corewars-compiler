@@ -20,16 +20,24 @@ let compile_label (args : arg list) (env : env) : instruction list =
     | _ -> [] in
   List.fold_left (fun res i -> res @ (compile_label_aux i env)) [] args
 
+let compile_args (arg1 : arg) (arg2 : arg) (env : env) : rmod * rarg * rarg =
+  let carg1, rarg1 = (compile_arg arg1 env) in
+  let carg2, rarg2 = (compile_arg arg2 env) in
+  let rmod = (compile_mod carg1 carg2 RB env) in
+  rmod, rarg1, rarg2
+
   
 let compile_precond (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with
-  | Cond1 (op, a) ->
-    let _, rarg = (compile_arg a env) in
-    let rmod = RB in
+  | Cond1 (op, a2) ->
+    let a1 = ALab (MDir, label) in
+    let carg1, rarg1 = (compile_arg a1 env) in
+    let carg2, rarg2 = (compile_arg a2 env) in
+    let rmod = (compile_mod carg1 carg2 RI env) in
     (match op with
-    | Cjz -> [IJMN (rmod, RLab (RDir, label), rarg)]
-    | Cjn -> [IJMZ (rmod, RLab (RDir, label), rarg)]
-    | Cdz -> [IDJN (rmod, RLab (RDir, label), rarg)]
+    | Cjz -> [IJMN (rmod, rarg1, rarg2)]
+    | Cjn -> [IJMZ (rmod, rarg1, rarg2)]
+    | Cdz -> [IDJN (rmod, rarg1, rarg2)]
     | Cdn -> raise (CTError (sprintf "DN cond is not available on precondition")) )
   | Cond2 (op, a1, a2) ->
     let carg1, rarg1 = (compile_arg a1 env) in
@@ -45,14 +53,16 @@ let compile_precond (cond : cond) (label : string ) (env : env) : instruction li
 
 let compile_postcond (cond : cond) (label : string ) (env : env) : instruction list =
   match cond with
-  | Cond1 (op, a) ->
-    let _, rarg = (compile_arg a env) in
-    let rmod = RB in
+  | Cond1 (op, a2) ->
+    let a1 = ALab (MDir, label) in
+    let carg1, rarg1 = (compile_arg a1 env) in
+    let carg2, rarg2 = (compile_arg a2 env) in
+    let rmod = (compile_mod carg1 carg2 RB env) in
     (match op with
-    | Cjz -> [IJMZ (rmod, RLab (RDir, label), rarg)]
-    | Cjn -> [IJMN (rmod, RLab (RDir, label), rarg)]
+    | Cjz -> [IJMZ (rmod, rarg1, rarg2)]
+    | Cjn -> [IJMN (rmod, rarg1, rarg2)]
     | Cdz -> raise (CTError (sprintf "DZ cond is not available on postcondition"))
-    | Cdn -> [IDJN (rmod, RLab (RDir, label), rarg)] )
+    | Cdn -> [IDJN (rmod, rarg1, rarg2)] )
   | Cond2 (op, a1, a2) ->
     let carg1, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
@@ -131,7 +141,7 @@ let prelude = "
 ;redcode-94b
 "
 
-let epilogue = [IDAT (RRef (RImm, 0), RRef (RImm, 0))]
+let epilogue = [IDAT (RNone, RNone)]
 
 let compile_prog (e : expr) : string =
   let tag_e = (tag_expr e) in
