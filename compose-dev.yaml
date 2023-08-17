@@ -1,9 +1,9 @@
 services:
   app:
+    image: ocaml-compiler
     entrypoint:
     - sleep
     - infinity
-    image: custom-ocaml
     init: true
     volumes:
     - type: bind

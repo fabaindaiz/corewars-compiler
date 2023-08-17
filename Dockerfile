@@ -1,10 +1,11 @@
-FROM ocaml/opam:debian-11-ocaml-5.2
-
+FROM ocaml/opam:ubuntu-20.04
 ENV SHELL=/bin/bash
 
 USER root
 
 RUN apt update && apt-get install -y
+#  nasm \
+#  clang
 # && rm -rf /var/lib/apt/lists/*
 
 USER opam
