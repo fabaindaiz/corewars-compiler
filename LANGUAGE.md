@@ -46,7 +46,6 @@ Addresing modes are used to specify how the argument is used in the instruction.
 - (Ind var) | (@ var) indirect addresing to var
 - (Dec var) | (< var) decrement var and indirect addresing to var
 - (Inc var) | (> var) indirect addresing to var and increment var
-- (instr var) | (% var) points to the instruction instead of the value
 - (store var) | (! var) store var value in this place (field is automatic)
 
 
@@ -60,8 +59,8 @@ Unary conditions are used to specify when the control flow is executed based on 
 
 - (JZ x) x is zero
 - (JN x) x is not zero
-- (DZ x) decrement x and x is zero
-- (DN x) decrement x and x is not zero
+- (DZ x) decrement x and x is zero (not available on some control flows)
+- (DN x) decrement x and x is not zero (not available on some control flows)
 
 ### Binary conditions (cond2)
 
@@ -77,41 +76,57 @@ Binary conditions are used to specify when the control flow is executed based on
 
 Instructions are used to specify the operation to be performed. Instruction modifiers are automatically generated during compilation.
 
+### instructions modifiers (mod)
+
+All instruction modifiers are automatically generated, but there is an option to select one manually.
+A useful case where to declare them explicitly is when you want to target the entire instruction or both fields.
+
+- I points to the instruction instead of values
+- X points to both fields to the same fields
+- F points to both fields to the opposite fields
+
 ### redcode instructions
 
 All redcode instructions are available for direct use.
 Square brackets '[]' indicates that the argument is optional.
 
+#### Misc instructions
+
+- (DAT [arg1] [arg2]) data values (arg1 & arg2 only store data)
 - (NOP [arg1] [arg2]) no operation (arg1 & arg2 only store data)
-
-- (DAT arg1 arg2) data values
-- (MOV arg1 arg2) move arg1 to arg2
-
-- (ADD arg1 arg2) add arg1 to arg2
-- (SUB arg1 arg2) sub arg1 from arg2
-- (MUL arg1 arg2) mul arg1 to arg2
-- (DIV arg1 arg2) div arg1 from arg2
-- (MOD arg1 arg2) mod arg1 from arg2
-
 - (JMP arg1 [arg2]) jump to arg1 (arg2 only store data)
 - (SPL arg1 [arg2]) split to arg1 (arg2 only store data)
 
-- (JMZ arg1 arg2) jump to arg1 if arg2 is zero
-- (JMN arg1 arg2) jump to arg1 if arg2 is not zero
-- (DJN arg1 arg2) decrement arg2 and jump to arg1 if arg2 is not zero
+#### Arithmetic instructions
 
-- (SEQ arg1 arg2) skip next instruction if arg1 equals arg2
-- (SNE arg1 arg2) skip next instruction if arg1 not equals arg2
-- (SLT arg1 arg2) skip next instruction if arg1 is less than arg2
+- (MOV [mod] arg1 arg2) move arg1 to arg2
+- (ADD [mod] arg1 arg2) add arg1 to arg2
+- (SUB [mod] arg1 arg2) sub arg1 from arg2
+- (MUL [mod] arg1 arg2) mul arg1 to arg2
+- (DIV [mod] arg1 arg2) div arg1 from arg2
+- (MOD [mod] arg1 arg2) mod arg1 from arg2
+
+#### Conditional instructions
+
+- (JMZ [mod] arg1 arg2) jump to arg1 if arg2 is zero
+- (JMN [mod] arg1 arg2) jump to arg1 if arg2 is not zero
+- (DJN [mod] arg1 arg2) decrement arg2 and jump to arg1 if arg2 is not zero
+- (SEQ [mod] arg1 arg2) skip next instruction if arg1 equals arg2
+- (SNE [mod] arg1 arg2) skip next instruction if arg1 not equals arg2
+- (SLT [mod] arg1 arg2) skip next instruction if arg1 is less than arg2
+
 
 ### Control flows
 
 Control flows are used to specify the execution order of the instructions. Use control flows generates extra instructions in the code.
 
 - (repeat body) repeat body forever (one extra instruction)
+- (if cond then) execute body if cond is true (no extra instruction + cond)
+
 - (while cond body) repeat body while cond is true (one extra instruction + cond)
-- (if cond body) execute body if cond is true (no extra instruction + cond)
 - (do-while cond body) repeat body while cond is true (no extra instruction + cond)
+
+- (if-else cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
 
 
 ### Other instructions

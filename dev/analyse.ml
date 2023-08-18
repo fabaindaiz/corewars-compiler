@@ -24,6 +24,9 @@ let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
   | EPrim2 (_, a1, a2, _) ->
     let env' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB env')
+  | EPrim2m (_, _, a1, a2, _) ->
+    let env' = (analyse_store_arg a1 id PA penv) in
+    (analyse_store_arg a2 id PB env')
   | EFlow (_, exp, _) -> (analyse_store_expr exp id penv)
   | EFlow1 (_, cond, exp, _) ->
     let env' = (analyse_store_cond cond id penv) in

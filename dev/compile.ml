@@ -23,7 +23,7 @@ let compile_label (args : arg list) (env : env) : instruction list =
 let compile_args (arg1 : arg) (arg2 : arg) (env : env) : rmod * rarg * rarg =
   let carg1, rarg1 = (compile_arg arg1 env) in
   let carg2, rarg2 = (compile_arg arg2 env) in
-  let rmod = (compile_mod carg1 carg2 RB env) in
+  let rmod = (compile_mod carg1 carg2 MNone RB env) in
   rmod, rarg1, rarg2
 
   
@@ -33,7 +33,7 @@ let compile_precond (cond : cond) (label : string ) (env : env) : instruction li
     let a1 = ALab (MDir, label) in
     let carg1, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
-    let rmod = (compile_mod carg1 carg2 RI env) in
+    let rmod = (compile_mod carg1 carg2 MNone RI env) in
     (match op with
     | Cjz -> [IJMN (rmod, rarg1, rarg2)]
     | Cjn -> [IJMZ (rmod, rarg1, rarg2)]
@@ -42,12 +42,12 @@ let compile_precond (cond : cond) (label : string ) (env : env) : instruction li
   | Cond2 (op, a1, a2) ->
     let carg1, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
-    let rmod = (compile_mod carg1 carg2 RI env) in
+    let rmod = (compile_mod carg1 carg2 MNone RI env) in
     (match op with
     | Ceq -> [ISEQ (rmod, rarg1, rarg2) ; IJMP (RLab (RDir, label), RNone)]
     | Cne -> [ISNE (rmod, rarg1, rarg2) ; IJMP (RLab (RDir, label), RNone)]
     | Cgt -> 
-      let rmod' = (compile_mod carg2 carg1 RI env) in
+      let rmod' = (compile_mod carg2 carg1 MNone RI env) in
       [ISLT (rmod', rarg2, rarg1) ; IJMP (RLab (RDir, label), RNone)]
     | Clt -> [ISLT (rmod, rarg1, rarg2) ; IJMP (RLab (RDir, label), RNone)] )
 
@@ -57,7 +57,7 @@ let compile_postcond (cond : cond) (label : string ) (env : env) : instruction l
     let a1 = ALab (MDir, label) in
     let carg1, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
-    let rmod = (compile_mod carg1 carg2 RB env) in
+    let rmod = (compile_mod carg1 carg2 MNone RB env) in
     (match op with
     | Cjz -> [IJMZ (rmod, rarg1, rarg2)]
     | Cjn -> [IJMN (rmod, rarg1, rarg2)]
@@ -66,13 +66,13 @@ let compile_postcond (cond : cond) (label : string ) (env : env) : instruction l
   | Cond2 (op, a1, a2) ->
     let carg1, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
-    let rmod = (compile_mod carg1 carg2 RI env) in
+    let rmod = (compile_mod carg1 carg2 MNone RI env) in
     (match op with
     | Ceq -> [ISNE (rmod, rarg1, rarg2) ; IJMP (RLab (RDir, label), RNone)]
     | Cne -> [ISEQ (rmod, rarg1, rarg2) ; IJMP (RLab (RDir, label), RNone)]
     | Cgt -> [ISLT (rmod, rarg1, rarg2) ; IJMP (RLab (RDir, label), RNone)]
     | Clt ->
-      let rmod' = (compile_mod carg2 carg1 RI env) in
+      let rmod' = (compile_mod carg2 carg1 MNone RI env) in
       [ISLT (rmod', rarg2, rarg1) ; IJMP (RLab (RDir, label), RNone)] )
 
 
@@ -81,21 +81,26 @@ let rec compile_expr (e : tag eexpr) (env : env) : instruction list =
   | EComment (s) -> [ICOM (s)]
   | ELabel (l, _) -> [ILAB (l)]
   | EPrim2 (op, arg1, arg2, _) ->
-    let carg1, rarg1 = (compile_arg arg1 env) in
-    let carg2, rarg2 = (compile_arg arg2 env) in
-    let rmod = (compile_mod carg1 carg2 RI env) in
+    let _, rarg1 = (compile_arg arg1 env) in
+    let _, rarg2 = (compile_arg arg2 env) in
     (compile_label [arg1; arg2] env) @ 
     (match op with
     | Dat -> [IDAT (rarg1, rarg2)]
+    | Nop -> [INOP (rarg1, rarg2)]
+    | Spl -> [ISPL (rarg1, rarg2)]
+    | Jmp -> [IJMP (rarg1, rarg2)] )
+  | EPrim2m (op, imod, arg1, arg2, _) ->
+    let carg1, rarg1 = (compile_arg arg1 env) in
+    let carg2, rarg2 = (compile_arg arg2 env) in
+    let rmod = (compile_mod carg1 carg2 imod RI env) in
+    (compile_label [arg1; arg2] env) @ 
+    (match op with
     | Mov -> [IMOV (rmod, rarg1, rarg2)]
     | Add -> [IADD (rmod, rarg1, rarg2)]
     | Sub -> [ISUB (rmod, rarg1, rarg2)]
     | Mul -> [IMUL (rmod, rarg1, rarg2)]
     | Div -> [IDIV (rmod, rarg1, rarg2)]
     | Mod -> [IMOD (rmod, rarg1, rarg2)]
-    | Spl -> [ISPL (rarg1, rarg2)]
-    | Jmp -> [IJMP (rarg1, rarg2)]
-    | Nop -> [INOP (rarg1, rarg2)]
     | Jmz -> [IJMZ (rmod, rarg1, rarg2)]
     | Jmn -> [IJMN (rmod, rarg1, rarg2)]
     | Djn -> [IDJN (rmod, rarg1, rarg2)]

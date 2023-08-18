@@ -3,7 +3,7 @@ DESCRIPTION: evaluates a function declaration
 SRC:
 (let (x dest)
   (seq
-    (MOV (ins -1) (store x))
+    (MOV I (Dir -1) (store x))
     (ADD 4 x)
     (JMP x)
     (label dest) ))

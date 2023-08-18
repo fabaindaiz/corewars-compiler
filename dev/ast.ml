@@ -6,18 +6,12 @@ type place =
 | PB
 
 
-type imod =
-| MI
-| MX
-| MF
-
 type imode =
-| MNone
-| MInc
-| MDec
+| MINone
+| MIInc
+| MIDec
 
 type mode =
-| MIns of imod  (* Instruction *)
 | MImm          (* Immediate *)
 | MDir          (* Direct *)
 | MInd of imode (* Indirect *)
@@ -48,17 +42,29 @@ type cond =
 | Cond2 of cond2 * arg * arg
 
 
+type imod =
+| MNone
+| MA
+| MB
+| MAB
+| MBA
+| MI
+| MX
+| MF
+
 type prim2 =
 | Dat
+| Jmp
+| Spl
+| Nop
+
+type prim2m =
 | Mov
 | Add
 | Sub
 | Mul
 | Div
 | Mod
-| Jmp
-| Spl
-| Nop
 | Jmz
 | Jmn
 | Djn
@@ -67,6 +73,7 @@ type prim2 =
 | Slt
 | Stp
 | Ldp
+
 
 type flow =
 | Repeat
@@ -84,6 +91,7 @@ type expr =
 | Comment of string
 | Label of string
 | Prim2 of prim2 * arg * arg
+| Prim2m of prim2m * imod * arg * arg
 | Flow of flow * expr
 | Flow1 of flow1 * cond * expr
 | Flow2 of flow2 * cond * expr * expr
@@ -94,6 +102,7 @@ type 'a eexpr =
 | EComment of string
 | ELabel of string * 'a
 | EPrim2 of prim2 * arg * arg * 'a
+| EPrim2m of prim2m * imod * arg * arg * 'a
 | EFlow of flow * 'a eexpr * 'a
 | EFlow1 of flow1 * cond * 'a eexpr * 'a
 | EFlow2 of flow2 * cond * 'a eexpr * 'a eexpr * 'a
@@ -113,6 +122,9 @@ let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
   | Prim2 (op, a1, a2) ->
     let (next_tag) = (cur + 1) in
     (EPrim2 (op, a1, a2, cur), next_tag)
+  | Prim2m (op, m, a1, a2) ->
+    let (next_tag) = (cur + 1) in
+    (EPrim2m (op, m, a1, a2, cur), next_tag)
   | Flow (op, expr) ->
     let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
     (EFlow (op, tag_expr, cur), next_tag)

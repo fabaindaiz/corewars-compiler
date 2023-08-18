@@ -9,27 +9,18 @@ exception CTError of string
 
 let imode_to_rmode (imode : imode) (place : place) : rmode =
   match imode, place with
-  | MNone, PA -> RAInd
-  | MNone, PB -> RBInd
-  | MDec, PA -> RADec
-  | MDec, PB -> RBDec
-  | MInc, PA -> RAInc
-  | MInc, PB -> RBInc
+  | MINone, PA -> RAInd
+  | MINone, PB -> RBInd
+  | MIDec, PA -> RADec
+  | MIDec, PB -> RBDec
+  | MIInc, PA -> RAInc
+  | MIInc, PB -> RBInc
 
 let compile_mode (mode : mode) (dest : place) : rmode =
-  match dest with
-  | PA ->
-    (match mode with
-    | MIns (_) -> RDir
-    | MImm -> RImm
-    | MDir -> RDir
-    | MInd (m) -> (imode_to_rmode m PA) )
-  | PB -> 
-    (match mode with
-    | MIns (_) -> RDir
-    | MImm -> RImm
-    | MDir -> RDir
-    | MInd (m) -> (imode_to_rmode m PB) )
+  match mode with
+  | MImm -> RImm
+  | MDir -> RDir
+  | MInd (m) -> (imode_to_rmode m dest)
 
 
 type darg =
@@ -66,7 +57,7 @@ let darg_to_carg (darg : darg) (env : env) : carg =
     (match List.assoc_opt s lenv with
     | Some _ ->
       (match m with
-      | MIns (_) | MImm | MDir -> ACVar (m, s)
+      | MImm | MDir -> ACVar (m, s)
       | MInd (_) -> ACPnt (m, s) )
     | None -> ACLab (m, s) )
 
@@ -93,7 +84,6 @@ let compile_arg (arg : arg) (env : env) : carg * rarg =
 
 
 type opmod =
-| TIns of imod
 | TNum
 | TRef
 | TA
@@ -109,12 +99,10 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
   match carg with
   | ACRef (m, _) | ACLab (m, _) ->
     (match m with
-    | MIns (i) ->  TIns (i)
     | MImm -> TNum
     | MDir | MInd (_) -> TRef )
   | ACVar (m, s) ->
     (match m with
-    | MIns (i) -> TIns (i)
     | MImm | MDir ->
       let p = (translate_penv s penv) in
       (place_to_opmod p)
@@ -133,21 +121,10 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
         (match List.assoc_opt s penv with
         | Some p -> (place_to_opmod p)
         | None -> TB ))
-    | MIns (_) | MImm | MDir -> raise (CTError ("please report this bug, this error should not happen")) )
+    | MImm | MDir -> raise (CTError ("please report this bug, this error should not happen")) )
 
-
-let imod_to_rmod (imod : imod) : rmod =
-  match imod with
-  | MI -> RI
-  | MX -> RX
-  | MF -> RF
-
-let compile_mod (carg1 : carg) (carg2 : carg) (def : rmod) (env : env) : rmod =
-  let mod1 = (carg_to_opmod carg1 env) in
-  let mod2 = (carg_to_opmod carg2 env) in
+let opmod_to_rmod (mod1 : opmod) (mod2 : opmod) (rmod : rmod) : rmod =
   match mod1, mod2 with
-  | TIns (b), _ -> (imod_to_rmod b)
-  | _, TIns (b) -> (imod_to_rmod b)
   | TNum, TA -> RA
   | TNum, TB -> RAB
   | TA, TNum -> RAB
@@ -156,4 +133,17 @@ let compile_mod (carg1 : carg) (carg2 : carg) (def : rmod) (env : env) : rmod =
   | TA, TB -> RAB
   | TB, TA -> RBA
   | TB, TB -> RB
-  | _, _ -> def
+  | _, _ -> rmod
+
+let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env : env) : rmod =
+  let mod1 = (carg_to_opmod carg1 env) in
+  let mod2 = (carg_to_opmod carg2 env) in
+  match imod with
+  | MNone -> (opmod_to_rmod mod1 mod2 rmod)
+  | MA -> RA
+  | MB -> RB
+  | MAB -> RAB
+  | MBA -> RBA
+  | MI -> RI
+  | MF -> RF
+  | MX -> RX

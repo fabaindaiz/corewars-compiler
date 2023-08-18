@@ -6,7 +6,7 @@ SRC:
     (JMP (Dir 2))
     (DAT 0 (store x))
     (do-while (DN 100)
-      (MOV (ins -1) (Inc x)) )))
+      (MOV I (Dir -1) (Inc x)) )))
 EXPECTED:
 ;redcode-94b
 

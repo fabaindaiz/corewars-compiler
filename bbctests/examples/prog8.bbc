@@ -8,7 +8,7 @@ SRC:
       (DAT (store x) (store y))
       (while (LT y x)
         (seq
-          (MOV (ins x) (Dec x)) )))))
+          (MOV I (Dir x) (Dec x)) )))))
 EXPECTED:
 ;redcode-94b
 
