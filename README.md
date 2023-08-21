@@ -25,6 +25,8 @@ To execute the resulting redcode you can use one of these redcode interpreters.
 - Test all instructions modifiers and addressing modes
 - Improve control flow instructions and conditions
 
+- Reduce duplicate code reduce duplicate code
+
 ## Acknowledgements
 
 - Pleiad for [BBCTester](https://github.com/pleiad/BBCTester)

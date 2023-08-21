@@ -3,10 +3,10 @@ DESCRIPTION: evaluates a function declaration
 SRC:
 (let (x dest)
   (seq
-      (MOV (Ins -1) (store x))
-      (ADD 4 x)
-      (JMP x)
-      (label dest) ))
+    (MOV I (Dir -1) (store x))
+    (ADD 4 x)
+    (JMP x)
+    (label dest) ))
 EXPECTED:
 ;redcode-94b
 

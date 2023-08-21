@@ -21,8 +21,10 @@ let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
 
 let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
   match e with
-  | ELabel (_) -> penv
   | EPrim2 (_, a1, a2, _) ->
+    let env' = (analyse_store_arg a1 id PA penv) in
+    (analyse_store_arg a2 id PB env')
+  | EPrim2m (_, _, a1, a2, _) ->
     let env' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB env')
   | EFlow (_, exp, _) -> (analyse_store_expr exp id penv)
@@ -35,6 +37,7 @@ let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
     (analyse_store_expr exp2 id penv'')
   | ELet (_, _, exp, _) -> (analyse_store_expr exp id penv)
   | ESeq (exps, _) -> List.fold_left (fun penv' exp -> (analyse_store_expr exp id penv')) penv exps
+  | _ -> penv
 
 
 let analyse_let (id : string) (arg : arg) (body : tag eexpr) (label : string) (env : env) : env =

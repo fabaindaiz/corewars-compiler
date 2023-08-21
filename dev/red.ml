@@ -64,7 +64,8 @@ let pp_rmod (rmod : rmod) : string =
 
 (* red opcode *)
 type instruction =
-| ILabel of string
+| ICOM of string             (* comment *)
+| ILAB of string             (* label *)
 | IDAT of rarg * rarg        (* data *)
 | IMOV of rmod * rarg * rarg (* move *)
 | IADD of rmod * rarg * rarg (* add *)
@@ -88,7 +89,8 @@ type instruction =
 (* red opcode to string *)
 let pp_instr (opcode : instruction) : string =
   match opcode with
-  | ILabel (l)       -> sprintf "%-6s" (l)
+  | ICOM (s)         -> sprintf ";%-6s" (s)
+  | ILAB (l)         -> sprintf "%-6s" (l)
   | IDAT (e1, e2)    -> sprintf "  DAT    %s, %s"            (pp_rarg e1) (pp_rarg e2)
   | IMOV (m, e1, e2) -> sprintf "  MOV%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)
   | IADD (m, e1, e2) -> sprintf "  ADD%s %s, %s" (pp_rmod m) (pp_rarg e1) (pp_rarg e2)

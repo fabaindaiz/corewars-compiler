@@ -17,24 +17,21 @@ let imode_to_rmode (imode : imode) (place : place) : rmode =
   | MIInc, PB -> RBInc
 
 let compile_mode (mode : mode) (dest : place) : rmode =
-  match dest with
-  | PA ->
-    (match mode with
-    | MIns -> RDir
-    | MImm -> RImm
-    | MDir -> RDir
-    | MInd (m) -> (imode_to_rmode m PA) )
-  | PB -> 
-    (match mode with
-    | MIns -> RDir
-    | MImm -> RImm
-    | MDir -> RDir
-    | MInd (m) -> (imode_to_rmode m PB) )
+  match mode with
+  | MImm -> RImm
+  | MDir -> RDir
+  | MInd (m) -> (imode_to_rmode m dest)
 
 
 type darg =
 | ADRef of mode * int
 | ADLab of mode * string
+
+let replace_store (arg : arg) (env : env) : arg =
+  let aenv, _, _ = env in
+  match arg with
+  | AStore (s) -> (translate_aenv s aenv)
+  | _ -> arg
 
 let arg_to_darg (arg : arg) : darg =
   match arg with
@@ -60,7 +57,7 @@ let darg_to_carg (darg : darg) (env : env) : carg =
     (match List.assoc_opt s lenv with
     | Some _ ->
       (match m with
-      | MIns | MImm | MDir -> ACVar (m, s)
+      | MImm | MDir -> ACVar (m, s)
       | MInd (_) -> ACPnt (m, s) )
     | None -> ACLab (m, s) )
 
@@ -77,12 +74,6 @@ let carg_to_rarg (carg : carg) (env : env) : rarg =
     let l = (translate_lenv s lenv) in
     RLab ((compile_mode m p), l)
 
-
-let replace_store (arg : arg) (env : env) : arg =
-  let aenv, _, _ = env in
-  match arg with
-  | AStore (s) -> (translate_aenv s aenv)
-  | _ -> arg
 
 let compile_arg (arg : arg) (env : env) : carg * rarg =
   let arg' = (replace_store arg env) in
@@ -109,10 +100,9 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
   | ACRef (m, _) | ACLab (m, _) ->
     (match m with
     | MImm -> TNum
-    | MIns | MDir | MInd (_) -> TRef )
+    | MDir | MInd (_) -> TRef )
   | ACVar (m, s) ->
     (match m with
-    | MIns -> TRef
     | MImm | MDir ->
       let p = (translate_penv s penv) in
       (place_to_opmod p)
@@ -131,12 +121,9 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
         (match List.assoc_opt s penv with
         | Some p -> (place_to_opmod p)
         | None -> TB ))
-      | MIns | MImm | MDir -> raise (CTError ("please report this bug, this error should not happen")) )
+    | MImm | MDir -> raise (CTError ("please report this bug, this error should not happen")) )
 
-
-let compile_mod (carg1 : carg) (carg2 : carg) (def : rmod) (env : env) : rmod =
-  let mod1 = (carg_to_opmod carg1 env) in
-  let mod2 = (carg_to_opmod carg2 env) in
+let opmod_to_rmod (mod1 : opmod) (mod2 : opmod) (rmod : rmod) : rmod =
   match mod1, mod2 with
   | TNum, TA -> RA
   | TNum, TB -> RAB
@@ -146,4 +133,17 @@ let compile_mod (carg1 : carg) (carg2 : carg) (def : rmod) (env : env) : rmod =
   | TA, TB -> RAB
   | TB, TA -> RBA
   | TB, TB -> RB
-  | _, _ -> def
+  | _, _ -> rmod
+
+let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env : env) : rmod =
+  let mod1 = (carg_to_opmod carg1 env) in
+  let mod2 = (carg_to_opmod carg2 env) in
+  match imod with
+  | MNone -> (opmod_to_rmod mod1 mod2 rmod)
+  | MA -> RA
+  | MB -> RB
+  | MAB -> RAB
+  | MBA -> RBA
+  | MI -> RI
+  | MF -> RF
+  | MX -> RX
