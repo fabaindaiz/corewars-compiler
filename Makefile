@@ -20,7 +20,7 @@ init:
 tests:
 	dune exec execs/run_test.exe -- test '$(F)'
 
-ctest:
+ctests:
 	dune exec execs/run_test.exe -- test '$(F)' -c
 
 compile: 
@@ -32,8 +32,8 @@ compile:
 %.exe:
 	dune build execs/$@
 
-clean: clean-test
-	rm -Rf _build
+clean: clean-tests
+	dune clean
 
 clean-tests:
 	find bbctests/ -type f -regex '.*\.\(o\|s\|run\|result\)' -delete

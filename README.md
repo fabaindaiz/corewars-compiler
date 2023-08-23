@@ -3,7 +3,7 @@
 
 This software aims to be an easier way to write and optimize code for corewars. corewars-compiler uses its own mini functional language called RED which can then be compiled into optimized redcode.
 
-work in progress.
+#### work in progress.
 
 
 ### Instructions of use
@@ -22,10 +22,8 @@ To execute the resulting redcode you can use one of these redcode interpreters.
 #### TODO
 
 - Create a RED language tutorial
-- Test all instructions modifiers and addressing modes
 - Improve control flow instructions and conditions
-
-- Reduce duplicate code reduce duplicate code
+- Reduce duplicate code and improve compiled redcode
 
 ## Acknowledgements
 

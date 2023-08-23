@@ -151,3 +151,14 @@ let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
 
 let tag_expr (e : expr) : tag eexpr =
   let (tagged, _) = tag_expr_help e 1 in tagged
+
+
+(* Pretty printing - used by testing framework *)
+let string_of_arg(a : arg) : string =
+  match a with
+  | ANone -> "0"
+  | AStore s -> s
+  | ANum n -> Int.to_string n
+  | AId s -> s
+  | ARef (_, n) -> Int.to_string n
+  | ALab (_, s) -> s
