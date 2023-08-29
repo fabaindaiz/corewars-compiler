@@ -38,12 +38,14 @@ type cond2 =
 | Clt
 
 type cond =
+| Cond0
 | Cond1 of cond1 * arg
 | Cond2 of cond2 * arg * arg
 
 
 type imod =
-| MNone
+| MDef
+| MN
 | MA
 | MB
 | MAB
@@ -57,8 +59,6 @@ type prim2 =
 | Jmp
 | Spl
 | Nop
-
-type prim2m =
 | Mov
 | Add
 | Sub
@@ -75,10 +75,8 @@ type prim2m =
 | Ldp
 
 
-type flow =
-| Repeat
-
 type flow1 =
+| Repeat
 | If
 | While
 | DoWhile
@@ -90,9 +88,7 @@ type flow2 =
 type expr =
 | Comment of string
 | Label of string
-| Prim2 of prim2 * arg * arg
-| Prim2m of prim2m * imod * arg * arg
-| Flow of flow * expr
+| Prim2 of prim2 * imod * arg * arg
 | Flow1 of flow1 * cond * expr
 | Flow2 of flow2 * cond * expr * expr
 | Let of string * arg * expr
@@ -101,9 +97,7 @@ type expr =
 type 'a eexpr =
 | EComment of string
 | ELabel of string * 'a
-| EPrim2 of prim2 * arg * arg * 'a
-| EPrim2m of prim2m * imod * arg * arg * 'a
-| EFlow of flow * 'a eexpr * 'a
+| EPrim2 of prim2 * imod * arg * arg * 'a
 | EFlow1 of flow1 * cond * 'a eexpr * 'a
 | EFlow2 of flow2 * cond * 'a eexpr * 'a eexpr * 'a
 | ELet of string * arg * 'a eexpr * 'a
@@ -119,15 +113,9 @@ let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
   | Label (s) ->
     let (next_tag) = (cur + 1) in
     (ELabel (s, cur), next_tag)
-  | Prim2 (op, a1, a2) ->
+  | Prim2 (op, m, a1, a2) ->
     let (next_tag) = (cur + 1) in
-    (EPrim2 (op, a1, a2, cur), next_tag)
-  | Prim2m (op, m, a1, a2) ->
-    let (next_tag) = (cur + 1) in
-    (EPrim2m (op, m, a1, a2, cur), next_tag)
-  | Flow (op, expr) ->
-    let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
-    (EFlow (op, tag_expr, cur), next_tag)
+    (EPrim2 (op, m, a1, a2, cur), next_tag)
   | Flow1 (op, cond, expr) ->
     let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
     (EFlow1 (op, cond, tag_expr, cur), next_tag)

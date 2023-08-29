@@ -1,5 +1,6 @@
 (* Lib *)
 open Printf
+open Red
 open Ast
 
 exception CTError of string
@@ -37,3 +38,7 @@ let translate_lenv (x : string) (lenv : lenv) : string =
   match List.assoc_opt x lenv with
   | Some label -> label
   | None -> raise (CTError (sprintf "unbound variable %s in lenv" x))
+
+
+let jump_label (label : string) : instruction =
+  INSTR (IJMP, RN, RLab(RDir, label), RNone)

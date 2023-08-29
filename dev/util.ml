@@ -139,7 +139,8 @@ let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env :
   let mod1 = (carg_to_opmod carg1 env) in
   let mod2 = (carg_to_opmod carg2 env) in
   match imod with
-  | MNone -> (opmod_to_rmod mod1 mod2 rmod)
+  | MDef -> (opmod_to_rmod mod1 mod2 rmod)
+  | MN -> RN
   | MA -> RA
   | MB -> RB
   | MAB -> RAB
