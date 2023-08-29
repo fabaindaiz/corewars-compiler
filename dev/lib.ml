@@ -40,5 +40,12 @@ let translate_lenv (x : string) (lenv : lenv) : string =
   | None -> raise (CTError (sprintf "unbound variable %s in lenv" x))
 
 
+let replace_store (arg : arg) (env : env) : arg =
+  let aenv, _, _ = env in
+  match arg with
+  | AStore (s) -> (translate_aenv s aenv)
+  | _ -> arg
+
+
 let jump_label (label : string) : instruction =
   INSTR (IJMP, RN, RLab(RDir, label), RNone)

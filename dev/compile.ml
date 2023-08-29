@@ -20,6 +20,28 @@ let compile_label (args : arg list) (env : env) : instruction list =
     | _ -> [] in
   List.fold_left (fun res i -> res @ (compile_label_aux i env)) [] args
 
+
+let compile_arg (arg : arg) (env : env) : carg * rarg =
+  let arg' = (replace_store arg env) in
+  let darg = (arg_to_darg arg') in
+  let carg = (darg_to_carg darg env) in
+  let rarg = (carg_to_rarg carg env) in
+  (carg, rarg)
+
+let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env : env) : rmod =
+  let mod1 = (carg_to_opmod carg1 env) in
+  let mod2 = (carg_to_opmod carg2 env) in
+  match imod with
+  | MDef -> (opmod_to_rmod mod1 mod2 rmod)
+  | MN -> RN
+  | MA -> RA
+  | MB -> RB
+  | MAB -> RAB
+  | MBA -> RBA
+  | MI -> RI
+  | MF -> RF
+  | MX -> RX
+
 let compile_args (arg1 : arg) (arg2 : arg) (imod : imod) (rmod : rmod) (env : env) : rmod * rarg * rarg =
   let carg1, rarg1 = (compile_arg arg1 env) in
   let carg2, rarg2 = (compile_arg arg2 env) in
