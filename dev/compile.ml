@@ -9,16 +9,14 @@ open Analyse
 exception CTError of string
 
 
-let compile_label (args : arg list) (env : env) : instruction list =
-  let compile_label_aux (arg : arg) (env : env) : instruction list =
-    match arg with
-    | AStore (s) ->
-      let _, _, lenv = env in
-      (match List.assoc_opt s lenv with
-      | Some l -> [ILAB (l)]
-      | None -> raise (CTError (sprintf "unbound variable %s in lenv" s)) )
-    | _ -> [] in
-  List.fold_left (fun res i -> res @ (compile_label_aux i env)) [] args
+let compile_label (arg : arg) (env : env) : instruction list =
+  match arg with
+  | AStore (s) ->
+    let _, _, lenv = env in
+    (match List.assoc_opt s lenv with
+    | Some l -> [ILAB (l)]
+    | None -> raise (CTError (sprintf "unbound variable %s in lenv" s)) )
+  | _ -> []
 
 
 let compile_arg (arg : arg) (env : env) : carg * rarg =
@@ -85,7 +83,7 @@ let compile_cond2 (cond : cond2) (mode : mcond) (a1 : arg) (a2 : arg) : opcode *
 
 let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) : instruction list =
   match cond with
-  | Cond0 -> raise (CTError (sprintf "Cond0 is not available on condition"))
+  | Cond0 -> []
   | Cond1 (op, a2) ->
     let a1 = ALab (MDir, label) in
     let opcode = (compile_cond1 op mode) in
@@ -125,7 +123,7 @@ let rec compile_expr (e : tag eexpr) (env : env) : instruction list =
   | EPrim2 (op, imod, arg1, arg2, _) ->
     let opcode = (compile_prim2 op) in
     let rmod, rarg1, rarg2 = (compile_args arg1 arg2 imod RI env) in
-    (compile_label [arg1; arg2] env) @ [INSTR (opcode, rmod, rarg1, rarg2)]
+    (compile_label arg1 env) @  (compile_label arg2 env) @ [INSTR (opcode, rmod, rarg1, rarg2)]
   | EFlow1 (op, cond, exp, tag) ->
     (match op with
     | Repeat ->
