@@ -1,0 +1,8 @@
+;redcode-94t
+;SAL's Tourney Hill Specs
+;use pmars -@ 94t.opt file1 [files...]
+
+-s 8192        ;coresize
+-p 8000        ;max. processes
+-c 100000      ;cycles
+-l 300         ;warrior length

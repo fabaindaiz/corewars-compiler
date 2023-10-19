@@ -155,6 +155,7 @@ let rec compile_expr (e : tag eexpr) (env : env) : instruction list =
 
 let prelude = "
 ;redcode-94b
+
 "
 
 let epilogue = [INSTR (IDAT, RN, RNone, RNone)]

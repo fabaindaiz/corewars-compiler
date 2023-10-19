@@ -1,0 +1,8 @@
+;redcode-tinylp
+;SAL's Tiny LP Hill Specs
+;use pmars -@ tinylp.opt file1 [files...]
+
+-s 800         ;coresize
+-p 800         ;max. proc.
+-c 8           ;cycles
+-l 50          ;warrior length

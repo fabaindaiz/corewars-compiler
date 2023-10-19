@@ -1,0 +1,856 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+<title>Core War Frequently Asked Questions (rec.games.corewar
+FAQ)</title>
+<style type="text/css"><!--
+  BODY { color: black; background: white; }
+  A:link { color: blue; text-decoration: none; }
+  A:visited { color: purple; text-decoration: none; }
+  A:active { color: aqua; text-decoration: none; }
+  H1 { text-align: center; }
+  CODE { font-weight: bold; }
+  .code88, .code94 { color: navy; font-weight: bold; }
+  .comment { color: green; }
+  .command { color: green; }
+  .label { color: green; }
+  .macro { color: navy; font-weight: bold; }
+  P { text-align: justify; }
+  LI { text-align: justify; }
+  DT { font-weight: bold; }
+  table {border-collapse: collapse;}
+  tr:nth-child(odd) {background: ghostwhite;}
+  th {background: gainsboro;}
+--></style>
+</head>
+
+<body>
+<h1>Core War Frequently Asked Questions (rec.games.corewar FAQ)</h1>
+
+<p>These are the Frequently Asked Questions (and answers) for the programming game Core War.</p>
+
+<h3><a name="TOC">Table of Contents</a></h3>
+<ol>
+<li><a href="#WhatIsCoreWar">What is Core War</a></li>
+
+<li><a href="#IsItCoreWar">Is it "Core War", "Core Wars" or "Corewar"?</a></li>
+
+<li><a href="#WhereCanIFind">Where can I find more information about Core War?</a></li>
+
+<li><a href="#CoreWarHasChanged">Core War has changed since Dewdney's articles.
+Where do I get a copy of the current instruction set?</a></li>
+
+<li><a href="#WhatIsICWS94">What is ICWS'94?</a></li>
+
+<li><a href="#WhatIsTheICWS">What is the ICWS?</a></li>
+
+<li><a href="#WhatIsCoreWarrior">What is <cite>Core Warrior</cite>?</a></li>
+
+<li><a href="#WhereAreTheArchives">Where are the Core War archives?</a></li>
+
+<li><a href="#CoreWarSystems">Where can I find a Core War system?</a></li>
+
+<li><a href="#WarriorCode">Where can I find warrior code?</a></li>
+
+<li><a href="#IDoNotHaveAccess">I do not have access to Usenet. How can I read the Core War newsgroup?</a> </li>
+
+<li><a href="#WWWSites">Are there any Core War related WWW sites?</a></li>
+
+<li><a href="#WhatIsKotH">What is KotH? How do I enter?</a></li>
+
+<li><a href="#IsItDAT0">Is it <code class= 
+"code88">DAT 0, 0</code> or <code class="code88">DAT #0, #0</code>?
+How do I compare to core under ICWS'88 rules?</a></li>
+
+<li><a href="#HowDoesSLTwork">How does
+<code class="code88">SLT</code> (Skip if Less Than) work?</a></li>
+
+<li><a href="#Evaluation">What is the
+difference between in-register and in-memory evaluation?</a></li>
+
+<li><a href="#pSpace">What is P-space?</a></li>
+
+<li><a href="#assert">What does "Missing ;assert" in my message from KotH mean?</a></li>
+
+<li><a href="#codeformat">How should I format my code?</a></li>
+
+<!--
+
+<li><a href="#resources">Are there any other
+Core War related resources I should know about?</a></li>
+
+<li><a href="#WhatDoesMean">What does
+(expression or term of your choice) mean?</a></li>
+
+<li><a href="#OtherQuestions">Other
+questions?</a></li>
+
+-->
+
+</ol>
+
+<hr>
+
+<h3><a name="WhatIsCoreWar">1. What is Core War?</a></h3>
+
+<p>Core War is a game played by two or more programs (and vicariously
+by their authors) written in an assembly language called Redcode
+and run in a virtual computer called MARS (for Memory Array Redcode
+Simulator). The object of the game is to cause all processes of the
+opposing program to terminate, leaving your program in sole
+posession of the machine.</p>
+
+<p>There are Core War systems available for most computer
+platforms. Redcode has been standardized by the <a href= 
+"#WhatIsTheICWS">ICWS</a>, and is therefore transportable between
+all standard Core War systems.</p>
+
+<p>The system in which the programs run is quite simple. The <em>
+core</em> (the memory of the simulated computer) is a continuous
+array of instructions, empty except for the competing programs. The
+core wraps around, so that after the last instruction comes the
+first one again.</p>
+
+<p>There are no absolute addresses in Core War. All addresses are
+relative. That is, the address <code>0</code> doesn't mean the
+first instruction in the memory, but the instruction that contains
+the address <code>0</code>. The next instruction is <code>1</code>,
+and the previous one obviously
+<code>-1</code>. However, all numbers are treated as positive, and
+are in the range <code>0</code> to <code>CORESIZE-1</code> where
+<code>CORESIZE</code> is the amount of memory locations in the core
+- this means that <code>-1</code> would be treated as <code>
+CORESIZE-1</code> in any arithmetic operations, e.g. <code>3218 +
+7856 = (3218 + 7856) <strong>mod</strong> CORESIZE</code>. Many
+people get confused by this, and it is particularly important when
+using the <code class="code88"><a href="#HowDoesSLTwork">
+SLT</a></code> instruction. Note that the source code of a program
+can still contain negative numbers, but if you start using
+instructions like <code class="code94">DIV #-2, #5</code> it is
+important to know what effect they will have when executed.</p>
+
+<p>The basic unit of memory in Core War is one instruction. Each
+Redcode instruction contains three parts:</p>
+
+<ul>
+<li>the opcode</li>
+
+<li>the source address (a.k.a. the A-field)</li>
+
+<li>the destination address (a.k.a. the B-field)</li>
+</ul>
+
+<p>The execution of the programs is equally simple. The MARS executes
+one instruction at a time, and then proceeds to the next one in the
+memory, unless the instruction explicitly tells it to jump to
+another address. If there is more than one program running, (as is
+usual) the programs execute alternately, one instruction at a time.
+The execution of each instruction takes the same time, one cycle,
+whether it is <code class="code88">MOV</code>, <code class="code94">DIV</code>
+or even <code class="code88">DAT</code> (which kills the process).</p>
+
+<p>Each program may have several processes running. These processes
+are stored in a task queue. When it is the program's turn to
+execute an instruction it dequeues a process and executes the
+corresponding instruction. Processes that are not killed during the
+execution of the instruction are put back into the task queue.
+Processes created by a <code class="code88">SPL</code> instruction
+are added to the task queue <em>after</em> the creating process is
+put back into the task queue.</p>
+
+<hr>
+
+<h3><a name="IsItCoreWar">2. Is it "Core War", "Core Wars" or "Corewar"?</a></h3>
+
+<p>All three terms are used. A. K. Dewdney used Core War. Other early
+references use Core Wars. Lately, people seem to prefer "Corewar".</p>
+
+<hr>
+
+<h3><a name="WhereCanIFind">3. Where can I find more information
+about Core War?</a></h3>
+
+<p>Core War was first described in the <cite>Core War
+Guidelines</cite> of March, 1984 by D. G. Jones and A. K. Dewdney
+of the Department of Computer Science at The University of Western
+Ontario (Canada). Dewdney wrote several "Computer Recreations"
+articles in <cite>Scientific American</cite> which discussed Core
+War, starting with the May 1984 article. Those articles are
+contained in two anthologies:</p>
+
+<table class="datatable">
+<thead>
+<tr>
+<th>Author</th>
+<th>Title</th>
+<th>Published</th>
+<th>ISBN</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Dewdney, A. K.</td>
+<td>The Armchair Universe:<br>An Exploration of Computer Worlds</td>
+<td>New York: W. H. Freeman &copy; 1988</td>
+<td>0-7167-1938-X (Hardcover)<br>0-7167-1939-8 (Paperback)</td>
+</tr>
+
+<tr>
+<td>Dewdney, A. K.</td>
+<td>The Magic Machine:<br>A Handbook of Computer Sorcery</td>
+<td>New York: W. H. Freeman &copy; 1990</td>
+<td>0-7167-2125-2 (Hardcover)<br>0-7167-2144-9 (Paperback)</td>
+</tr>
+</tbody>
+
+</table>
+
+<p>A.K. Dewdney's articles are still the most readable introduction
+to Core War, even though the Redcode dialect described in there is
+no longer current. You can view a scanned version of the articles at
+<a href="http://www.koth.org/info/sciam/">
+http://www.koth.org/info/sciam/</a>. For those who are interested,
+Dewdney has a home page at
+<a href="https://www.csd.uwo.ca/~akd/">
+https://www.csd.uwo.ca/~akd/</a>.</p>
+
+<hr>
+
+<h3><a name="CoreWarHasChanged">4. Core War has changed since
+Dewdney's articles. Where do I get a copy of the current
+instruction set?</a></h3>
+
+<p>A draft of the official standard (ICWS'88) is available at <a href= 
+"https://corewar.co.uk/standards/icws88.txt">
+https://corewar.co.uk/standards/icws88.txt</a>.
+This document is formatted awkwardly and contains ambiguous
+statements. For a more approachable intro to Redcode, take a look
+at Mark Durham's tutorials, <a href="http://www.koth.org/info/tutorial1.html">
+http://www.koth.org/info/tutorial1.html</a> and <a href= 
+"http://www.koth.org/info/tutorial2.html">
+http://www.koth.org/info/tutorial2.html</a>.</p>
+
+<p>Steven Morrell has prepared a more practically oriented Redcode
+tutorial that discusses different warrior classes with lots of
+example code. This and various other tutorials can be found at <a
+href="http://www.koth.org/info.html">
+http://www.koth.org/info.html</a>.</p>
+
+<p>Even though ICWS'88 is still the "official" standard, you will
+find that most people are playing by <a href="#WhatIsICWS94">
+ICWS'94 draft</a> rules and extensions.</p>
+
+<hr>
+
+<h3><a name="WhatIsICWS94">5. What is ICWS'94?</a></h3>
+
+<p>In 1992 work began on a draft proposal for a new Core War standard,
+dubbed ICWS'94, to be submitted to the <a href="#WhatIsTheICWS">ICWS</a>
+for evaluation. Unfortunately, the ICWS became inactive and the proposal
+was never officially adopted. The draft proposal has become widely accepted
+as the <i>de facto</i> Core War standard.</p>
+
+<p>A major change is the addition of "instruction modifiers" that allow
+instructions to modify A-field, B-field or both. Also new are new
+addressing modes and unrestricted opcode and addressing mode combination
+("no illegal instructions"). ICWS'94 is backwards compatible; i.e. ICWS'88
+warriors will run correctly on an ICWS'94 system. The ICWS'94 draft
+is available at
+<a href="http://www.koth.org/info/icws94.html">http://www.koth.org/info/icws94.html</a>.</p>
+
+<hr>
+<h3><a name="WhatIsTheICWS">6. What is the ICWS?</a></h3>
+
+<p>The "International Core Wars Society" (ICWS) was established in 1985,
+the year after Core War first appeared in <cite>Scientific American</cite>.
+The ICWS was responsible for the creation of two Core War standards
+(ICWS'86 and ICWS'88) and the running of eight annual Core War
+tournaments. The ICWS is no longer active.</p>
+
+<hr>
+
+<h3><a name="WhatIsCoreWarrior">7. What is <cite>Core
+Warrior</cite>?</a></h3>
+
+<p>Following in the tradition of <cite>The Core War News
+Letter</cite>, <cite>Push Off</cite>, and <cite>The 94
+Warrior</cite>, <cite>Core Warrior</cite> was a newsletter covering
+strategies and current standings in Core War. Started in October
+1995, back issues of <cite>Core Warrior</cite> are available at
+<a href="https://corewar.co.uk/cw">https://corewar.co.uk/cw</a>.
+The final issue of <cite>Core Warrior</cite> was published in
+May 2007. There is a <cite>Core Warrior</cite> index
+at <a href="http://www.shadowmagic.org.uk/corewar/warrior.html">
+http://www.shadowmagic.org.uk/corewar/warrior.html</a>
+which has a summary of the contents of each issue. Many of the
+earlier issues contain useful information for beginners.</p>
+
+<hr>
+<h3><a name="WhereAreTheArchives">8. Where are the Core War
+archives?</a></h3>
+
+<p>Many documents such as the guidelines, the ICWS standards,
+previous tournament Redcode entries and Core War systems are
+available via ftp from
+<a href="ftp://ftp.koth.org/pub/corewar">
+ftp://ftp.koth.org/pub/corewar</a>.</p>
+
+<p>Past rec.games.corewar postings (including Redcode source listings)
+are archived at <a href="https://corewar.co.uk/rgc.htm">
+https://corewar.co.uk/rgc.htm</a>.</p>
+
+<hr>
+<h3><a name="CoreWarSystems">9. Where can I find a Core War system?</a></h3>
+
+<p><strong>CAUTION!</strong> There are many Core War systems available
+which are not <a href="#WhatIsICWS94">ICWS'94</a>
+(or ICWS'88) compatible. Generally, the older the program - the less
+likely it will be ICWS compatible. The three most popular systems which
+support ICWS'94 are pMARS, CoreWin and ARES.</p>
+
+<p>pMARS (with binaries for Windows) is available from:</p>
+
+<ul>
+<li><a href="https://corewar.co.uk/pmars.htm">
+https://corewar.co.uk/pmars.htm</a></li>
+<li><a href="http://www.koth.org/pmars">
+http://www.koth.org/pmars</a></li>
+<li><a href="https://sourceforge.net/projects/corewar">
+https://sourceforge.net/projects/corewar</a></li>
+<li><a href="https://corewar.co.uk/pihlaja/pmars-sdl">
+https://corewar.co.uk/pihlaja/pmars-sdl</a></li>
+</ul>
+
+<p>CoreWin is a full-featured, GUI-based Core War simulator for Windows:</p>
+
+<ul>
+<li><a href="https://corewar.co.uk/wendell">https://corewar.co.uk/wendell</a></li>
+</ul>
+
+<p>ARES is an IDE and Core War simulator for Windows with some experimental
+features:</p>
+
+<ul>
+<li><a href="https://harald.ist.org/sites/ares/">https://harald.ist.org/sites/ares/</a></li>
+</ul>
+
+
+<p>There are several notable MARS suitable for embedding or use
+in an evolver. Joonas Pihlaja wrote exhaust which Martin Ankerl later rewrote
+as exMARS:</p>
+
+<ul>
+<li><a href="https://corewar.co.uk/pihlaja/exhaust">https://corewar.co.uk/pihlaja/exhaust</a></li>
+<li><a href="https://corewar.co.uk/ankerl/exmars.htm">https://corewar.co.uk/ankerl/exmars.htm</a></li>
+</ul>
+
+<p>PyCorewar is simple Python library for debugging and benchmarking Core War programs:</p>
+
+<ul>
+<li><a href="https://corewar.co.uk/gutzeit/pycorewar">https://corewar.co.uk/gutzeit/pycorewar</a></li>
+</ul>
+
+<p>corewar.io is an online interactive Core War simulator and debugger:</p>
+
+<ul>
+<li><a href="https://www.corewar.io">https://www.corewar.io</a></li>
+</ul>
+
+<hr>
+
+<h3><a name="WarriorCode">10. Where can I find warrior code?</a></h3>
+
+<p>To learn the game it is a good idea to study previously posted warrior code.
+Damien "Planar" Doligez has a well organized library of the warriors published before 2002 at
+<a href="http://para.inria.fr/~doligez/corewar/">http://para.inria.fr/~doligez/corewar/</a>
+(<a href="http://www.koth.org/planar/index.html">mirror</a>).</p>
+
+<p>The most up-to-date collection of warrior code is available on Christoph C. Birk's
+Koenigstuhl infinite hills at
+<a href="https://users.obs.carnegiescience.edu/birk/COREWAR/koenigstuhl.html">
+https://users.obs.carnegiescience.edu/birk/COREWAR/koenigstuhl.html</a>
+(<a href="http://koth.org/users.obs.carnegiescience.edu/birk/COREWAR/koenigstuhl.html">mirror</a>).</p>
+
+
+<hr>
+<h3><a name="IDoNotHaveAccess">11. I do not have access to Usenet.
+How can I read the Core War newsgroup?</a></h3>
+
+<p>To receive rec.games.corewar articles by email, join the COREWAR-L
+list run on the KOTH.org list processor. To join, send the message</p>
+
+<pre>SUB COREWAR-L FirstName LastName</pre>
+
+<p>to <a href="mailto:listproc@koth.org">listproc@koth.org</a>. You
+can send mail to <a href="mailto:corewar-l@koth.org">
+corewar-l@koth.org</a> to post even if you are not a member of the
+list.</p>
+
+<p>Google Groups provides a gateway to Usenet and rec.games.corewar at
+<a href="https://groups.google.com/group/rec.games.corewar">https://groups.google.com/group/rec.games.corewar</a>.</p>
+
+<hr>
+<h3><a name="WWWSites">12. Are there any Core War related WWW sites?</a></h3>
+
+<p>You bet. The following websites offer convenient access to software,
+tutorials, past newsletters and warrior code:</p>
+
+<ul>
+<li><a href="https://users.obs.carnegiescience.edu/birk/COREWAR">https://users.obs.carnegiescience.edu/birk/COREWAR</a></li>
+<li><a href="http://para.inria.fr/~doligez/corewar">http://para.inria.fr/~doligez/corewar</a></li>
+<li><a href="http://www.koth.org">http://www.koth.org</a></li>
+<li><a href="https://corewar.co.uk">https://corewar.co.uk</a></li>
+<li><a href="http://newton.freehostia.com/net/corewar">http://newton.freehostia.com/net/corewar</a></li>
+<li><a href="http://www.corewar.info">http://www.corewar.info</a></li>
+</ul>
+
+<hr>
+
+<h3><a name="WhatIsKotH">13. What is KotH? How do I enter?</a></h3>
+
+<p>King Of The Hill (KotH) is an ongoing Core War tournament
+available to anyone with email. You enter by submitting a
+Redcode program (warrior) with special comments via plain text
+email. You will receive a reply indicating how well your program did
+against the current top programs "on the hill".</p>
+
+<p>There are two styles of KotH tournaments, "classical" and
+"multi-warrior". The "classical" KotH is a one-on-one tournament,
+that is your warrior will play a set number of battles against each
+of the programs currently on the Hill. You normally receive
+3 points for each win and 1 point for each tie. All scores are
+updated to reflect your battles and the programs on the hill are ranked
+from high to low. If you are in last place you are pushed off the hill,
+otherwise someone else is pushed off.</p>
+
+<p>In "multi-warrior" KotH, all warriors on the hill fight each
+other at the same time. Score calculation is a bit more complex
+than for the one-on-one tournament. Briefly, points are awarded
+based on how many warriors survive until the end of a round. A
+warrior that survives by itself gets more points than a warrior
+that survives together with other warriors. The
+<a href="http://www.koth.org/pmars">pMARS documentation</a>
+has more information on multi-warrior scoring.</p>
+
+<p>The idea for an email-based Core War server came from David Lee.
+The original KotH was developed and run by William Shubert at Intel
+starting in December 1991 and discontinued after almost three years
+of service.</p>
+
+<p>Currently, KotHs offering a wide variety of hills are are running at two sites:
+<a href="http://koth.org">KOTH.org</a> is maintained by Scott J. Ellentuch
+and <a href="https://sal.discontinuity.info">sal.discontinuity.info</a>
+by Barkley Vowk. The way
+you submit warriors to both KotHs is pretty much the same.</p>
+
+<h4>Entry Rules for King of the Hill Core War</h4>
+
+<ul>
+<li>Write a Core War program. KotH is fully ICWS '94 compatible,
+<strong>EXCEPT</strong> that a comma (",") is required between two arguments.</li>
+
+<li>Put a line starting with "<code class="command">;redcode</code>"
+(or "<code class="command">;redcode-94</code>", etc., see below) at
+the top of your program. This <strong>MUST</strong> be the first line.
+Anything before it will be lost. Additionally, a
+"<code class="command">;name &lt;program name&gt;</code>" and
+"<code class="command">;author &lt;your name&gt;</code>" are required.
+You can also describe the algorithm you use if you have lines
+beginning with "<code class="command">;strategy</code>".</li>
+
+<li>Email this file as plain text to <a href="mailto:koth@koth.org">
+koth@koth.org</a> or <a href="mailto:koth@sal.discontinuity.info">
+koth@sal.discontinuity.info</a>.</li>
+
+<li>Within a few minutes you should receive an email telling you
+whether your program assembled correctly or not. If it did assemble,
+sit back and wait; if not, make the change required and re-submit.</li>
+
+<li>In 15 minutes or so you should get more mail telling you how your
+program performed against the current top programs. If no news arrives
+during that time, don't worry; entries are put in a queue and run
+through the tournament one at a time. A backlog may develop. Be
+patient.</li>
+</ul>
+
+<h4>Sample Entry</h4>
+
+<pre class="code88">
+<span class="command">;redcode
+;name Imp
+;author A. K. Dewdney
+;strategy the simplest Redcode program able to relocate itself</span>
+
+    <span class="label">imp</span>       mov   imp, imp+1
+
+              end   <span class="comment">; nothing after the end instruction will be assembled</span>
+</pre>
+
+<p>If your program makes it onto the hill, you will get mail every
+time a new program makes it onto the hill. If this is too much
+mail you can switch to quiet mode. See the KotH information at
+<a href="http://www.koth.org/koth.html">http://www.koth.org/koth.html</a>
+or <a href="https://sal.discontinuity.info/help.html">https://sal.discontinuity.info/help.html</a>
+for more details.</p>
+
+<p>Often programmers want to try out slight variations in their
+programs. If you already have a program named "<code>foo
+v1.0</code>" on the hill, adding the line "<code class=
+"command">;kill foo</code>" to a new program will automatically
+bump <code>foo v1.0</code> off the hill. Just "<code class=
+"command">;kill</code>" will remove all of your programs when you
+submit the new one. The server kills programs by assigning an
+impossibly low score; it may therefore take another successful
+challenge before a killed program is actually removed from the
+hill.</p>
+
+<h4>Popular Hills</h4>
+
+<table class="datatable">
+
+<thead>
+<tr>
+<th>Hill Name</th>
+<th>Hill Size</th>
+<th>Core Size</th>
+<th>Max. Processes</th>
+<th>Cycles Before Tie</th>
+<th>Max. Length</th>
+<th>Min. Distance</th>
+<th>Rounds Fought</th>
+<th>Instr. Set</th>
+</tr>
+</thead>
+
+<tbody>
+<tr align="RIGHT">
+<td align="LEFT">KOTH.org's '88 Standard Hill ("<code class="command">;redcode</code>")</td>
+<td>20</td>
+<td>8000</td>
+<td>8000</td>
+<td>80000</td>
+<td>100</td>
+<td>100</td>
+<td>250</td>
+<td align="LEFT">ICWS '88</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">KOTH.org's '94 Standard Hill ("<code class="command">;redcode-94</code>")</td>
+<td>20</td>
+<td>8000</td>
+<td>8000</td>
+<td>80000</td>
+<td>100</td>
+<td>100</td>
+<td>250</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">KOTH.org's '94 No Pspace Hill ("<code class="command">;redcode-94nop</code>")</td>
+<td>20</td>
+<td>8000</td>
+<td>8000</td>
+<td>80000</td>
+<td>100</td>
+<td>100</td>
+<td>250</td>
+<td align="LEFT">ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">KOTH.org's '94 Big Hill ("<code class="command">;redcode-94x</code>")</td>
+<td>20</td>
+<td>55440</td>
+<td>10000</td>
+<td>500000</td>
+<td>200</td>
+<td>200</td>
+<td>250</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">KOTH.org's '94 Multiwarrior Hill ("<code class="command">;redcode-94m</code>")</td>
+<td>10</td>
+<td>8000</td>
+<td>8000</td>
+<td>80000</td>
+<td>100</td>
+<td>100</td>
+<td>500</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">SAL's Beginner's Hill ("<code class="command">;redcode-94b</code>")</td>
+<td>25</td>
+<td>8000</td>
+<td>8000</td>
+<td>80000</td>
+<td>100</td>
+<td>100</td>
+<td>6 &times; 250</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">SAL's Tiny Hill ("<code class="command">;redcode-tiny</code>")</td>
+<td>25</td>
+<td>800</td>
+<td>800</td>
+<td>8000</td>
+<td>20</td>
+<td>20</td>
+<td>6 &times; 250</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">SAL's Nano Hill ("<code class="command">;redcode-nano</code>")</td>
+<td>50</td>
+<td>80</td>
+<td>80</td>
+<td>800</td>
+<td>5</td>
+<td>5</td>
+<td>30 &times; 250</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+
+<tr align="RIGHT">
+<td align="LEFT">SAL's Limited Process (LP) Hill ("<code class="command">;redcode-lp</code>")</td>
+<td>25</td>
+<td>8000</td>
+<td>8</td>
+<td>80000</td>
+<td>200</td>
+<td>200</td>
+<td>6 &times; 250</td>
+<td align="LEFT">Extended ICWS '94</td>
+</tr>
+</tbody>
+
+</table>
+
+<p><strong>Note:</strong> Warriors on the beginner's hill are
+retired at age 50.</p>
+
+<hr>
+
+<h3><a name="IsItDAT0">14. Is it <code class="code88">DAT 0,
+0</code> or <code class="code88">DAT #0, #0</code>? How do I
+compare to core under ICWS'88 rules?</a></h3>
+
+<p>Core is initialized to <code class="code88">DAT 0, 0</code>.
+Under ICWS'88 rules this is an illegal instruction and
+'88 standard assemblers will not assemble it, only
+<code class="code88">DAT #0, #0</code>. This begs the question,
+how to compare something to see if it is empty core under
+ICWS'88 rules? The answer is, the instructions before your
+warrior's first instruction and after your warrior's last
+instruction are most likely <code class="code88">DAT 0, 0</code>.
+So you can use them, or any other unmodified instructions, for
+comparison.</p>
+
+<p>Note: under <a href="#WhatIsICWS94">ICWS'94</a> rules
+<code class="code94">DAT 0, 0</code> is a legal instruction
+and '94 standard assemblers will assemble
+<code class="code88">DAT 0, 0</code>.</p>
+
+<hr>
+
+<h3><a name="HowDoesSLTwork">15. How does <code class="code88">
+SLT</code> (Skip if Less Than) work?</a></h3>
+
+<p><code class="code88">SLT</code> skips the next instruction if
+the value of the A-operand is less than value of the B-operand.
+<code class="code88">SLT</code> can sometimes cause confusion
+because of the way modular arithmetic works. It is important to
+note that all negative numbers are converted to positive numbers
+before a battles begins. For example, <code>-1</code> becomes <code>
+CORESIZE-1</code>.</p>
+
+<p>Once you realize that all numbers are treated as positive, it is
+clear what is meant by "less than". It should also be clear that no
+number is less than zero.</p>
+<hr>
+
+<h3><a name="Evaluation">16. What is the difference between
+in-register and in-memory evaluation?</a></h3>
+
+<p>These terms refer to the way instruction operands are evaluated.
+The '88 Redcode standard ICWS'88 is unclear about whether a
+simulator should "buffer" the result of A-operand evaluation before
+the B-operand is evaluated. Simulators that do buffer are said to
+use in-register evaluation, those that don't, in-memory evaluation.
+<a href="#WhatIsICWS94">ICWS'94</a> clears this confusion by
+mandating in-register evaluation. Instructions that execute
+differently under these two forms of evaluation are <code class= 
+"code88">MOV</code>, <code class="code88">ADD</code>, <code class= 
+"code88">SUB</code>, <code class="code88">MUL</code>, <code class= 
+"code88">DIV</code> and <code class="code88">MOD</code> where <em>
+the effective address of the A-operand is modified by evaluation of
+the B-operand</em>. This is best illustrated by an example:</p>
+
+<pre class="code88">
+   <span class="label">L1</span>  mov L2, &lt;L2
+   <span class="label">L2</span>  dat #0, #1
+</pre>
+
+<p>Under in-register evaluation, the <code class="code88">L2</code>
+instruction is saved in a buffer before the <code>L2</code> memory
+location is decremented by evaluation of the B-operand of <code
+class="code88">L1</code>. The saved <code class="code88">DAT
+#0,#1</code> instruction is then written to <code class="code88">
+<span class="label">L2</span></code>, leaving it unchanged.</p>
+
+<p>Under in-memory evaluation, the <code class="code88"><span
+class="label">L2</span></code> instruction is not buffered and thus
+decremented by evaluation of the B-operand. After execution of
+<code class="code88"><span class="label">L1</span></code>, <code
+class="code88"><span class="label">L2</span></code> changes to
+<code class="code88">DAT #0,#0</code>.</p>
+<hr>
+
+<h3><a name="pSpace">17. What is P-space?</a></h3>
+
+<p>P-space is a separate area of memory which only your program's
+processes can access. The contents of each P-space cell are
+preserved between rounds in a multi-round match. Unlike core memory
+each P-space cell can only store one number, not a whole
+instruction. Also the addressing in P-space is absolute, i.e.
+P-space address <code>1</code> is always <code>1</code> regardless
+of where the instruction is referenced from.</p>
+
+<p>P-space can only be accessed by two special instructions,
+<code class="code94">LDP</code> and <code class="code94">STP</code>.
+The syntax of these two instructions is a bit unusual. <code
+class="code94">STP</code> has an ordinary number in
+core as its source which is put into the P-space cell pointed
+to by the destination. The P-space cell isn't determined by
+the destination <em>address</em>, but by its <em>value</em>, i.e.
+the value that would be overwritten if this were a <code class= 
+"code94">MOV</code>. So <code class="code94">STP.AB #Q, #R</code>
+would put the number Q into the <em>P-space cell</em> R
+<strong>mod</strong> <code>PSPACESIZE</code>. Similarly,</p>
+
+<pre class="code94">
+        stp.b  2, 3
+        dat    0, 0
+        dat    0, 9
+        dat    0, 7
+</pre>
+
+<p>would put the number 9 into the P-space cell <strong>7</strong>.
+<code class="code88">LDP</code> works the same way, except
+the source is a P-space cell and the destination is a field in core.</p>
+
+<p>The P-space cell <code>0</code> is a special
+cell. It is initialized to a special value before each round.
+This value is:</p>
+
+<ul>
+<li><code>-1</code> (or <code>CORESIZE-1</code>) at the beginning
+of the first round</li>
+
+<li><code>0</code> if the program died in the previous round</li>
+
+<li>The number of surviving programs if the program did not die in
+the previous round</li>
+</ul>
+
+<p>This means that for one-on-one matches, loss=0, win=1 and
+tie=2.</p>
+
+<p>The default size of P-space is 1/16 of the core size. This size
+is the value of the predefined variable <code>PSPACESIZE</code>.
+All cells in P-space (except for cell <code>0</code>) are initialized
+to <code>0</code>.</p>
+
+<hr>
+
+<h3><a name="assert">18. What does "Missing <code class="command">;assert</code>"
+in my message from KotH mean?</a></h3>
+
+<p>This means you have omitted an "<code class=
+"command">;assert</code>" line in your submission. "<code class= 
+"command">;assert</code>" is used to specify which environments
+your code will work under or was designed for. For example, if your
+warrior was written for the '94 draft hill then you can put:</p>
+
+<pre class="code94">
+<span class="command">;assert CORESIZE==8000</span>
+</pre>
+
+<p>in your code, meaning that an error will occur if you attempt to
+compile the code for a different core size. If you don't want to
+use the features of "<code class="command">;assert</code>" and you
+want to get rid of the annoying warning just put:</p>
+
+<pre class="code94">
+<span class="command">;assert 1</span>
+</pre>
+
+<p>in your code, which means it will compile unconditionally.</p>
+
+<hr>
+
+<h3><a name="codeformat">19. How should I format my code?</a></h3>
+
+<p>The way you format your code is really your own choice.
+If you are new to the game then use the style you feel most
+comfortable with. However, using a common format helps others to
+understand your code quicker. Most players tend to use the
+following conventions when writing code:</p>
+
+<ul>
+
+<li>use meaningful label names</li>
+
+<li>enclose <code>EQU</code>ate expressions in parentheses, e.g.
+<code>step equ (2430+5)</code></li>
+
+<li>use lower case for label names and opcodes</li>
+
+<li>don't add opcode modifiers if you don't need to, e.g. <code
+class="code94">add.ab #1, #2</code> is the same as <code class= 
+"code94">add #1, #2</code></li>
+
+<li>use whitespace after every comma</li>
+
+<li>use tabs to align the opcodes, the instruction field(s) and any
+comments</li>
+
+<li>do not use <strong>$</strong> (direct addressing mode) or
+<strong>:</strong> (suffix of some labels)</li>
+
+</ul>
+
+<hr>
+
+<h3><a name="Credits">Credits</a></h3>
+
+<p>Additions, corrections, etc. to this document are solicited. Thanks
+in particular to the following people who have contributed major portions
+of this document:</p> 
+
+<ul>
+<li>Mark Durham (wrote the original version of the FAQ)</li>
+<li>Paul Kline</li>
+<li>Randy Graham</li>
+<li>Stefan Strack</li>
+<li>Anton Marsden</li>
+<li>Barkley Vowk</li>
+<li>John Metcalf</li>
+</ul>
+
+<p>Copyright &copy;  1991&ndash;2022  the Core War FAQ Contributors.
+Content of the FAQ is available under the GNU Free Documentation License, version 1.3.</p>
+
+</body>
+</html>
+
