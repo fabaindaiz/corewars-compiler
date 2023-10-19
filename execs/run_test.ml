@@ -37,16 +37,19 @@ let () =
     Compiler (fun s o -> fprintf o "%s" (compile_prog (parse_exp (sexp_from_string s))) ) in
   
   let bbc_tests =
+    let name : string = "compare" in
     let oracle : oracle = Expected in
     let runtime : runtime = Runtime compileout in
     let action : action = Compare in
-    tests_from_dir ~compiler ~oracle ~runtime ~ action "bbctests" in
+    tests_from_dir ~name ~compiler ~oracle ~runtime ~ action "bbctests" in
   
   let verify_tests =
+    let command =
+      unixcommand (fun s -> CCUnix.call "rt/pmars-0.9.4/pmars -A -@ rt/pmars-0.9.4/config/94b.opt %s" s) in
+    let name : string = "execute" in
     let oracle : oracle = Expected in
-    let runtime : runtime =
-      Runtime (unixcommand (fun s -> CCUnix.call "rt/pmars -A -@ rt/94b.opt %s" s)) in
+    let runtime : runtime = Runtime command in
     let action : action = Execute in
-    tests_from_dir ~compiler ~oracle ~runtime ~action "bbctests" in
+    tests_from_dir ~name ~compiler ~oracle ~runtime ~action "bbctests" in
   
-  run "Tests corewars-compiler" (ocaml_tests @ verify_tests)
+  run "Tests corewars-compiler" (ocaml_tests @ bbc_tests @ verify_tests)
