@@ -1,0 +1,8 @@
+;redcode-94xm
+;KOTH.org '94 Experimental Multiwarrior Hill Specs
+;use pmars -@ 94xm.opt file1 [files...]
+
+-s 55440       ;coresize
+-p 10000       ;max. proc.
+-c 500000      ;cycles
+-l 200         ;warrior length

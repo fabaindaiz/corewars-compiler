@@ -1,0 +1,675 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+<title>Core War Glossary</title>
+<style type="text/css"><!--
+  BODY { color: black; background: white; }
+  A:link { color: blue; text-decoration: none; }
+  A:visited { color: purple; text-decoration: none; }
+  A:active { color: aqua; text-decoration: none; }
+  H1 { text-align: center; }
+  CODE { font-weight: bold; }
+  .code88, .code94 { color: navy; font-weight: bold; }
+  .comment { color: green; }
+  .command { color: green; }
+  .label { color: green; }
+  .macro { color: navy; font-weight: bold; }
+  P { text-align: justify; }
+  LI { text-align: justify; }
+  DT { font-weight: bold; }
+  table {border-collapse: collapse;}
+  tr:nth-child(odd) {background: ghostwhite;}
+  th {background: gainsboro;}
+--></style>
+</head>
+
+<body>
+<h1>Core War Glossary</h1>
+
+<!-- to do list
+
+Add HSA, Mirrored Imps, TNT Bombs
+
+Add example code for a modern incendiary
+
+-->
+
+<p>A list of terms used in Core War along with a brief explanation.
+References to an X-like program mean that the term X is derived
+from the specific program X and has become a generic term.</p>
+
+<dl>
+
+<hr>
+
+<dt><a name="Airbag">Airbag</a></dt>
+
+<dd>A loop with carefully timed processes designed to detect when
+it's been damaged and allow some of the processes to jump to safety.</dd>
+
+<hr>
+
+<dt><a name="BScanner">B-Scanner</a></dt>
+
+<dd>A <a href="#Scanner">scanner</a> which only recognize non-zero B-fields. 
+
+<pre class="code88">
+    <span class="label">example</span>   add   #10, scan
+    <span class="label">scan</span>      jmz   example, 10
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="BinaryLaunch">Binary Launch</a></dt>
+
+<dd>One of several means to start an <a href="#ImpSpiral">imp-spiral</a> running. The
+fastest launch technique, but requires the most code. See also <a
+href="#JMPADDLaunch"><code class="code88">JMP</code>/<code class= 
+"code88">ADD</code> launch</a> and <a href="#VectorLaunch">vector
+launch</a>.
+
+<pre class="code88">
+    <span class="macro">impsize   equ 2667</span>
+
+    <span class="label">example</span>   spl   4                  <span class="comment">; extend by adding spl 8, spl 16, etc.</span>
+              spl   2
+              jmp   imp+(0*impsize)    <span class="comment">; jmp's execute in order</span>
+              jmp   imp+(1*impsize)
+              spl   2
+              jmp   imp+(2*impsize)
+              jmp   imp+(3*impsize)
+    <span class="label">imp</span>       mov   0, impsize         <span class="comment">; in '94 use -&gt; mov.i #0, impsize</span>
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="Blur">Blur</a></dt>
+
+<dd>A <a href="#Scanner">scanner</a> which attacks with a
+continuous <code class="code88">SPL</code> carpet
+from the scan loop.</dd>
+
+<hr>
+
+<dt><a name="Bomber">Bomber</a></dt>
+
+<dd>Blindly place bombs in a pattern through core hoping to hit
+the opponent. Common bombs include <code class="code88">DAT</code>
+bombs, <code class="code88">SPL</code> bombs,
+<a href="#StunBomb">stun bombs</a>  and
+<a href="#IncendiaryBomb">incendiary bombs</a>.</dd>
+
+<hr>
+
+<dt><a name="Bootstrapping">Bootstrapping</a></dt>
+
+<dd>Strategy of copying the active portion of the program away from
+the initial location, leaving a <a href="#Decoy">decoy</a> behind and making the
+relocated program as small as possible.</dd>
+
+<hr>
+
+<dt><a name="Brainwash">Brainwash</a></dt>
+
+<dd>Make the opponent execute code which will wipe its own
+<a href="#PSpace">p-space</a>. 
+
+<pre class="code94">
+    <span class="label">example</span>   stp   #0, #0
+              djn   example, example
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="C">c</a></dt>
+
+<dd>Measure of speed, equal to one location per cycle. Speed of
+light. E.g. a warrior that is 0.5c is one which can bomb or scan
+one location every two cycles.</dd>
+
+<hr>
+
+<dt><a name="CMPScanner"><code class="code88">
+CMP</code>-Scanner</a></dt>
+
+<dd>A <a href="#Scanner">scanner</a> which uses a <code class="code88">CMP</code>
+instruction to look for opponents. 
+
+<pre class="code88">
+    <span class="label">example</span>   add   step, scan
+    <span class="label">scan</span>      cmp   10, 30
+              jmp   attack
+              jmp   example
+    <span class="label">step</span>      dat   #20, #20
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="Color">Color</a></dt>
+
+<dd>Property of bombs making them visible to <a href="#Scanner">scanners</a>, causing them
+to attack useless locations, thus slowing them down. 
+
+<pre class="code88">
+    <span class="label">example</span>   dat   #100
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="CoreClear">Core-Clear</a></dt>
+
+<dd>Code that sequentially overwrites core with <code class="code88">DAT</code> instructions;
+usually the last part of a program.</dd>
+
+<hr>
+
+<dt><a name="DClear">D-Clear</a></dt>
+
+<dd>A <a href="#C">1c</a> <a href="#CoreClear">core-clear</a> which alternates between
+<code class="code88">DAT</code> bombs and decrementing core.
+
+<pre class="code94">
+    <span class="label">example</span>   ...
+
+              spl   0
+    <span class="label">clear</span>     mov   bomb,  >example
+              djn.f clear, >example
+
+    <span class="label">bomb</span>      dat   10
+</pre></dd>
+
+<hr>
+
+<dt><a name="Decoy">Decoy</a></dt>
+
+<dd>Bogus or unused instructions meant to slow down <a href="#Scanner">scanners</a>.
+Typically, <code class="code88">DAT</code>s with non-zero
+b-fields.</dd>
+
+<hr>
+
+<dt><a name="DecoyMaker">Decoy Maker</a></dt>
+
+<dd><p>Creates a <a href="#Decoy">decoy</a> at <a href="#C">3c</a> to slow down
+<a href="#Scanner">scanners</a> and <a href="#Qscan">quick scans</a>.</p>
+
+<pre class="code94">
+    <span class="macro">decoy     equ 4000</span>
+
+    <span class="label">example</span>   mov   {decoy+0,  &lt;decoy+2
+              mov   {decoy+3,  &lt;decoy+5
+              mov   {decoy+6,  &lt;decoy+8
+              mov   {decoy+9,  &lt;decoy+11
+              mov   {decoy+12, &lt;decoy+14
+              mov   {decoy+15, &lt;decoy+17
+</pre>
+</dd>
+
+<dt><a name="DecrementResistant">Decrement Resistant</a></dt>
+
+<dd>Property of programs making them functional (or at least
+partially functional) when overrun by a <a href="#DJNstream"><code class="code88">DJN</code>-stream</a>.</dd>
+
+<hr>
+
+<dt><a name="DJNstream"><code class="code88">DJN</code>-Stream
+(also <code class="code88">DJN</code>-Train)</a></dt>
+
+<dd>Using a <code class="code88">DJN</code> command to rapidly
+decrement core locations. 
+
+<pre class="code88">
+    <span class="label">example</span>   ...
+	
+              djn   example, &lt;4000
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="Dodger">Dodger</a></dt>
+
+<dd>A dodger tries to avoid the opponent's attack pattern
+either by jumping over an approaching <a href="#CoreClear">core-clear</a> or by copying
+itself over a location bombed by the opponent.</dd>
+
+<hr>
+<dt><a name="Dwarf">Dwarf</a></dt>
+
+<dd>A Dwarf-like program. The prototypical small <a href="#Bomber">bomber</a>.
+Dwarf was one of the example programs in A. K. Dewdney's first
+<cite>Computer Recreations</cite> column.</dd>
+
+<hr>
+
+<dt><a name="FScanner">F-Scanner</a></dt>
+
+<dd>A <a href="#Scanner">scanner</a> which recognizes non-zero a- or b-fields. 
+
+<pre class="code94">
+    <span class="label">example</span>   add   #10, scan
+    <span class="label">scan</span>      jmz.f example, 10
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="GateBusting">Gate-busting (also gate-crashing)</a></dt>
+
+<dd>A technique to "interweave" a decrement-resistant <a href="#ImpSpiral">imp-spiral</a>
+(e.g. <code class="code88">MOV 0, 2668</code>) with a standard one
+to overrun <a href="#ImpGate">imp-gates</a>.</dd>
+
+<hr>
+
+<dt><a name="Handshaking">Handshaking</a></dt>
+
+<dd>A handshaking program recognizes when it's fighting itself (or
+an ally) and causes one program to terminate to unnaturally increase
+the score of the other.</dd>
+
+<hr>
+
+<dt><a name="Hybrid">Hybrid</a></dt>
+
+<dd>Programs which combine two or more of the basic strategies,
+either in sequence (e.g. stone-&gt;paper) or in parallel (e.g.
+imp/stone).</dd>
+
+<hr>
+
+<dt><a name="Imp">Imp</a></dt>
+
+<dd>An Imp-like program. A program which only uses the
+<code class="code88">MOV</code> instruction. Imp was one of the
+example programs in A. K. Dewdney's first
+<cite>Computer Recreations</cite> column.
+
+<pre class="code88">
+    <span class="label">example</span>   mov   0, 1
+</pre>
+
+or 
+
+<pre class="code88">
+    <span class="label">example</span>   mov   0, 2
+              mov   0, 2
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="ImpGate">Imp-Gate</a></dt>
+
+<dd>A location in core which is bombed or decremented continuously
+so that an <a href="#Imp">imp</a> cannot pass. Also used to
+describe the program-code which maintains the gate. 
+
+<pre class="code88">
+    <span class="label">example</span>   ...
+
+              spl   0, &lt;example
+              dat   &lt;example, #0
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="ImpRing">Imp-Ring</a></dt>
+
+<dd>A minimal <a href="#ImpSpiral">imp-spiral</a>. For example an imp-ring with
+three points and three processes running in this sequence:
+
+<pre class="code88">
+    <span class="macro">impsize   equ 2667</span>                 <span class="comment">; (CORESIZE+1)/3</span>
+
+    <span class="label">a</span>         mov   0, impsize         <span class="comment">; copy self to b</span>
+    <span class="label">b</span>         mov   0, impsize         <span class="comment">; copy self to c</span>
+    <span class="label">c</span>         mov   0, impsize         <span class="comment">; copy self to a+1</span>
+</pre>
+
+One method of launching an imp-ring:
+
+<pre class="code88">
+    <span class="macro">impsize   equ 2667</span>
+
+    <span class="label">example</span>   spl   impsize+1
+              mov   example, impsize
+    <span class="label">imp</span>       mov   0, impsize
+</pre>
+
+</dd>
+
+<hr>
+
+<dt><a name="ImpSpiral">Imp-Spiral</a></dt>
+
+<dd>An <a href="#Imp">imp-like</a> program with multiple
+processes supporting each other. For example a three-point spiral,
+with six processes running in this sequence: 
+
+<pre class="code88">
+    <span class="macro">impsize   equ 2667</span>                 <span class="comment">; (CORESIZE+1)/3</span>
+
+    <span class="label">a</span>         mov   0, impsize         <span class="comment">; copy self to b</span>
+    <span class="label">b</span>         mov   0, impsize         <span class="comment">; copy self to c</span>
+    <span class="label">c</span>         mov   0, impsize         <span class="comment">; copy self to a+1</span>
+    <span class="label">a+1</span>       mov   0, impsize         <span class="comment">; copy self to b+1</span>
+    <span class="label">b+1</span>       mov   0, impsize         <span class="comment">; copy self to c+1</span>
+    <span class="label">c+1</span>       mov   0, impsize         <span class="comment">; copy self to a+2</span>
+</pre>
+
+See <a href="#BinaryLaunch">binary launch</a>,
+<a href="#JMPADDLaunch"><code class="code88">JMP</code>/<code class="code88">ADD</code> launch</a>
+and <a href="#VectorLaunch">vector launch</a> for examples of launching imp-spirals.
+</dd>
+
+<hr>
+
+<dt><a name="IncendiaryBomb">Incendiary Bomb</a></dt>
+
+<dd>A type of <a href="#StunBomb">stun bomb</a> which creates a <code class="code88">SPL
+0</code> carpet. 
+
+<pre class="code88">
+    <span class="label">example</span>   spl   0, 8
+              mov   example, &lt;example
+</pre>
+
+Modern incendiary bombs use separate <code class="code94">SPL</code> /
+<code class="code94">MOV</code> bombs:
+
+<pre class="code94">
+    <span class="label">sp</span>        spl   0, sm+1            <span class="comment">; spl half of the incendiary</span>
+
+              ...
+
+    <span class="label">sm</span>        mov   sp, >sp            <span class="comment">; mov half of the incendiary</span>
+</pre>
+
+
+
+</dd>
+
+<hr>
+
+<dt><a name="JMPADDLaunch"><code class="code88">JMP</code>/<code
+class="code88">ADD</code> Launch</a></dt>
+
+<dd>One of several means to start an <a href="#ImpSpiral">
+imp-spiral</a> running. The slowest launch technique, but requires
+the least code. See also <a href="#BinaryLaunch">binary launch</a>
+and <a href="#VectorLaunch">vector launch</a>. 
+
+<pre class="code88">
+    <span class="macro">impsize   equ 2667</span>
+
+    <span class="label">example</span>   spl   1                  <span class="comment">; extend by adding more spl 1's</span>
+              spl   1
+              spl   2
+              jmp   @0, imp
+              add   #impsize, -1       <span class="comment">; bump address by impsize after each jmp</span>
+              dat   #0, #0             <span class="comment">; excess processes must die!</span>
+    <span class="label">imp</span>       mov   0, impsize         <span class="comment">; in '94 use -&gt; mov.i #0,IMPSIZE</span>
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="Mirror">Mirror</a></dt>
+
+<dd>Copy of a program or program part, positioned to make the
+active program invisible to a <a href="#CMPScanner"><code class= 
+"code88">CMP</code>-scanner</a>.</dd>
+
+<hr>
+
+<dt><a name="OnAxisOffAxis">On-Axis/Off-Axis</a></dt>
+
+<dd>On-axis <a href="#Scanner">scanners</a> compare two locations M/2 apart, where M is
+the core size. Off-axis scanners use some other separation.</dd>
+
+<hr>
+
+<dt><a name="Oneshot">Oneshot</a></dt>
+
+<dd>A <a href="#Scanner">scanner</a> which scans until the first target is found then
+switches permanently to a <a href="#TwoPassCoreClear">two-pass core-clear</a>.</dd>
+
+<hr>
+
+<dt><a name="OptimaConstant">Optima Constant</a></dt>
+
+<dd>Bomb or scan increments chosen to
+cover core most effectively, i.e. leaving gaps of uniform size.
+Programs to calculate optimal constants and lists of optimal
+numbers are available at <a href="ftp://ftp.koth.org/corewar">
+ftp.koth.org</a>.</dd>
+
+<hr>
+
+<dt><a name="PSpace">P-Space</a></dt>
+
+<dd>P-space is an area of memory which only your program's processes
+can access. The contents of each memory location are preserved between
+rounds in a multi-round match.</dd>
+
+<hr>
+
+<dt><a name="P^2">P^2</a>/<a name="P^3">P^3</a></dt>
+
+<dd>A modern table-based <a href="#PSwitcher">p-switcher</a>.</dd>
+
+<hr>
+
+<dt><a name="PSwitcher">P-Switcher</a></dt>
+
+<dd>A type of <a href="#PWarrior">p-warrior</a> which uses the results
+of previous rounds in order to switch between different components /
+strategies.</dd>
+
+<hr>
+
+<dt><a name="PWarrior">P-Warrior</a></dt>
+
+<dd>A program which uses <a href="#PSpace">p-space</a>.</dd>
+
+<hr>
+
+<dt><a name="Paper">Paper</a></dt>
+
+<dd>A paper-like program is one which replicates itself many times.
+Part of the scissors (beats) paper (beats) stone (beats scissors)
+analogy.</dd>
+
+<hr>
+
+<dt><a name="PitTrapper">Pit-Trapper</a></dt>
+
+<dd>(also slaver, vampire). A program which enslaves another.
+Usually accomplished by bombing with <code>JMP</code>s to a <code
+class="code88">SPL 0</code> pit with an optional <a href="#CoreClear">core-clear</a>
+routine.</dd>
+
+<hr>
+
+<dt><a name="Q^2">Q^2</a>/<a name="Q^3">Q^3</a>/<a name="Q^4">Q^4</a></dt>
+
+<dd>Modern versions of the <a href="#QScan">quick scan</a> where anything
+found is attacked almost immediately.</dd>
+
+<hr>
+
+<dt><a name="QScan">Quick Scan</a></dt>
+
+<dd>A <a href="#C">2c</a> scan of a set group of core locations with
+bombing if anything is found.</dd>
+
+<hr>
+
+<dt><a name="Reflection">Reflection</a></dt>
+
+<dd>See <a href="#Mirror">mirror</a>.</dd>
+
+<hr>
+
+<dt><a name="Replicator">Replicator</a></dt>
+
+<dd>Generic for <a href="#Paper">paper</a>. A program which makes many copies of itself,
+each copy also making copies.</dd>
+
+<hr>
+
+<dt><a name="Satellite">Satellite</a></dt>
+
+<dd>A separate component which is copied and launched from a <a href="#Paper">paper</a>.</dd>
+
+<hr>
+
+<dt><a name="Scanner">Scanner</a></dt>
+
+<dd>A program which searches through core for an opponent rather
+than bombing blindly.</dd>
+
+<hr>
+
+<dt><a name="Scissors">Scissors</a></dt>
+
+<dd>A program designed to beat <a href="#Replicator">replicators</a>, usually a (B-field
+scanning) <a href="#PitTrapper">pit-trapper</a>. Part of the paper-scissors-stone analogy.</dd>
+
+<hr>
+
+<dt><a name="SelfRepair">Self-Repair</a></dt>
+
+<dd>Ability of a program to fix it's own code after being attacked.</dd>
+
+<hr>
+
+<dt><a name="SelfSplitting">Self-Splitting</a></dt>
+
+<dd>Strategy of amplifying the number of processes executing a
+piece of code. 
+
+<pre class="code94">
+    <span class="label">example</span>   ...
+
+              spl   0                  <span class="comment">; self-splitting</span>
+    <span class="label">clear</span>     mov   bomb,  >example
+              djn.f clear, >example
+
+    <span class="label">bomb</span>      dat   10
+</pre></dd>
+
+<hr>
+
+<dt><a name="Silk">Silk</a></dt>
+
+<dd>A <a href="#Replicator">replicator</a> which splits off processes to each new copy before
+actually copying the code. This allows it to replicate extremely
+quickly. Example:
+
+<pre class="code94">
+              spl   2
+              mov   1
+              spl   1                  <span class="comment">; generate 6 consecutive processes</span>
+    <span class="label">example</span>   spl   3620,     0        <span class="comment">; split to new copy</span>
+              mov   &gt;example, }example <span class="comment">; copy self to new location</span>
+              mov   bomb,     &gt;2000    <span class="comment">; linear bombing</span>
+              mov   bomb,     }2042    <span class="comment">; a-indirect bombing for anti-vamp</span>
+              jmp   example,  &lt;example <span class="comment">; reset source pointer, make new copy</span>
+    <span class="label">bomb</span>      dat   &gt;2667,    &gt;5334    <span class="comment">; anti-imp bomb</span>
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="Slaver">Slaver</a></dt>
+
+<dd>See <a href="#PitTrapper">pit-trapper</a>.</dd>
+
+<hr>
+
+<dt><a name="Stealth">Stealth</a></dt>
+
+<dd>Property of programs, or program parts, which are invisible to
+<a href="#Scanner">scanners</a>, accomplished by using zero
+b-fields and <a href="#Reflection">reflections</a>.</dd>
+
+<hr>
+
+<dt><a name="Stone">Stone</a></dt>
+
+<dd>A Stone-like program designed to be a small <a href="#Bomber">bomber</a>. Part of the
+Paper-Scissors-Stone analogy.</dd>
+
+<hr>
+
+<dt><a name="StunBomb">Stun Bomb</a></dt>
+
+<dd>A type of bomb which makes the opponent multiply useless
+processes, thus slowing it down. This example is referred to as a <code
+class="code88">SPL</code>-<code class="code88">JMP</code> bomb. 
+
+<pre class="code88">
+    <span class="label">example</span>   spl   0
+              jmp   example
+</pre>
+</dd>
+
+<hr>
+
+<dt><a name="TwoPassCoreClear">Two-Pass Core-Clear (also <code class="code88">SPL</code>/<code
+class="code88">DAT</code> Core-Clear)</a></dt>
+
+<dd>A <a href="#CoreClear">core-clear</a> that fills core first with <code class="code88">
+SPL</code> instructions, then with <code class="code88">
+DAT</code>s. This is very effective in killing <a href="#Paper">paper</a> and certain
+<a href="#ImpSpiral">imp-spiral</a> variations.</dd>
+
+<hr>
+
+<dt><a name="Vampire">Vampire</a></dt>
+
+<dd>See <a href="#PitTrapper">pit-trapper</a>.</dd>
+
+<hr>
+
+<dt><a name="VectorLaunch">Vector Launch</a></dt>
+
+<dd>One of several means to start an <a href="#ImpSpiral">
+imp-spiral</a> running. As fast as a binary launch, but requiring
+much less code. See also <a href="#JMPADDLaunch"><code class=
+"code88">JMP</code>/<code class="code88">ADD</code> launch</a> and
+<a href="#BinaryLaunch">binary launch</a>. This example is one form
+of a vector launch: 
+
+<pre class="code94">
+    <span class="macro">impsize   equ 2667</span>
+
+              spl   1
+              spl   1
+              jmp   @vect, }0
+    <span class="label">vect</span>      dat   imp+(0*impsize)    <span class="comment">; start of vector table</span>
+              dat   imp+(1*impsize)
+              dat   imp+(2*impsize)
+              dat   imp+(3*impsize)    <span class="comment">; end of vector table</span>
+    <span class="label">imp</span>       mov.i #0, impsize
+</pre>
+</dd>
+</dl>
+
+<hr>
+
+<p>Copyright &copy; 1991&ndash;2022 the <a href="corewar-faq.html#Credits">Core War FAQ Contributors</a>.
+Content of the glossary is available under the GNU Free Documentation License, version 1.3.</p>
+
+</body>
+</html>
+

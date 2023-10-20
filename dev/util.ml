@@ -27,12 +27,6 @@ type darg =
 | ADRef of mode * int
 | ADLab of mode * string
 
-let replace_store (arg : arg) (env : env) : arg =
-  let aenv, _, _ = env in
-  match arg with
-  | AStore (s) -> (translate_aenv s aenv)
-  | _ -> arg
-
 let arg_to_darg (arg : arg) : darg =
   match arg with
   | ANone -> ADRef (MImm, 0)
@@ -73,14 +67,6 @@ let carg_to_rarg (carg : carg) (env : env) : rarg =
     let p = (translate_penv s penv) in
     let l = (translate_lenv s lenv) in
     RLab ((compile_mode m p), l)
-
-
-let compile_arg (arg : arg) (env : env) : carg * rarg =
-  let arg' = (replace_store arg env) in
-  let darg = (arg_to_darg arg') in
-  let carg = (darg_to_carg darg env) in
-  let rarg = (carg_to_rarg carg env) in
-  (carg, rarg)
 
 
 type opmod =
@@ -134,16 +120,3 @@ let opmod_to_rmod (mod1 : opmod) (mod2 : opmod) (rmod : rmod) : rmod =
   | TB, TA -> RBA
   | TB, TB -> RB
   | _, _ -> rmod
-
-let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env : env) : rmod =
-  let mod1 = (carg_to_opmod carg1 env) in
-  let mod2 = (carg_to_opmod carg2 env) in
-  match imod with
-  | MNone -> (opmod_to_rmod mod1 mod2 rmod)
-  | MA -> RA
-  | MB -> RB
-  | MAB -> RAB
-  | MBA -> RBA
-  | MI -> RI
-  | MF -> RF
-  | MX -> RX

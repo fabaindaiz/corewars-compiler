@@ -14,6 +14,7 @@ let analyse_store_arg (arg : arg) (id : string) (place : place) (penv : penv) : 
 
 let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
   match cond with
+  | Cond0 -> penv
   | Cond1 (_, a) -> (analyse_store_arg a id PB penv)
   | Cond2 (_, a1, a2) -> 
     let penv' = (analyse_store_arg a1 id PA penv) in
@@ -21,13 +22,9 @@ let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
 
 let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
   match e with
-  | EPrim2 (_, a1, a2, _) ->
+  | EPrim2 (_, _, a1, a2, _) ->
     let env' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB env')
-  | EPrim2m (_, _, a1, a2, _) ->
-    let env' = (analyse_store_arg a1 id PA penv) in
-    (analyse_store_arg a2 id PB env')
-  | EFlow (_, exp, _) -> (analyse_store_expr exp id penv)
   | EFlow1 (_, cond, exp, _) ->
     let env' = (analyse_store_cond cond id penv) in
     (analyse_store_expr exp id env')

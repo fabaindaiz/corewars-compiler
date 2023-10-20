@@ -1,0 +1,8 @@
+;redcode-94b
+;SAL's Beginners' Hill Specs
+;use pmars -@ 94b.opt file1 [files...]
+
+-s 8000        ;coresize
+-p 8000        ;max. processes
+-c 80000       ;cycles
+-l 100         ;warrior length

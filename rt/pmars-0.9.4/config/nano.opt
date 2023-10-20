@@ -1,0 +1,8 @@
+;redcode-nano
+;SAL's Nano Hill Specs
+;use pmars -@ nano.opt file1 [files...]
+
+-s 80          ;coresize
+-p 80          ;max. proc.
+-c 800         ;cycles
+-l 5           ;warrior length

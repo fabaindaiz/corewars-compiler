@@ -1,0 +1,8 @@
+;redcode-lp
+;SAL's Limited Process Hill Specs
+;use pmars -@ lp.opt file1 [files...]
+
+-s 8000        ;coresize
+-p 8           ;max. processes
+-c 80000       ;cycles
+-l 200         ;warrior length

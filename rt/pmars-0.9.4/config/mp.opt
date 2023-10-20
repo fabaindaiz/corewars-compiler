@@ -1,0 +1,9 @@
+;redcode-mp
+;SAL's Medium Process Hill Specs
+;use pmars -@ mp.opt file1 [files...]
+
+-s 8000        ;coresize
+-p 64          ;max. processes
+-c 80000       ;cycles
+-l 100         ;warrior length
+-S 1           ;can't switch off p-space

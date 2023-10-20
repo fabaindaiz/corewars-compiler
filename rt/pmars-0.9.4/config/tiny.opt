@@ -1,0 +1,8 @@
+;redcode-tiny
+;SAL's Tiny Hill Specs
+;use pmars -@ tiny.opt file1 [files...]
+
+-s 800         ;coresize
+-p 800         ;max. proc.
+-c 8000        ;cycles
+-l 20          ;warrior length
