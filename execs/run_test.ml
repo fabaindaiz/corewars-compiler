@@ -45,7 +45,7 @@ let () =
   
   let verify_tests =
     let runtime =
-      unixcommand (fun s -> CCUnix.call "rt/pmars-0.9.4/pmars -A -@ rt/pmars-0.9.4/config/94b.opt %s" s) in
+      unixcommand (fun s -> CCUnix.call "pmars/pmars -A -@ pmars/config/94b.opt %s" s) in
     
     let name : string = "execute" in
     let oracle : oracle = Expected in
