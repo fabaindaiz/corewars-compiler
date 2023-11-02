@@ -1,4 +1,4 @@
 (library
- (name dev)
+ (name cored)
  (modules red ast analyse compile lib util parse)
  (libraries containers))
