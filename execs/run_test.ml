@@ -1,6 +1,6 @@
-open Dev.Ast
-open Dev.Parse
-open Dev.Compile
+open Cored.Ast
+open Cored.Parse
+open Cored.Compile
 open Alcotest
 open Bbcsteptester.Type
 open Bbcsteptester.Test
