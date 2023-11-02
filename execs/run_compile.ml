@@ -1,5 +1,5 @@
-open Dev.Parse
-open Dev.Compile
+open Cored.Parse
+open Cored.Compile
 open Printf
 
 
