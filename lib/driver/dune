@@ -1,0 +1,4 @@
+(library
+ (name driver)
+ (modules compile config)
+ (libraries common middle_end parsing syntax typechecking))

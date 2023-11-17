@@ -1,0 +1,4 @@
+(library
+ (name middle_end)
+ (modules codegen)
+ (libraries common syntax))

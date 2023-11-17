@@ -1,0 +1,4 @@
+(library
+ (name typechecking)
+ (modules static)
+ (libraries common syntax))
