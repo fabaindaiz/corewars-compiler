@@ -1,0 +1,947 @@
+file: TIMES
+##
+## Ends in an error in state: 0.
+##
+## file' -> . file [ # ]
+##
+## The known suffix of the stack is as follows:
+##
+##
+
+expected an expression
+
+file: NOT TIMES
+##
+## Ends in an error in state: 8.
+##
+## expr -> NOT . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## NOT
+##
+
+expected an expression after '!'
+
+file: MINUS TIMES
+##
+## Ends in an error in state: 13.
+##
+## expr -> MINUS . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## MINUS
+##
+
+expected an expression after '-' 
+
+file: LPAREN TIMES
+##
+## Ends in an error in state: 14.
+##
+## simple_expr -> LPAREN . expr RPAREN [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DOT DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+expected an expression after '(' 
+
+file: LET TRUE
+##
+## Ends in an error in state: 15.
+##
+## expr -> LET . ID EQUAL expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## expr -> LET . ID COLON ty EQUAL expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## expr -> LET . REC and_bindings IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET
+##
+
+expected an identifier after 'let' 
+
+file: LET ID TRUE
+##
+## Ends in an error in state: 116.
+##
+## expr -> LET ID . EQUAL expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## expr -> LET ID . COLON ty EQUAL expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET ID
+##
+
+expected '=' after the identifier in a let binding
+
+file: LET ID EQUAL TIMES
+##
+## Ends in an error in state: 117.
+##
+## expr -> LET ID EQUAL . expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET ID EQUAL
+##
+
+expected an expression after '=' in a let binding
+
+file: IF TIMES
+##
+## Ends in an error in state: 24.
+##
+## expr -> IF . expr THEN expr ELSE expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## IF
+##
+
+expected an expression after 'if' 
+
+file: FUN TRUE
+##
+## Ends in an error in state: 26.
+##
+## expr -> FUN . ID ARROW expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## expr -> FUN . ID COLON ty ARROW expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## FUN
+##
+
+expected an identifier after 'fun' 
+
+file: FUN ID TRUE
+##
+## Ends in an error in state: 27.
+##
+## expr -> FUN ID . ARROW expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## expr -> FUN ID . COLON ty ARROW expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## FUN ID
+##
+
+expected '->' after the identifier in a function expression
+
+file: FUN ID ARROW TIMES
+##
+## Ends in an error in state: 89.
+##
+## expr -> FUN ID ARROW . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## FUN ID ARROW
+##
+
+expected an expression after '->' in a function expression
+
+file: FALSE TIMES TIMES
+##
+## Ends in an error in state: 58.
+##
+## expr -> expr TIMES . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr TIMES
+##
+
+expected an expression after '*' 
+
+file: FALSE NOT
+##
+## Ends in an error in state: 155.
+##
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## top -> expr . [ EOF COLONCOLON ]
+##
+## The known suffix of the stack is as follows:
+## expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+ill-formed expression
+
+file: FALSE PLUS TIMES
+##
+## Ends in an error in state: 62.
+##
+## expr -> expr PLUS . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr PLUS
+##
+
+expected an expression after '+'
+
+file: FALSE MINUS TIMES
+##
+## Ends in an error in state: 64.
+##
+## expr -> expr MINUS . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr MINUS
+##
+
+expected an expression after '-'
+
+file: IF FALSE RPAREN
+##
+## Ends in an error in state: 91.
+##
+## expr -> expr . PLUS expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> IF expr . THEN expr ELSE expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES THEN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+expected 'then' after the condition of an if expression
+
+file: IF FALSE THEN TIMES
+##
+## Ends in an error in state: 92.
+##
+## expr -> IF expr THEN . expr ELSE expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN
+##
+
+expected an expression after 'then' in an if expression
+
+file: IF FALSE THEN FALSE THEN
+##
+## Ends in an error in state: 93.
+##
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> IF expr THEN expr . ELSE expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS EQUAL ELSE COMMA BARBAR AMPERSANDAMPERSAND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+expected 'else' after the true branch in an if expression
+
+file: FALSE LESS TIMES
+##
+## Ends in an error in state: 66.
+##
+## expr -> expr LESS . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr LESS
+##
+
+expected an expression after '<'
+
+
+file: FALSE EQUAL TIMES
+##
+## Ends in an error in state: 68.
+##
+## expr -> expr EQUAL . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr EQUAL
+##
+
+expected an expression after '='
+
+file: IF FALSE THEN FALSE ELSE TIMES
+##
+## Ends in an error in state: 94.
+##
+## expr -> IF expr THEN expr ELSE . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN expr ELSE
+##
+
+expected an expression after 'else' in an if expression
+
+file: LET ID EQUAL FALSE THEN
+##
+## Ends in an error in state: 118.
+##
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> LET ID EQUAL expr . IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+##
+## The known suffix of the stack is as follows:
+## LET ID EQUAL expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+expected 'in' after the binding expression in a let binding
+
+file: LET ID EQUAL FALSE IN TIMES
+##
+## Ends in an error in state: 119.
+##
+## expr -> LET ID EQUAL expr IN . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET ID EQUAL expr IN
+##
+
+expected an expression after 'in' in a let binding
+
+file: LPAREN FALSE THEN
+##
+## Ends in an error in state: 86.
+##
+## expr -> expr . PLUS expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES RPAREN PLUS MINUS LESS EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## simple_expr -> LPAREN expr . RPAREN [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DOT DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+unclosed parenthesis, missing ')' after expression
+
+file: FALSE THEN
+##
+## Ends in an error in state: 155.
+##
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## top -> expr . [ EOF COLONCOLON ]
+##
+## The known suffix of the stack is as follows:
+## expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+expected expression
+
+file: FALSE COMMA FALSE COMMA TIMES
+##
+## Ends in an error in state: 56.
+##
+## reversed_separated_nontrivial_llist(COMMA,expr) -> reversed_separated_nontrivial_llist(COMMA,expr) COMMA . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## reversed_separated_nontrivial_llist(COMMA,expr) COMMA
+##
+
+expected expression after ',' in a tuple
+
+file: FALSE COMMA TIMES
+##
+## Ends in an error in state: 77.
+##
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr COMMA . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr COMMA
+##
+
+expected expression after ',' in a tuple
+
+file: FALSE DOT TRUE
+##
+## Ends in an error in state: 51.
+##
+## simple_expr -> simple_expr DOT . LPAREN INT RPAREN [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DOT DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## simple_expr DOT
+##
+
+expected '(' after '.' in a tuple element access
+
+file: FALSE DOT LPAREN TRUE
+##
+## Ends in an error in state: 52.
+##
+## simple_expr -> simple_expr DOT LPAREN . INT RPAREN [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DOT DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## simple_expr DOT LPAREN
+##
+
+expected a number after '(' in a tuple element access
+
+file: FALSE DOT LPAREN INT TRUE
+##
+## Ends in an error in state: 53.
+##
+## simple_expr -> simple_expr DOT LPAREN INT . RPAREN [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DOT DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## simple_expr DOT LPAREN INT
+##
+
+expected ')' after index in tuple element access
+
+file: FALSE FALSE NOT
+##
+## Ends in an error in state: 155.
+##
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS EQUAL EOF COMMA COLONCOLON BARBAR AMPERSANDAMPERSAND ]
+## top -> expr . [ EOF COLONCOLON ]
+##
+## The known suffix of the stack is as follows:
+## expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 61, spurious reduction of production app_expr -> app_expr simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+ill-formed expression
+
+file: FALSE BARBAR TIMES
+##
+## Ends in an error in state: 70.
+##
+## expr -> expr BARBAR . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr BARBAR
+##
+
+expected expression after '&&'
+
+file: FALSE AMPERSANDAMPERSAND TIMES
+##
+## Ends in an error in state: 72.
+##
+## expr -> expr AMPERSANDAMPERSAND . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## expr AMPERSANDAMPERSAND
+##
+
+expected expression after '&&'
+
+file: LET REC TRUE
+##
+## Ends in an error in state: 16.
+##
+## expr -> LET REC . and_bindings IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET REC
+##
+
+expected binding after 'let rec'
+
+file: LET REC ID TRUE
+##
+## Ends in an error in state: 17.
+##
+## and_bindings -> ID . EQUAL expr [ IN ]
+## and_bindings -> ID . COLON ty EQUAL expr [ IN ]
+## and_bindings -> ID . EQUAL expr AND and_bindings [ IN ]
+## and_bindings -> ID . COLON ty EQUAL expr AND and_bindings [ IN ]
+##
+## The known suffix of the stack is as follows:
+## ID
+##
+
+expected '=' after identifier in binding
+
+file: LET REC ID EQUAL TIMES
+##
+## Ends in an error in state: 18.
+##
+## and_bindings -> ID EQUAL . expr [ IN ]
+## and_bindings -> ID EQUAL . expr AND and_bindings [ IN ]
+##
+## The known suffix of the stack is as follows:
+## ID EQUAL
+##
+
+expected expression after '=' in binding
+
+file: LET REC ID EQUAL FALSE THEN
+##
+## Ends in an error in state: 104.
+##
+## and_bindings -> ID EQUAL expr . [ IN ]
+## and_bindings -> ID EQUAL expr . AND and_bindings [ IN ]
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+##
+## The known suffix of the stack is as follows:
+## ID EQUAL expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+ill-formed expression after '=' in binding
+
+file: LET REC ID EQUAL FALSE AND TRUE
+##
+## Ends in an error in state: 105.
+##
+## and_bindings -> ID EQUAL expr AND . and_bindings [ IN ]
+##
+## The known suffix of the stack is as follows:
+## ID EQUAL expr AND
+##
+
+expected binding after 'and' in a mutually recursive binding
+
+file: LET REC ID EQUAL FALSE IN TIMES
+##
+## Ends in an error in state: 114.
+##
+## expr -> LET REC and_bindings IN . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET REC and_bindings IN
+##
+
+expected expression after 'in' in a let binding
+
+file: FUN ID COLON TRUE
+##
+## Ends in an error in state: 28.
+##
+## expr -> FUN ID COLON . ty ARROW expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## FUN ID COLON
+##
+
+expected type after ':' in a function
+
+file: FUN ID COLON LPAREN TRUE
+##
+## Ends in an error in state: 31.
+##
+## simple_ty -> LPAREN . ty RPAREN [ TIMES RPAREN EQUAL EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+expected type after '('
+
+file: FUN ID COLON LPAREN TBOOL EQUAL
+##
+## Ends in an error in state: 32.
+##
+## simple_ty -> LPAREN ty . RPAREN [ TIMES RPAREN EQUAL EOF COLONCOLON ARROW ]
+## ty -> ty . ARROW simple_ty [ RPAREN ARROW ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN ty
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 36, spurious reduction of production ty -> simple_ty
+##
+
+expected type after '('
+
+file: LET ID COLON TBOOL ARROW TRUE
+##
+## Ends in an error in state: 34.
+##
+## ty -> ty ARROW . simple_ty [ RPAREN EQUAL EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## ty ARROW
+##
+
+expected type after '->'
+
+file: FUN ID COLON TBOOL TRUE
+##
+## Ends in an error in state: 36.
+##
+## reversed_separated_nontrivial_llist(TIMES,simple_ty) -> simple_ty . TIMES simple_ty [ TIMES RPAREN EQUAL EOF COLONCOLON ARROW ]
+## ty -> simple_ty . [ RPAREN EQUAL EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## simple_ty
+##
+
+ill-formed type
+
+file: FUN ID COLON TBOOL TIMES TRUE
+##
+## Ends in an error in state: 37.
+##
+## reversed_separated_nontrivial_llist(TIMES,simple_ty) -> simple_ty TIMES . simple_ty [ TIMES RPAREN EQUAL EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## simple_ty TIMES
+##
+
+expected type after '*'
+
+file: FUN ID COLON TBOOL TIMES TBOOL TRUE
+##
+## Ends in an error in state: 39.
+##
+## reversed_separated_nontrivial_llist(TIMES,simple_ty) -> reversed_separated_nontrivial_llist(TIMES,simple_ty) . TIMES simple_ty [ TIMES RPAREN EQUAL EOF COLONCOLON ARROW ]
+## ty -> reversed_separated_nontrivial_llist(TIMES,simple_ty) . [ RPAREN EQUAL EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## reversed_separated_nontrivial_llist(TIMES,simple_ty)
+##
+
+ill-formed type
+
+file: FUN ID COLON TBOOL TIMES TBOOL TIMES TRUE
+##
+## Ends in an error in state: 40.
+##
+## reversed_separated_nontrivial_llist(TIMES,simple_ty) -> reversed_separated_nontrivial_llist(TIMES,simple_ty) TIMES . simple_ty [ TIMES RPAREN EQUAL EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## reversed_separated_nontrivial_llist(TIMES,simple_ty) TIMES
+##
+
+expected type after '*'
+
+file: FUN ID COLON TBOOL RPAREN
+##
+## Ends in an error in state: 42.
+##
+## expr -> FUN ID COLON ty . ARROW expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## ty -> ty . ARROW simple_ty [ ARROW ]
+##
+## The known suffix of the stack is as follows:
+## FUN ID COLON ty
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 36, spurious reduction of production ty -> simple_ty
+##
+
+expected '->' after type in a function
+
+file: FUN ID COLON TBOOL ARROW TIMES
+##
+## Ends in an error in state: 43.
+##
+## expr -> FUN ID COLON ty ARROW . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## ty -> ty ARROW . simple_ty [ ARROW ]
+##
+## The known suffix of the stack is as follows:
+## FUN ID COLON ty ARROW
+##
+
+expected type after '->' in the type declaration of the function argument
+
+file: FUN ID COLON TBOOL ARROW LPAREN TIMES
+##
+## Ends in an error in state: 44.
+##
+## simple_expr -> LPAREN . expr RPAREN [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DOT DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## simple_ty -> LPAREN . ty RPAREN [ TIMES RPAREN ARROW ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+expected type after '('
+
+file: LET REC ID COLON TRUE
+##
+## Ends in an error in state: 107.
+##
+## and_bindings -> ID COLON . ty EQUAL expr [ IN ]
+## and_bindings -> ID COLON . ty EQUAL expr AND and_bindings [ IN ]
+##
+## The known suffix of the stack is as follows:
+## ID COLON
+##
+
+expected type after ':' in a binding
+
+file: LET REC ID COLON TBOOL RPAREN
+##
+## Ends in an error in state: 108.
+##
+## and_bindings -> ID COLON ty . EQUAL expr [ IN ]
+## and_bindings -> ID COLON ty . EQUAL expr AND and_bindings [ IN ]
+## ty -> ty . ARROW simple_ty [ EQUAL ARROW ]
+##
+## The known suffix of the stack is as follows:
+## ID COLON ty
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 36, spurious reduction of production ty -> simple_ty
+##
+
+ill-formed type in binding
+
+file: LET REC ID COLON TBOOL EQUAL TINT
+##
+## Ends in an error in state: 109.
+##
+## and_bindings -> ID COLON ty EQUAL . expr [ IN ]
+## and_bindings -> ID COLON ty EQUAL . expr AND and_bindings [ IN ]
+##
+## The known suffix of the stack is as follows:
+## ID COLON ty EQUAL
+##
+
+expected expression after '=' in binding, but got type
+
+file: LET REC ID COLON TBOOL EQUAL FALSE THEN
+##
+## Ends in an error in state: 110.
+##
+## and_bindings -> ID COLON ty EQUAL expr . [ IN ]
+## and_bindings -> ID COLON ty EQUAL expr . AND and_bindings [ IN ]
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AND AMPERSANDAMPERSAND ]
+##
+## The known suffix of the stack is as follows:
+## ID COLON ty EQUAL expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+ill-formed expression in binding
+
+file: LET REC ID COLON TBOOL EQUAL FALSE AND TRUE
+##
+## Ends in an error in state: 111.
+##
+## and_bindings -> ID COLON ty EQUAL expr AND . and_bindings [ IN ]
+##
+## The known suffix of the stack is as follows:
+## ID COLON ty EQUAL expr AND
+##
+
+expected expression after '&&', but got type
+
+file: LET ID COLON TRUE
+##
+## Ends in an error in state: 121.
+##
+## expr -> LET ID COLON . ty EQUAL expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET ID COLON
+##
+
+expected type after ':' in binding
+
+file: LET ID COLON TBOOL RPAREN
+##
+## Ends in an error in state: 122.
+##
+## expr -> LET ID COLON ty . EQUAL expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## ty -> ty . ARROW simple_ty [ EQUAL ARROW ]
+##
+## The known suffix of the stack is as follows:
+## LET ID COLON ty
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 36, spurious reduction of production ty -> simple_ty
+##
+
+ill-formed type after ':' in binding
+
+file: LET ID COLON TBOOL EQUAL TINT
+##
+## Ends in an error in state: 123.
+##
+## expr -> LET ID COLON ty EQUAL . expr IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET ID COLON ty EQUAL
+##
+
+ill-formed expression in binding
+
+file: LET ID COLON TBOOL EQUAL FALSE THEN
+##
+## Ends in an error in state: 124.
+##
+## expr -> expr . PLUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . MINUS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . TIMES expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . EQUAL expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . LESS expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . AMPERSANDAMPERSAND expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> expr . BARBAR expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+## expr -> LET ID COLON ty EQUAL expr . IN expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+## reversed_separated_nontrivial_llist(COMMA,expr) -> expr . COMMA expr [ TIMES PLUS MINUS LESS IN EQUAL COMMA BARBAR AMPERSANDAMPERSAND ]
+##
+## The known suffix of the stack is as follows:
+## LET ID COLON ty EQUAL expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 50, spurious reduction of production app_expr -> simple_expr
+## In state 60, spurious reduction of production expr -> app_expr
+##
+
+ill-formed expression in binding
+
+file: LET ID COLON TBOOL EQUAL FALSE IN TINT
+##
+## Ends in an error in state: 125.
+##
+## expr -> LET ID COLON ty EQUAL expr IN . expr [ TRUE TIMES THEN SUB STP SPL SNE SLT SEQ RPAREN PLUS NOT NOP MUL MOV MOD MINUS LPAREN LET LESS LDP JMZ JMP JMN INT IN IF ID FUN FALSE EQUAL EOF ELSE DJN DIV DAT COMMA COLONCOLON BARBAR AND AMPERSANDAMPERSAND ADD ]
+##
+## The known suffix of the stack is as follows:
+## LET ID COLON ty EQUAL expr IN
+##
+
+ill-formed expression after binding
+
+file: FALSE COLONCOLON TRUE
+##
+## Ends in an error in state: 152.
+##
+## top -> top COLONCOLON . ty [ EOF COLONCOLON ]
+##
+## The known suffix of the stack is as follows:
+## top COLONCOLON
+##
+
+expected type after '::' in type ascription
+
+file: FALSE COLONCOLON TBOOL RPAREN
+##
+## Ends in an error in state: 153.
+##
+## top -> top COLONCOLON ty . [ EOF COLONCOLON ]
+## ty -> ty . ARROW simple_ty [ EOF COLONCOLON ARROW ]
+##
+## The known suffix of the stack is as follows:
+## top COLONCOLON ty
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 36, spurious reduction of production ty -> simple_ty
+##
+
+ill-formed type after '::' in type ascription

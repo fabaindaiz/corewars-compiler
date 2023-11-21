@@ -1,0 +1,4 @@
+(executable
+ (public_name corewars_compiler)
+ (name main)
+ (libraries common middle_end syntax driver menhirLib cmdliner))

@@ -1,12 +1,30 @@
 # corewars-compiler
-#### By fabaindaiz
 
 This software aims to be an easier way to write and optimize code for corewars. corewars-compiler uses its own mini functional language called RED which can then be compiled into optimized redcode.
 
 #### work in progress.
 
+## Usage
 
-### Instructions of use
+### Basic usage
+
+TODO
+
+## Installation
+
+To install this project, first you need to install its dependencies using opam:
+
+```sh
+opam install --deps-only .
+```
+
+Then, build the project using dune:
+
+```sh
+dune build
+```
+
+### Documentation
 - See REFERENCE.md for develop and run.
 - See LANGUAGE.md for RED language reference.
 - See TUTORIAL.md for a RED language tutorial.

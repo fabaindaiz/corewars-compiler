@@ -1,31 +1,35 @@
-FROM ocaml/opam:ubuntu-20.04
-ENV SHELL=/bin/bash
+FROM ocaml/opam:latest
+
+SHELL ["/bin/bash", "-c"]
 
 USER root
 
-RUN apt update && apt-get install -y
-#  nasm \
-#  clang
+# Upgrade apt repository packages & Install baseline packages
+RUN apt-get update && \
+  DEBIAN_FRONTEND="noninteractive" apt-get upgrade --yes
+  DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
+    nasm \
+    clang
 # && rm -rf /var/lib/apt/lists/*
+
+# Make typing unicode characters in the terminal work.
+ENV LANG en_US.UTF-8
 
 USER opam
 
-# opam init -a
-RUN opam init -y
-RUN opam update
-RUN eval `opam env`
+# Run user commands
 
-# opam switch list-available
-RUN opam switch create 5.0.0
-RUN eval `opam env`
+RUN opam init -y && \
+    opam update && \
+    eval `opam env`
 
-RUN opam install -y \
-  dune \
-  utop \
-  merlin \
-  containers \
-  alcotest \
-  ocaml-lsp-server
+RUN opam install --unlock-base --yes \
+    dune \
+    utop \
+    merlin \
+    containers \
+    alcotest \
+    ocaml-lsp-server
 
 #RUN dune build --watch --terminal-persistence=clear-on-rebuild
 
