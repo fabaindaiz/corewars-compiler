@@ -1,72 +1,50 @@
-type e =
-  | Value of value
-  | Label of string
-  | Lam of string * e
-  | App of e * e
-  | Prim1 of Prim.op1 * e
-  | Prim2 of Prim.op2 * e * e
-  | Prim3 of Prim.op3 * e * e * e
-  | Let of string * e * e
-  | Tuple of e list
+type 'a t = { desc : 'a desc; meta : 'a }
 
-and value =
-  | Arg of place * arg
+and 'a desc =
+  | Arg of Arg.t
   | Var of string
+  | Label of string
+  | Prim1 of Prim.op1 * 'a t
+  | Prim2 of Prim.op2 * 'a t * 'a t
+  | Prim3 of Prim.op3 * 'a t * 'a t * 'a t
+  | Let of 'a binding * 'a t
+  | Seq of 'a t list
 
-and arg =
-  | None
-  | Store of string
-  | Num of int
-  | Id of string
-  | Ref of mode * int
-  | Lab of mode * string
-
-and mode =
-  | MImm
-  | MDir
-  | MInd
-  | MIndInc
-  | MIndDec
-
-and place =
-  | PNone
-  | PA
-  | PB
+and 'a binding = { name : string; term : 'a t }
 
 [@@deriving show { with_path = false }]
 
+let rec pp fmt e = pp_desc fmt e.desc
 
-let of_mode (m : Typed_ast.mode) : mode =
-  match m with
-  | Typed_ast.MImm -> MImm
-  | Typed_ast.MDir -> MDir
-  | Typed_ast.MInd -> MInd
-  | Typed_ast.MIndInc -> MIndInc
-  | Typed_ast.MIndDec -> MIndDec
+and pp_desc fmt =
+  let open Format in
+  function
+  | Arg arg -> fprintf fmt "%s" (Arg.to_string arg)
+  | Var x -> fprintf fmt "%s" x
+  | Label l -> fprintf fmt "%s" l
+  | Prim1 (op1, e1) -> fprintf fmt "@[<hov 2>%a@ %a@]" Prim.pp_op1 op1 pp e1
+  | Prim2 (op2, e1, e2) ->
+      fprintf fmt "@[<hov 2>%a@ %a@ %a@]" Prim.pp_op2 op2 pp e1 pp e2
+  | Prim3 (op3, e1, e2, e3) ->
+      fprintf fmt "@[<hov 2>%a@ %a@ %a@ %a@]" Prim.pp_op3 op3 pp e1 pp e2 pp e3
+  | Let (binding, e) ->
+      fprintf fmt "@[<hov 0>let %s =@ %a@ in@.%a@]" binding.name pp binding.term
+        pp e
+  | Seq exprs ->
+      fprintf fmt "@[<hov 2>(%a)@]" (Common.Pp.pp_list ",@ " pp) exprs
 
-let of_arg (a : Typed_ast.arg) : arg =
-  match a with
-  | Typed_ast.None -> None
-  | Typed_ast.Store x -> Store x
-  | Typed_ast.Num n -> Num n
-  | Typed_ast.Id x -> Id x
-  | Typed_ast.Ref (m, n) -> Ref (of_mode m, n)
-  | Typed_ast.Lab (m, l) -> Lab (of_mode m, l)
+and pp_binding fmt binding =
+  Format.fprintf fmt "@[<hov 2>%s =@ %a@]" binding.name pp binding.term
 
-let of_value (v : Typed_ast.value) : value =
-  match v with
-  | Typed_ast.Arg a -> Arg (PNone, of_arg a)
-  | Typed_ast.Var x -> Var x
-
-let rec of_typed_ast (e : Typed_ast.e) : e =
-  match e with
-  | Value v -> Value (of_value v)
-  | Label l -> Label l
-  | Lam (x, _, e) -> Lam (x, of_typed_ast e)
-  | App (e1, e2) -> App (of_typed_ast e1, of_typed_ast e2)
-  | Prim1 (op1, e) -> Prim1 (op1, of_typed_ast e)
-  | Prim2 (op2, e1, e2) -> Prim2 (op2, of_typed_ast e1, of_typed_ast e2)
-  | Prim3 (op3, e1, e2, e3) -> Prim3 (op3, of_typed_ast e1, of_typed_ast e2, of_typed_ast e3)
-  | Let (b, e') -> Let (b.name, of_typed_ast b.e, of_typed_ast e')
-  | Tuple exprs -> Tuple (List.map of_typed_ast exprs)
-  | Ascribe (e, _) -> of_typed_ast e
+let rec map (f : 'a -> 'b) (t : 'a t) : 'b t =
+  let bind desc = { desc; meta = f t.meta } in
+  match t.desc with
+  | Arg arg -> bind (Arg arg)
+  | Var x -> bind (Var x)
+  | Label l -> bind (Label l)
+  | Prim1 (op1, e1) -> bind (Prim1 (op1, map f e1))
+  | Prim2 (op2, e1, e2) -> bind (Prim2 (op2, map f e1, map f e2))
+  | Prim3 (op3, e1, e2, e3) -> bind (Prim3 (op3, map f e1, map f e2, map f e3))
+  | Let (binding, e) ->
+      bind (Let ({ binding with term = map f binding.term }, map f e))
+  | Seq exprs -> bind (Seq (List.map (map f) exprs))

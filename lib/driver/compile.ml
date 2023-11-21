@@ -27,13 +27,13 @@ let typecheck (conf : Config.t) typed_e =
 
 let erase_types conf typed_e =
   log conf "Erasing types\n%!";
-  Ast.of_typed_ast typed_e
+  Ast_typed.to_ast typed_e
 
 let uniquify conf e =
   log conf "Uniquifying\n%!";
-  let e = Uniquify.uniquify e in
-  log conf "%a\n\n%!" Ast.pp_e e;
-  e
+  let t = Uniquify.uniquify e in
+  log conf "%a\n\n%!" Ast.pp t;
+  t
 
 let analyze_store conf e =
   log conf "Transforming to Stored AST\n%!";

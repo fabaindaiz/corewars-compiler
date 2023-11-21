@@ -1,17 +1,16 @@
 type e =
   | Value of value
+  | Arg of arg
   | Label of string
-  | Lam of string * Type.t * e
+  | Lam of string * e
   | App of e * e
   | Prim1 of Prim.op1 * e
   | Prim2 of Prim.op2 * e * e
   | Prim3 of Prim.op3 * e * e * e
-  | Let of binding * e
+  | Let of string * e * e
   | Tuple of e list
-  | Ascribe of e * Type.t
 
 and value =
-  | Arg of arg
   | Var of string
 
 and arg =
@@ -29,6 +28,9 @@ and mode =
   | MIndInc
   | MIndDec
 
-and binding = { name : string; e : e; ty : Type.t }
+and place =
+  | PNone
+  | PA
+  | PB
 
 [@@deriving show { with_path = false }]

@@ -1,38 +1,21 @@
 open Common
 open Syntax
 open Type
-open Typed_ast
+open Ast_typed
 module Env = Map.Make (String)
 
 let err msg = Error.(error (Ty (IncompatibleType msg)))
 
-let rec typecheck e = ignore (typeof Env.empty e)
-
-and ty_of_value env = function
-  | Arg _ -> Type.Arg
-  | Var x -> Env.find x env
+let rec typecheck e = ignore (typeof Env.empty e) 
 
 and typeof env e =
-  match e with
-  | Value v -> ty_of_value env v
+  match e.desc with
+  | Arg _ -> Type.Arg
+  | Var x -> (
+      match Env.find_opt x env with
+      | Some ty -> ty
+      | None -> err (Format.asprintf "unbound variable '%s'" x))
   | Label _ -> Type.Instr
-  | Lam (x, ty, e) ->
-      let env' = Env.add x ty env in
-      let ty' = typeof env' e in
-      Arrow (ty, ty')
-  | App (e1, e2) -> (
-      let ty1 = typeof env e1 in
-      let ty2 = typeof env e2 in
-      match ty1 with
-      | Arrow (a, b) when a = ty2 -> b
-      | Arrow (ty11, _) ->
-          err
-            (Format.asprintf "expected argument of type '%a', but got '%a'"
-               Type.pp ty11 Type.pp ty2)
-      | _ ->
-          err
-            (Format.asprintf "expected function type, but got '%a'" Type.pp ty1)
-      )
   | Prim1 (op, e1) -> (
       let ty1 = typeof env e1 in
       let a, b = ty_of_op1 op in
@@ -70,14 +53,13 @@ and typeof env e =
       | ty ->
           err
             (Format.asprintf "expected '%a', but got '%a'" Type.pp binding.ty
-               Type.pp ty))
-  | Tuple _ -> Type.Instr
-  | Ascribe (e, ty') -> (
-      match typeof env e with
-      | ty when ty = ty' -> ty
-      | ty ->
-          err
-            (Format.asprintf
-               "expected expression of type '%a', but got expression of type \
-                '%a'"
-               Type.pp ty' Type.pp ty))
+                Type.pp ty))
+  | Seq l ->
+      let check_instr_type e = 
+        let ty = typeof env e in
+        match ty with
+        | Type.Instr -> ()
+        | _ -> err (Format.asprintf "expected instruction, but got '%a'" Type.pp ty)
+      in
+      List.iter check_instr_type l;
+      Type.Instr

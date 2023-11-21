@@ -23,7 +23,14 @@
  (description "A longer description")
  (depends 
  (ocaml (>= 4.10))
-  dune sedlex menhir menhirLib cmdliner alcotest ppx_expect ppx_deriving)
+  dune
+  sedlex
+  menhir
+  menhirLib
+  cmdliner
+  alcotest
+  ppx_expect
+  ppx_deriving)
  (tags
   (topics "to describe" your project)))
 

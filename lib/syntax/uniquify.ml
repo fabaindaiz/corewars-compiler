@@ -16,31 +16,21 @@ module Env = struct
     | None -> Error.(error (Syntax (UnboundVariable id)))
 end
 
-let uniquify e =
-  let rec go (e : e) env : e =
-    match (e : e) with
-    | Value v -> Value
-      (match v with
-      | Arg (p, a) -> Arg (p,
-        (match a with
-        | None | Num _ | Ref _ -> a
-        | Store x -> Store (Env.find x env)
-        | Id x -> Id (Env.find x env)
-        | Lab (m, x) -> Lab (m, Env.find x env)))
-      | Var x -> Var (Env.find x env))
-    | Label (l) -> Label (l)
-    | Lam (x, e) ->
-        let x' = Gensym.fresh x in
-        let env' = Env.add x x' env in
-        Lam (x', go e env')
-    | App (e1, e2) -> App (go e1 env, go e2 env)
-    | Prim1 (op, e) -> Prim1 (op, go e env)
-    | Prim2 (op, e1, e2) -> Prim2 (op, go e1 env, go e2 env)
-    | Prim3 (op, e1, e2, e3) -> Prim3 (op, go e1 env, go e2 env, go e3 env)
-    | Let (x, e1, e2) ->
-        let x' = Gensym.fresh x in
-        let env' = Env.add x x' env in
-        Let (x', go e1 env, go e2 env')
-    | Tuple exprs -> Tuple (List.map (fun e -> go e env) exprs)
+let uniquify t =
+  let lift desc = { t with desc } in
+  let rec go (t : 'a t) env : 'a t =
+    (match t.desc with
+    | Arg arg -> Arg arg
+    | Var x -> Var (Env.find x env)
+    | Label l -> Label l
+    | Prim1 (op1, t1) -> Prim1 (op1, go t1 env)
+    | Prim2 (op2, t1, t2) -> Prim2 (op2, go t1 env, go t2 env)
+    | Prim3 (op3, t1, t2, t3) -> Prim3 (op3, go t1 env, go t2 env, go t3 env)
+    | Let (binding, body) ->
+        let name' = Gensym.fresh binding.name in
+        let env' = Env.add binding.name name' env in
+        Let ({ name = name'; term = go binding.term env }, go body env')
+    | Seq exprs -> Seq (List.map (fun e -> go e env) exprs))
+    |> lift
   in
-  go e Env.empty
+  go t Env.empty
