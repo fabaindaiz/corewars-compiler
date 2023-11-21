@@ -14,7 +14,7 @@ let parse (conf : Config.t) =
     | InputString str -> Parsing.Driver.parse_string str
   in
   let e = Option.get e_opt in
-  log conf "%a\n\n%!" Typed_ast.pp_e e;
+  log conf "%a\n\n%!" Ast_typed.pp_e e;
   e
 
 let typecheck (conf : Config.t) typed_e =

@@ -14,15 +14,15 @@ and typeof env e =
   | Var x -> (
       match Env.find_opt x env with
       | Some ty -> ty
-      | None -> err (Format.asprintf "unbound variable '%s'" x))
+      | None -> 
+          err (Format.asprintf "unbound variable '%s'" x))
   | Label _ -> Type.Instr
   | Prim1 (op, e1) -> (
       let ty1 = typeof env e1 in
       let a, b = ty_of_op1 op in
       if ty1 = a then b
       else
-        err
-          (Format.asprintf "expected argument of type '%a', but got '%a'"
+        err (Format.asprintf "expected argument of type '%a', but got '%a'"
              Type.pp a Type.pp ty1))
   | Prim2 (op, e1, e2) ->
       let ty1 = typeof env e1 in
@@ -30,10 +30,9 @@ and typeof env e =
       let a, b, c = ty_of_op2 op in
       if ty1 = a && ty2 = b then c
       else
-        err
-          (Format.asprintf
-             "expected arguments of types '%a' and '%a', but got '%a' and '%a'"
-             Type.pp a Type.pp b Type.pp ty1 Type.pp ty2)
+        err (Format.asprintf
+            "expected arguments of types '%a' and '%a', but got '%a' and '%a'"
+            Type.pp a Type.pp b Type.pp ty1 Type.pp ty2)
   | Prim3 (op, e1, e2, e3) ->
       let ty1 = typeof env e1 in
       let ty2 = typeof env e2 in
@@ -41,25 +40,21 @@ and typeof env e =
       let a, b, c, d = ty_of_op3 op in
       if ty1 = a && ty2 = b && ty3 = c then d
       else
-        err
-          (Format.asprintf
-             "expected arguments of types '%a', '%a' and '%a', but got '%a', \
-              '%a' and '%a'"
-             Type.pp a Type.pp b Type.pp c Type.pp ty1 Type.pp ty2 Type.pp
-             ty3)
+        err (Format.asprintf
+            "expected arguments of types '%a', '%a' and '%a', but got '%a', '%a' and '%a'"
+            Type.pp a Type.pp b Type.pp c Type.pp ty1 Type.pp ty2 Type.pp ty3)
   | Let (binding, e) -> (
       match typeof env binding.e with
       | ty when ty = binding.ty -> typeof (Env.add binding.name ty env) e
       | ty ->
-          err
-            (Format.asprintf "expected '%a', but got '%a'" Type.pp binding.ty
-                Type.pp ty))
+          err (Format.asprintf "expected '%a', but got '%a'"
+              Type.pp binding.ty Type.pp ty))
   | Seq l ->
-      let check_instr_type e = 
+      let aux e =
         let ty = typeof env e in
-        match ty with
-        | Type.Instr -> ()
-        | _ -> err (Format.asprintf "expected instruction, but got '%a'" Type.pp ty)
+        if ty = Type.Instr then ()
+        else
+          err (Format.asprintf "expected instruction, but got '%a'" Type.pp ty)
       in
-      List.iter check_instr_type l;
+      List.iter aux l;
       Type.Instr

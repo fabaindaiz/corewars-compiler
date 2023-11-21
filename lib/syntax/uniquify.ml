@@ -22,14 +22,27 @@ let uniquify t =
     (match t.desc with
     | Arg arg -> Arg arg
     | Var x -> Var (Env.find x env)
-    | Label l -> Label l
+    | Lab l -> Lab l
     | Prim1 (op1, t1) -> Prim1 (op1, go t1 env)
     | Prim2 (op2, t1, t2) -> Prim2 (op2, go t1 env, go t2 env)
     | Prim3 (op3, t1, t2, t3) -> Prim3 (op3, go t1 env, go t2 env, go t3 env)
     | Let (binding, body) ->
-        let name' = Gensym.fresh binding.name in
-        let env' = Env.add binding.name name' env in
-        Let ({ name = name'; term = go binding.term env }, go body env')
+        let name' =
+          (match binding with
+          | Bname { name } -> Gensym.fresh name
+          | Bexpr { name; term = _ } -> Gensym.fresh name)
+        in
+        let env' = 
+          (match binding with
+          | Bname { name } -> Env.add name name' env
+          | Bexpr { name; term = _ } -> Env.add name name' env)
+        in
+        let binding' =
+          (match binding with
+          | Bname { name = _ } -> Bname { name = name' }
+          | Bexpr { name = _; term } -> Bexpr { name = name'; term = go term env })
+        in
+        Let (binding', go body env')
     | Seq exprs -> Seq (List.map (fun e -> go e env) exprs))
     |> lift
   in
