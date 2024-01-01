@@ -3,9 +3,9 @@ open Cored.Parse
 open Cored.Compile
 open Alcotest
 open Bbcsteptester.Type
-open Bbcsteptester.Test
+open Bbcsteptester.Main
 open Bbcsteptester.Runtime
-open Printf
+open Bbcsteptester.Testeable
 
 
 let arg : arg testable =
@@ -34,22 +34,16 @@ let ocaml_tests = [
 let () =
   
   let compiler : compiler =
-    Compiler (fun s o -> fprintf o "%s" (compile_prog (parse_exp (sexp_from_string s))) ) in
+    SCompiler ( fun _ s -> (compile_prog (parse_exp (sexp_from_string s))) ) in
   
   let bbc_tests =
     let name : string = "compare" in
-    let runtime : runtime = compileout in
-    let oracle : oracle = Expected in
-    let action : action = CompareOutput in
-    tests_from_dir ~name ~compiler ~runtime ~oracle ~ action "bbctests" in
+    tests_from_dir ~name ~compiler "bbctests" in
   
   let verify_tests =
-    let runtime =
-      unixcommand (fun s -> CCUnix.call "pmars/pmars -A -@ pmars/config/94b.opt %s" s) in
-    
     let name : string = "execute" in
-    let oracle : oracle = Expected in
-    let action : action = IgnoreOutput in
-    tests_from_dir ~name ~compiler ~runtime ~oracle ~action "bbctests" in
+    let runtime: runtime = unixcommand "pmars/pmars -A -@ pmars/config/94b.opt %s" in
+    let testeable : testeable = compare_status in
+    tests_from_dir ~name ~compiler ~runtime ~testeable "bbctests" in
   
   run "Tests corewars-compiler" (ocaml_tests @ bbc_tests @ verify_tests)
