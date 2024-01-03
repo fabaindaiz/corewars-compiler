@@ -19,21 +19,30 @@ and 'a binding =
 let rec trans0 (t : 'a Ast.t) : 'a t =
   match t.desc with
   | Arg arg -> None
-    | Var x -> None
-    | Lab l -> None
-    | Prim1 (op1, t1) -> None
-    | Prim2 (op2, t1, t2) -> None
-    | Prim3 (op3, t1, t2, t3) -> None
-    | Let (binding, body) ->
-        let binding' =
-          (match binding with
-          | Bname { name = _ } -> Bname { name = name' }
-          | Bexpr { name = _; term } -> Bexpr { name = name'; term = go term env })
-        in
-        let body' =  in
-        Let (binding', body')
+  | Var x -> None
+  | Lab l -> None
+  | Prim1 (op1, t1) -> None
+  | Prim2 (op2, t1, t2) -> None
+  | Prim3 (op3, t1, t2, t3) -> None
+  | Let (binding, body) ->
+      let binding' =
+        (match binding with
+        | Bname { name = _ } -> binding
+        | Bexpr { name = _; term } -> {binding with term = trans0 term})
+      in
+      let body' =  in
+      Let (binding', body')
 
-    | Seq exprs -> None
+  | Seq exprs -> None
+
+and analize_arg (a : Arg.t) (p : place) (e : env) : env =
+  match a with
+  | None
+  | Store of string
+  | Num of int
+  | Id of string
+  | Ref of mode * int
+  | Lab of mode * string
 
 let rec store (_ : 'a Ast.t) =
   let rec go =
