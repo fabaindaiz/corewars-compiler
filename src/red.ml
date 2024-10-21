@@ -124,4 +124,4 @@ let pp_instruction (opcode : instruction) : string =
 
 (* red instruction list to string *)
 let pp_instrs (instrs : instruction list) : string =
-  List.fold_left (fun res i -> res ^ "\r\n" ^ (pp_instruction i)) "" instrs
+  List.fold_left (fun res i -> res ^ "\n" ^ (pp_instruction i)) "" instrs

@@ -2,10 +2,10 @@ open Cored.Ast
 open Cored.Parse
 open Cored.Compile
 open Alcotest
-open Bbcsteptester.Type
-open Bbcsteptester.Main
-open Bbcsteptester.Runtime
-open Bbcsteptester.Testeable
+open Bbctester.Type
+open Bbctester.Main
+open Bbctester.Runtime
+open Bbctester.Testeable
 
 
 let arg : arg testable =
@@ -42,7 +42,7 @@ let () =
   
   let verify_tests =
     let name : string = "execute" in
-    let runtime: runtime = unixcommand "pmars/pmars -A -@ pmars/config/94b.opt %s" in
+    let runtime: runtime = unix_command "pmars/pmars -A -@ pmars/config/94b.opt %s" in
     let testeable : testeable = compare_status in
     tests_from_dir ~name ~compiler ~runtime ~testeable "bbctests" in
   
