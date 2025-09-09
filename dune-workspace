@@ -1,5 +1,4 @@
-(lang dune 3.10)
+(lang dune 3.18)
 (env
- (cored
+ (dev
   (flags (:standard -warn-error -A))))
-

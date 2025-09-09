@@ -6,24 +6,29 @@ src = # nothing by default
 init:
 	dune build @check
 
-tests:
-	dune exec execs/run_test.exe -- test '$(F)'
+test:
+	dune exec test/run_test.exe -- test '$(F)'
 
-ctests:
-	dune exec execs/run_test.exe -- test '$(F)' -c
+testc:
+	dune exec test/run_test.exe -- test '$(F)' -c
 
-compile: 
+teste:
+	dune exec test/run_test.exe -- test '$(F)' -ce
+
+parse:
+	dune exec execs/run_parse.exe $(src)
+
+type:
+	dune exec execs/run_type.exe $(src)
+
+compile:
 	dune exec execs/run_compile.exe $(src)
-
-%.s: %.src 
-	dune exec execs/run_compile.exe $< > $@
 
 %.exe:
 	dune build execs/$@
 
 clean: clean-tests
-	dune clean
+	rm -Rf _build
 
 clean-tests:
-	rm -f bbctests/*.s bbctests/*.o bbctests/*.run bbctests/*.result bbctests/*~
-	rm -rf bbctests/*dSYM
+	find bbctests/ -type f -regex '.*\.\(o\|s\|run\|result\)' -delete

@@ -7,9 +7,15 @@
 *.cmx
 *.cmxs
 *.cmxa
-*.plist
 
-# ocamlbuild working directory
+# Files containing detailed information about the compilation (generated
+# by `ocamlc`/`ocamlopt` when invoked using the option `-bin-annot`).
+# These files are typically useful for code inspection tools
+# (e.g. Merlin).
+*.cmt
+*.cmti
+
+# ocamlbuild and Dune default working directory
 _build/
 
 # ocamlbuild targets
@@ -30,11 +36,5 @@ setup.log
 _opam/
 
 # Build results
-*.s
-*.run
-
-# VSCode configs
-.vscode/
-
-# Segmentation fault
-core
+*.red
+*.out

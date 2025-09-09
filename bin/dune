@@ -1,0 +1,4 @@
+(executable
+ (public_name corewars-compiler)
+ (name main)
+ (libraries common containers))
