@@ -7,6 +7,17 @@ To develop and run the compiler, you will need to use the following:
 
 In order to setup your ocaml environment, you should first [install opam](https://opam.ocaml.org/doc/Install.html), following the instructions for your distribution. Then create a switch with the right ocaml version and install the tools and libraries used in the course with the following invocations from the command line. 
 
+A switch local to this repository also works, and keeps everything under `_opam/` (ignored by git):
+
+```bash
+opam init --bare -n
+opam switch create . ocaml-base-compiler.5.5.1 --no-install
+opam install --switch=. dune containers alcotest
+opam exec --switch=. -- make check
+```
+
+Or the original course setup:
+
 ```bash
 opam init
 opam update
@@ -94,6 +105,7 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
 
 - you can run the executables manually as follows:
   * `make compile src=examples/prog.src`: builds/runs the compiler on the source file `examples/prog.src`, outputs the generated redcode
+  * `dune exec execs/run_compile.exe -- [--optimize o1,o2] [--report[=json]] [--expect=warn] [--emit-beh FILE] <file>`: `--report` prints the measured metrics and predictions on standard error (`=json`: JSON on standard output instead of the redcode); `--optimize` sets the policy; `--expect=warn` turns failed expectations into warnings; `--emit-beh` writes the execution expectations as a behaviour spec and the redcode beside it (see LANGUAGE.md)
 
 - you can also ask specific files to be built, eg.:
   * `make examples/prog.s`: looks up `examples/prog.src`, compiles it, and generates the redcode file `examples/prog.s`

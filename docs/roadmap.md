@@ -11,18 +11,17 @@ execution in the core follows the program's meaning** (`docs/semantics.md`).
 
 ## Where we are
 
-As of 2026-10-03 (s-7d2612-0a037e, s-7d2612-cc9344). `main` compiles the RED constructs in
-`LANGUAGE.md`, and the whole gate passes in CI: `dune build` and 29 tests (1 parse, 14 compare,
-14 execute) on OCaml 5.5.1, plus `make check-tools`. **Seven defects are recorded** below, five with
-a failing check (four behaviour specs, one audit check), and the `execute` suite only proves that
-pMARS assembles the output. A behaviour harness exists now (`tools/behave.py`, 3 passing specs,
-4 known-failing). On this machine only `make check-tools` runs (no opam switch).
-`origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
-Nothing is in motion beyond that branch.
+As of 2026-10-03 (s-7d2612-a654a5). The compiler now measures what it emits: the cost model
+(i-7d2612-aeab0f) is built on branch `feat/cost-model`, not yet merged; `run_compile.exe --report`
+shows the metrics and predictions, and `(expect ...)` checks them. The gate runs locally (an opam
+switch in `_opam/`): `dune build` and 52 tests besides `execute`, which needs Linux x86-64.
+**Seven defects are recorded** below, five with a failing check (four behaviour specs, one audit
+check), and the `execute` suite only proves that pMARS assembles the output. `origin/dev` holds a
+half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next, by cost to the invariant and verifiability:** the four correctness fixes with known-failing
-specs (each is local, test-first, and its spec already exists), then i-7d2612-47d3ea and
-i-7d2612-8f3f22 so the OCaml gate runs anywhere.
+**Next, by cost to the invariant and verifiability:** merge `feat/cost-model`; then the
+correctness fixes with known-failing specs; then subproject B (warnings, i-7d2612-90d6e1), which
+needs the cost model, and C (i-7d2612-7eadd5), which carries three decisions already taken.
 
 ## Correctness — recorded defects
 
@@ -33,8 +32,9 @@ i-7d2612-8f3f22 so the OCaml gate runs anywhere.
 `a1 >= a2`; `LT` repeats while `a1 <= a2`. Pre-conditions (`if`, `while`) are correct. Measured: with
 `x = y = 3` the compiled loop is still running after 10 instructions; ICWS'94 `SLT` is strict.
 **Collides with.** Every golden that contains a `do-while` with `GT`/`LT` (none today).
-**Decide first.** The layout: invert with an extra skip (one more instruction per iteration) or
-reuse the pre-condition layout at the loop's end.
+**Decided** (2026-10-03, user): `SLT b, a; SNE #0, #1; JMP head` — one more cell per `do-while`
+with `GT`/`LT`, the same cycles per iteration — plus a performance warning from subproject B where
+a construct costs extra. Built in subproject C (i-7d2612-7eadd5).
 
 ### Unary conditions always use the .B modifier · i-7d2612-3744e5
 **State.** Planned. Known-failing: `behtests/cond1_afield.beh`.
@@ -51,8 +51,9 @@ When `opmod_to_rmod` cannot decide (two references, no variable), the compiler e
 A-operand to `.AB`. `SLT.I` requires both `A<A` and `B<B`.
 **Collides with.** `prog0.bbc` and every golden with a raw-reference `MOV` (they expect `.I`,
 which the default also gives); any golden with `ADD`/`SLT` on two references.
-**Decide first.** Is `.I` a deliberate RED rule? If yes, document it in `LANGUAGE.md` and
-`docs/semantics.md`; if no, adopt the ICWS'94 table and write a spec per opcode family.
+**Decided** (2026-10-03, user): adopt the ICWS'94 table, and consider simple and compound
+operators in RED that translate to different modifiers or sequences. Built in subproject C
+(i-7d2612-7eadd5); at least `prog3.bbc` and `prog5.bbc` change (`ADD.I #1, #1`, `SUB.I`).
 
 ### User labels can collide with generated labels, and store-once is unchecked · i-7d2612-425c66
 **State.** Planned. Known-failing: `behtests/label_collision.beh`.
@@ -60,8 +61,9 @@ A user `(label LET1)` shares the namespace of generated labels; pMARS keeps the 
 and only warns. Unchecked as well: a `let` whose variable has no `(store x)` (its `LET` label is
 never defined) or two (defined twice), a user label that is a pMARS reserved word (`END`, `MOV`).
 **Collides with.** d-7d2612-123e41 (label names are part of every golden).
-**Decide first.** Reject colliding user labels in the parser, or give generated labels a prefix
-users cannot write (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive).
+**Decided** (2026-10-03, user): generated labels take a reserved prefix that the parser forbids in
+user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every golden changes once.
+Built in subproject C (i-7d2612-7eadd5).
 
 ### An inner let leaks its store placement into an outer variable of the same name · i-7d2612-ce4c3b
 **State.** Planned. Known-failing: `behtests/let_shadowing.beh`.
@@ -140,6 +142,38 @@ else in it (d-7d2612-8cdc44), then `dune build @fmt` in the gate.
 builds use the `dev` profile, where unused opens and values are errors. Decide whether warnings are
 errors, then make the file say so.
 
+## Cost model and optimization
+
+### Cost model, ordered IR and expectations (subproject A) · i-7d2612-aeab0f
+**State.** Done on branch `feat/cost-model` (s-7d2612-a654a5), not merged. Spec
+`docs/specs/2026-10-03-cost-model-design.md`, plan `docs/plans/2026-10-03-cost-model.md`.
+`Layout` (cells, successors, loops, label diagnostics), `Metrics` (length, roles, nonzero,
+nonblank, boot, per-loop cycles/overhead/exit, step and counter predictions, the policy),
+`Expect` (static checks, `--emit-beh` probes); `--report[=json]`, `--optimize`, `--expect=warn`.
+The prog7 counter prediction (202) equals what pMARS measures.
+**Still missing.** Weighted policies; benchmark validation (`--bench`); process counts for `SPL`;
+no alcotest runs the CLI itself.
+
+### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
+**State.** Planned. Warnings for possible slowdowns and possible optimizations, from the metrics:
+an extra instruction per iteration, compiler overhead above a construct's minimum, a step whose gcd
+with CORESIZE leaves cells unvisited, unreachable cells.
+**What is already in its favour.** i-7d2612-aeab0f gives every number and the construct that
+produced each cell.
+**Decide first.** Which warnings are on by default, and whether a policy changes them.
+
+### Operators, default modifiers, reserved label prefix and the do-while layout (subproject C) · i-7d2612-7eadd5
+**State.** Planned. Carries the decisions recorded in i-7d2612-fffa6c, i-7d2612-96f7b1 and
+i-7d2612-425c66.
+**Collides with.** d-7d2612-5b410d ends here: C changes emitted code, so every changed golden needs
+its behavioural reason (d-7d2612-6a1527), measured with the cost model.
+**Decide first.** The reserved prefix; which compound operators exist and what each emits.
+
+### Snippets: named RED fragments with verified metrics and specs · i-7d2612-8e9549
+**State.** Planned. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
+metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (subproject C or the
+dev branch's lambdas, i-7d2612-ec4d2d).
+
 ## Language and output
 
 ### Multiple hill targets · i-7d2612-217183
@@ -211,3 +245,7 @@ longer warriors.
 | i-7d2612-f2f7c5 kind check | No — it rejects programs, never changes output |
 | i-7d2612-ec4d2d dev branch | Yes — a different language and a non-deterministic label scheme |
 | i-7d2612-e8f3f0 tutorial | No |
+| i-7d2612-aeab0f cost model | No — it measures; d-7d2612-5b410d |
+| i-7d2612-90d6e1 warnings | No — it reports |
+| i-7d2612-7eadd5 subproject C | Yes — it changes emitted code; each change needs a behaviour spec |
+| i-7d2612-8e9549 snippets | No |

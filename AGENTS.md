@@ -77,6 +77,8 @@ make check-tools                # audit + behaviour specs + bundle checks; needs
 make check-ocaml                # dune build + the test suites (execute only on Linux x86-64)
 make tests F=compare            # dune exec execs/run_test.exe -- test '<F>'  (ctests: compact)
 make compile src=examples/prog1.src   # print the redcode for one RED file
+dune exec execs/run_compile.exe -- --report examples/prog1.src   # + metrics and predictions on stderr
+dune exec execs/run_compile.exe -- --emit-beh _build/p.beh examples/prog7_expect.src   # (expect ...) as a .beh
 python3 tools/behave.py behtests/prog8_while_lt.beh   # one behaviour spec
 tools/pmars-host.sh             # build pMARS for this machine into _build/pmars-host/
 ```

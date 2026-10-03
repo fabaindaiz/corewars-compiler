@@ -60,8 +60,17 @@ if a process is left. That is exactly how `tools/behave.py` implements `alive N`
 $P -@ pmars/config/94b.opt -b -k -r 200 -F 4000 _build/w.red other.red   # KotH format: wins ties
 ```
 
+## Predict before you run
+
+`dune exec execs/run_compile.exe -- --report prog.src` prints, without running anything, the
+cycles per loop iteration, the boot, and predictions (a pointer's step and coverage, a `DJN`
+counter's total and the instruction at which the warrior dies). Check a prediction with a probe:
+the prog7 counter predicts 202, and `behtests/prog7_dowhile_dn.beh` measures `dead 202`.
+
 ## Turn an observation into a spec
 
 Write `behtests/<name>.beh` (copy `behtests/prog8_while_lt.beh`): `golden:`, then `alive N`,
-`dead N` or `cell N ADDR TEXT` lines. Run `python3 tools/behave.py behtests/<name>.beh` and make
+`dead N` or `cell N ADDR TEXT` lines. Or write `(expect (alive N))`, `(expect (dead N))`,
+`(expect (cell ADDR "TEXT" N))` in the RED source and export them with
+`run_compile.exe --emit-beh _build/<name>.beh <file>`, which writes a spec with `redcode:`. Run `python3 tools/behave.py behtests/<name>.beh` and make
 sure it can fail: change one number and watch it go red, then put it back.

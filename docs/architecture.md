@@ -22,22 +22,29 @@ meaning each pass must preserve is in `docs/semantics.md`; settled choices are i
 ## The pipeline
 
 ```
-RED text ──CCSexp──▶ sexp ──Parse.parse_exp──▶ Ast.expr ──Ast.tag_expr──▶ tag eexpr
-   ──Compile.compile_expr (Analyse, Lib, Util)──▶ Red.instruction list ──Red.pp_instrs──▶ redcode text
+RED text ──CCSexp──▶ sexp ──Parse.parse_source──▶ Ast.source ──Ast.tag_expr──▶ tag eexpr
+   ──Compile.compile_expr (Analyse, Lib, Util)──▶ Compile.emitted list ──Red.pp_instrs──▶ redcode text
+                                                       └──Layout.build──▶ Layout.program ──Metrics.measure──▶ Metrics.t
+                                                                                          └──Expect.check──▶ pass / fail
 ```
+
+The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7d2612-5b410d).
 
 | Module | Role | Representation it produces |
 |---|---|---|
-| `src/parse.ml` | s-expression → AST; rejects unknown forms with `CTError` | `Ast.expr` |
+| `src/parse.ml` | s-expression → AST; the optional `(program ...)` header; rejects unknown forms with `CTError` | `Ast.source`, `Ast.expr` |
 | `src/ast.ml` | AST types; `tag_expr` numbers every node in pre-order from 1 | `tag eexpr` (tags feed label names) |
 | `src/analyse.ml` | per `let`: finds the field (`PA`/`PB`) where `(store x)` sits | extends `penv` |
 | `src/lib.ml` | environments `aenv` (name → initializer), `penv` (name → field), `lenv` (name → label); `jump_label` | `env` |
 | `src/util.ml` | operand lowering through three small IRs: `darg` (number or label) → `carg` (constant, label, variable or pointer) → `Red.rarg`; and modifier choice `opmod` → `Red.rmod` | `Red.rarg`, `Red.rmod` |
-| `src/compile.ml` | control flow and conditions to labels and jumps; `compile_prog` adds the header and the epilogue `DAT` | `Red.instruction list`, then text |
+| `src/compile.ml` | control flow and conditions to labels and jumps, each instruction annotated with its origin tag, generating construct and stored variables; `compile_prog` adds the header and the epilogue `DAT` | `Compile.emitted list`, then text |
+| `src/layout.ml` | positions: labels resolved to offsets, cells with roles and variables, successors, loops, label and line-length diagnostics | `Layout.program` |
+| `src/metrics.ml` | static metrics, step and counter predictions, the optimization policy, text and JSON reports | `Metrics.t` |
+| `src/expect.ml` | collects `(expect ...)` with their enclosing loop, checks the static ones, writes the execution ones as a behaviour spec | `Expect.outcome`, `.beh` text |
 | `src/red.ml` | the Redcode target: opcodes, modes, modifiers, and the pretty-printer that fixes the column padding | text |
 
-**Dependency direction:** `red` ← `ast` ← `lib` ← `util` ← `analyse` ← `compile`; `parse` depends only
-on `ast`. dune rejects cycles, so the direction cannot invert silently; a new module states where it
+**Dependency direction:** `red` ← `ast` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
+← `expect`; `parse` depends only on `ast`. dune rejects cycles, so the direction cannot invert silently; a new module states where it
 sits in this chain.
 
 ## Generated labels
@@ -64,7 +71,8 @@ changes every golden that contains one: that is a change to the output contract,
 | the exact redcode a program compiles to | a `.bbc` in `bbctests/examples/` (copy `bbctests/examples/prog2.bbc`) | `make tests F=compare` |
 | what the compiled warrior does in the core | a `.beh` in `behtests/` pointing at a golden (copy `behtests/prog8_while_lt.beh`), or `(expect (alive N))`-style expectations in the RED source exported with `run_compile.exe --emit-beh` (a spec with `redcode:` instead of `golden:`) | `python3 tools/behave.py` |
 | a bug, before fixing it | a `.bbc` in `bbctests/known-bugs/` with the current output, a `.beh` marked `known-failing: <roadmap id>`, and the roadmap item | both of the above |
-| a function's result | an alcotest case in `execs/run_test.ml` (`ocaml_tests`) | `make tests F=parse` |
+| a function's result | an alcotest case in `execs/run_test.ml` (`ocaml_tests`; groups `parse`, `emit`, `layout`, `metrics`, `policy`, `expect`) | `make tests F=metrics` |
+| a metric, prediction or expectation message | an alcotest case with the exact value (copy `test_metrics_prog8`) | `make tests F=metrics` |
 
 The `.bbc` format (BBCStepTester): `NAME:`, `DESCRIPTION:`, optional `PARAMS:` and `STATUS:`
 (`CT error`, `RT error`), `SRC:`, `EXPECTED:`, optional `END`. No trailing newline after the last

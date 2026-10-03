@@ -144,7 +144,8 @@ pattern matches:
   `SUB #k` on it, or its use through `>` `<` `}` `{`) and that is used as the target operand of a
   write (direct or indirect): step `k`; period `CORESIZE / gcd(k, CORESIZE)` iterations; cycles to
   cover the core = period × `cycles/iter`. When `gcd(k, CORESIZE) > 1`, the report says the pointer
-  does not visit every cell. prog1: step 4, period 2000, 6000 cycles.
+  does not visit every cell. prog1: step 4, period 2000, 6000 cycles, and it does **not** visit
+  every cell (gcd(4, 8000) = 4: one cell in four, as a classic Dwarf bombs).
 - **Counter.** A `DJN` whose decremented operand has a constant initial value `n` (an immediate on the
   `DJN` itself, or a cell field initialised to `n`): `n` iterations, so the loop runs
   `n × cycles/iter` cycles, and a warrior that ends after it dies after
@@ -192,8 +193,8 @@ compiled output. One spec format, one runner.
 
 ```
 length 4/100   code 3  data 0  epilogue 1  unreachable 0   nonzero 3  nonblank 4   boot 0  spl 0
-loop 0..2 (LET1, node 1)   cycles/iter 3   overhead 0   exit —
-  predicted: step 4 → period 2000 iterations, covers core in 6000 cycles
+loop 0..2 (LET1, user code, node 8)   cycles/iter 3   overhead 0   exit —
+  predicted: step 4 → period 2000 iterations, does not visit every cell (6000 cycles per period)
 policy: speed > size
 ```
 

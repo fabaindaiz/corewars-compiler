@@ -5,6 +5,33 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-03 · s-7d2612-a654a5 — Implement the cost model, ordered IR and expectations (subproject A)
+
+**What.** On branch `feat/cost-model`, following `docs/plans/2026-10-03-cost-model.md`:
+`Compile.emitted` (origin, construct, stores); `src/layout.ml` (cells, resolved offsets,
+successors, loops, label and line-length diagnostics); `src/metrics.ml` (metrics, step and counter
+predictions, policy, text and JSON reports); `src/expect.ml` (static checks, `.beh` export); the
+`(program ...)` header and `(expect ...)` in the parser; `run_compile.exe --report[=json]`,
+`--optimize`, `--expect=warn`, `--emit-beh`; `redcode:` in `tools/behave.py`; documents. 33 new
+alcotest cases. Installed a local opam switch (`_opam/`, OCaml 5.5.1) so the OCaml gate runs here.
+**Areas.** `src/`, `execs/`, `tools/behave.py`, `examples/prog7_expect.src`, `Makefile`, `docs/`,
+`LANGUAGE.md`, `REFERENCE.md`, `AGENTS.md`, `.claude/skills/run-warrior/`.
+**Why.** Subproject A of the optimization work the user asked for: metrics before optimizing.
+**Architecture.** ✅ Complies: no emitted byte changed (`compare` green, `test_emit_text_unchanged`).
+**What went wrong on the way.** The plan expected prog1's step prediction to cover the whole core;
+step 4 on CORESIZE 8000 visits one cell in four — the test caught it and the spec's example was
+corrected. The plan quoted prog8's body as `(MOV x (Dec x))`; it is `(MOV I (Dir x) (Dec x))`.
+`make check-ocaml` on macOS ran only `parse` and `compare`, so the new groups were outside the
+local gate until a separate chore commit; the audit's keyword check only sees `Atom "..."` matches,
+so string-matched keywords (`length`, `cycles`, objective names) are not checked. Running two
+`dune exec` at once corrupted `_build/.lock` (run them one after another). A first draft used a
+`| _, _ ->` over opcodes, against the repository's rule; replaced before commit.
+**What was left undone.** Merge to `main` (the user decides); weighted policies, benchmark
+validation, `SPL` process counts; a test that runs the CLI; subprojects B and C.
+**Measured.** `make check`: audit 11 checks, 0 failing, 1 known-failing; behave 7 specs, 0
+unexpected; 52 alcotest cases besides `execute`. prog7: predicted death after 202 instructions,
+measured 202 by `behtests/prog7_dowhile_dn.beh` and by an `--emit-beh` spec.
+
 ## 2026-10-03 · s-7d2612-8f97bb — Design the cost model and its implementation plan; strip assistant attribution from history
 
 **What.** Designed subproject A (ordered IR, static metrics, predictions, configurable policy,

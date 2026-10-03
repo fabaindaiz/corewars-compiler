@@ -17,6 +17,14 @@ written.
 | d-7d2612-4403a4 | Not adopted: GADTs, phantom types or a visitor library for the IRs. *A decision, not a rule.* | About 800 lines and four small IRs; exhaustive matches on plain variants already catch a forgotten case (warning 8 is an error in dune's dev profile) | — |
 | d-7d2612-62375b | Environments stay association lists (`aenv`, `penv`, `lenv` in `src/lib.ml`). *A decision, not a rule.* | A warrior is at most 100 instructions on 94b, so lookups are trivially cheap; `Map.Make(String)` would change nothing measurable. Revisit if RED gains macros that grow environments | — |
 
+## Cost model
+
+| Id | Decision | Why | Enforced in |
+|---|---|---|---|
+| d-7d2612-5b410d | The cost model (`Layout`, `Metrics`, `Expect`) measures the emitted program and changes no emitted code; optimizations that change output come later, each measured with it | Measuring and changing in one step would leave no baseline to compare against | the `compare` suite; `test_emit_text_unchanged` in `execs/run_test.ml` |
+| d-7d2612-2b781f | The default optimization policy is speed (worst cycles per loop iteration), then size (length); the user overrides it with `(optimize ...)` or `--optimize` | Measured on 94b against the Wilkies benchmark: one more instruction per iteration cost about 20 points, eight more cells about 4 (`docs/specs/2026-10-03-cost-model-design.md`) | `Metrics.default_policy`; `test_policy_default` |
+| d-7d2612-57b438 | A failed static expectation is a compile error (exit 1) unless `--expect=warn` | An expectation is a contract the programmer wrote; a warning nobody reads would let a slower warrior ship | `execs/run_compile.ml` — no test runs the CLI |
+
 ## Tests
 
 | Id | Decision | Why | Enforced in |

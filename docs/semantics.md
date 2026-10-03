@@ -141,6 +141,25 @@ simulation suffices.
 | behaviour specs | instances of the statement: alive/dead after N instructions, a cell's content | `python3 tools/behave.py` |
 | reference interpreter (planned) | `P` and its compiled code agree cell by cell (translation validation) | i-7d2612-56302d |
 
+## 6a. Metrics
+
+What the compiler measures on its own output (`src/metrics.ml`; definitions and reference values in
+`docs/specs/2026-10-03-cost-model-design.md`). A *cycle* is one instruction executed by one process.
+
+| Metric | Meaning |
+|---|---|
+| `length` | cells emitted, epilogue included |
+| `nonzero` / `nonblank` | cells a `JMZ.F` / `SEQ.I` scanner can tell from empty core |
+| `boot` | cycles before the first loop starts |
+| `cycles/iter` | instructions per loop iteration |
+| `overhead/iter` | of those, the jumps and skips a control construct added |
+| step prediction | a pointer that advances `k` per iteration visits `CORESIZE / gcd(k, CORESIZE)` cells |
+| counter prediction | a `DJN` from `n` runs `n` iterations (`0` runs `CORESIZE`) |
+
+These measure the static program: self-modifying code and indirect jumps are not followed, and a
+prediction is absent rather than guessed. They are claims about the redcode, checked against pMARS
+where a behaviour spec exists (prog7's counter: 202 instructions, both predicted and measured).
+
 ## 7. Vocabulary
 
 - **Syntax and semantics.** Syntax is which s-expressions parse (`src/parse.ml`); semantics is what
