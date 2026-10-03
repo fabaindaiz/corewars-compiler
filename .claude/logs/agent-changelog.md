@@ -26,8 +26,18 @@ local gate until a separate chore commit; the audit's keyword check only sees `A
 so string-matched keywords (`length`, `cycles`, objective names) are not checked. Running two
 `dune exec` at once corrupted `_build/.lock` (run them one after another). A first draft used a
 `| _, _ ->` over opcodes, against the repository's rule; replaced before commit.
+**Review.** A fresh-context review of the branch found 0 critical and 6 important issues, all fixed
+test-first in one pass: loops sharing a header were merged (a valid program with an expectation
+failed to compile); path enumeration was exponential (21 branches took 14 s; now linear, 8 ms for
+the suite); `ADD.B #k` with an immediate A was predicted to step by `k` instead of its own B-number;
+`dies_after` used the global boot for every loop; coverage ignored counters and exits; layout
+diagnostics were never shown. Looking at the fixed report found a seventh: a counter around an
+inner loop predicted a death pMARS refuted (still alive after 17 instructions); now no death is
+predicted there. The line-ending conversion of five files inside feature commits (CRLF to LF, the
+second time this friction occurred after the bootstrap) was undone by rewriting the unpushed branch.
 **What was left undone.** Merge to `main` (the user decides); weighted policies, benchmark
-validation, `SPL` process counts; a test that runs the CLI; subprojects B and C.
+validation, `SPL` process counts; a test that runs the CLI; subprojects B and C; the review's
+minor findings (in the roadmap under subproject A).
 **Measured.** `make check`: audit 11 checks, 0 failing, 1 known-failing; behave 7 specs, 0
 unexpected; 52 alcotest cases besides `execute`. prog7: predicted death after 202 instructions,
 measured 202 by `behtests/prog7_dowhile_dn.beh` and by an `--emit-beh` spec.

@@ -334,6 +334,53 @@ let test_expect_to_beh () =
     (X.to_beh ~redcode:"prog7.red" [XAlive 201; XDead 202; XLength (Le, 5)])
 
 
+(* Tests from the final review *)
+let test_review_nested_loops_split () =
+  let e = parse_exp (sexp_from_string "(do-while (DN 5) (seq (do-while (DN 3) (NOP)) (expect (cycles <= 100))))") in
+  let m = M.measure (L.of_expr e) in
+  check Alcotest.int "two loops" 2 (List.length m.loops) ;
+  check Alcotest.(list int) "both counters" [3; 5]
+    (List.sort compare (List.map (fun (n, _, _) -> n) (counters m))) ;
+  check outcome "outer expectation" (Some X.Pass) (X.check m (List.hd (X.collect (tag_expr e)))) ;
+  check Alcotest.(list (option int)) "no dies_after around an inner loop" [None; None]
+    (List.map (fun (_, _, d) -> d) (counters m)) ;
+  check Alcotest.bool "report says so" true (contains (M.to_text ~maxlength:100 m) "inner loops counted once")
+
+let test_review_many_branches_fast () =
+  let ifs = String.concat " " (List.init 21 (fun _ -> "(if (JZ x) (NOP))")) in
+  let src = Printf.sprintf "(let (x 0) (seq (JMP (Dir 2)) (DAT 0 (store x)) (repeat (seq %s))))" ifs in
+  let t0 = Sys.time () in
+  let m = M.measure (layout_of_src src) in
+  check Alcotest.bool "measured in under a second" true (Sys.time () -. t0 < 1.0) ;
+  check range "cycles" (r 22 43) (List.hd m.loops).cycles
+
+let test_review_step_b_immediate () =
+  let m = M.measure (layout_of_src
+    "(let (p 0) (seq (JMP (Dir 2)) (DAT 0 (store p)) (repeat (seq (ADD B 4 p) (MOV 0 (Ind p))))))") in
+  check step_t "step is the ADD's own B-number" (as_pairs [(7999, 8000, 24000, true)]) (as_pairs (steps m))
+
+let test_review_dies_after_second_loop () =
+  let m = M.measure (layout_of_src "(seq (do-while (DN 10) (NOP)) (do-while (DN 5) (NOP)))") in
+  check Alcotest.(list (option int)) "no dies_after past the first loop" [None; None]
+    (List.map (fun (_, _, d) -> d) (counters m))
+
+let test_review_covers_core_bounded () =
+  check outcome "prog7: counter ends first"
+    (Some (X.Fail "expect covers-core: the loop ends after 100 iterations, visiting 100 of 8000 cells"))
+    (X.check (metrics_of (example "prog7")) (XCoversCore, None)) ;
+  check outcome "prog8: loop can exit"
+    (Some (X.Fail "expect covers-core: the loop can exit before visiting every cell"))
+    (X.check (metrics_of (example "prog8")) (XCoversCore, None)) ;
+  check outcome "prog6: endless, step 1" (Some X.Pass) (X.check (metrics_of (example "prog6")) (XCoversCore, None)) ;
+  check Alcotest.bool "report" true
+    (contains (M.to_text ~maxlength:100 (metrics_of (example "prog7"))) "visits 100 cells before the counter ends")
+
+let test_review_diagnostics_reported () =
+  let m = M.measure (layout_of_src "(seq (JMP nowhere) (DAT 0 0))") in
+  check Alcotest.bool "text" true (contains (M.to_text ~maxlength:100 m) "undefined label `nowhere`") ;
+  check Alcotest.bool "json" true (contains (M.to_json m) "\"diagnostics\":[\"undefined label")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -385,6 +432,14 @@ let ocaml_tests = [
     test_case "global, no loop" `Quick test_expect_global_no_loop ;
     test_case "prog1: step" `Quick test_expect_step_prog1 ;
     test_case "behaviour spec text" `Quick test_expect_to_beh ;
+  ] ;
+  "review", [
+    test_case "nested loops sharing a header are split" `Quick test_review_nested_loops_split ;
+    test_case "21 branches measured fast" `Quick test_review_many_branches_fast ;
+    test_case "ADD.B with an immediate A steps by its B-number" `Quick test_review_step_b_immediate ;
+    test_case "dies_after only for the first loop" `Quick test_review_dies_after_second_loop ;
+    test_case "covers-core respects loop bounds" `Quick test_review_covers_core_bounded ;
+    test_case "diagnostics are reported" `Quick test_review_diagnostics_reported ;
   ] ;
   "interp", [
 

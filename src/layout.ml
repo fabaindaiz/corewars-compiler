@@ -146,11 +146,13 @@ let build ?(coresize = default_coresize) (body : Compile.emitted list) : program
     let rec up i = if not inside.(i) then (inside.(i) <- true ; List.iter up preds.(i)) in
     up s ;
     List.filter (fun i -> inside.(i)) (List.init n Fun.id) in
-  let headers = List.sort_uniq compare (List.map snd !backs) in
-  let loops = List.map (fun h ->
-    let edges = List.sort compare (List.filter (fun (_, t) -> t = h) !backs) in
+  (* Loops that share a header but close through different constructs (a do-while whose body
+     starts with another loop) stay separate: one loop per header and closing construct. *)
+  let keys = List.sort_uniq compare (List.map (fun (s, h) -> (h, cells.(s).origin)) !backs) in
+  let loops = List.map (fun (h, o) ->
+    let edges = List.sort compare (List.filter (fun (s, t) -> t = h && cells.(s).origin = o) !backs) in
     let body = List.sort_uniq compare (List.concat_map natural edges) in
-    { header = h; body; back_edges = edges }) headers in
+    { header = h; body; back_edges = edges }) keys in
   { cells; succ; loops; diagnostics = List.rev !diags; coresize }
 
 let reachable (p : program) : bool array =

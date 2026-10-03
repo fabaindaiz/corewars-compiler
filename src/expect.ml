@@ -48,10 +48,21 @@ let name (l : loop_metrics) : string =
   sprintf "the %s of node %s" (Option.value l.construct ~default:"loop")
     (match l.node with Some t -> string_of_int t | None -> "?")
 
-let steps_in (m : t) (ls : loop_metrics list) : (int * int * bool) list =
+(* The fixed-step pointers of these loops: (signed step, period, full, the loop). *)
+let steps_in (m : t) (ls : loop_metrics list) : (int * int * bool * loop_metrics) list =
   List.filter_map (fun p -> match p with
-    | Step s when List.exists (fun l -> l.loop.header = s.loop) ls -> Some (signed m s.k, s.period, s.full)
-    | Step _ | Counter _ -> None) m.predictions
+    | Step s ->
+      Option.map (fun l -> (signed m s.k, s.period, s.full, l))
+        (List.find_opt (fun l -> l.loop.header = s.loop && l.node = s.node) ls)
+    | Counter _ -> None) m.predictions
+
+(* Whether one pointer visits every cell before its loop can stop. *)
+let covers (m : t) ((k, period, full, l) : int * int * bool * loop_metrics) : (unit, string) result =
+  if not full then Error (sprintf "the pointer steps by %d and visits %d of %d cells" k period m.coresize)
+  else match counter_of m l with
+    | Some n when n < period -> Error (sprintf "the loop ends after %d iterations, visiting %d of %d cells" n n m.coresize)
+    | Some _ -> Ok ()
+    | None -> if l.exit <> None then Error "the loop can exit before visiting every cell" else Ok ()
 
 let check (m : t) ((x, loop) : expectation * tag option) : outcome option =
   let fail detail = Some (Fail (sprintf "%s: %s" (describe x) detail)) in
@@ -70,12 +81,13 @@ let check (m : t) ((x, loop) : expectation * tag option) : outcome option =
       verdict (holds c n l.overhead.max) (sprintf "%s spends %d per iteration on control" (name l) l.overhead.max))
   | XStep k -> in_scope (fun ls -> match steps_in m ls with
       | [] -> fail "no fixed-step pointer found"
-      | steps when List.exists (fun (s, _, _) -> s = k) steps -> Some Pass
-      | (s, _, _) :: _ -> fail (sprintf "the pointer steps by %d" s))
+      | steps when List.exists (fun (s, _, _, _) -> s = k) steps -> Some Pass
+      | (s, _, _, _) :: _ -> fail (sprintf "the pointer steps by %d" s))
   | XCoversCore -> in_scope (fun ls -> match steps_in m ls with
       | [] -> fail "no fixed-step pointer found"
-      | steps when List.exists (fun (_, _, full) -> full) steps -> Some Pass
-      | (s, period, _) :: _ -> fail (sprintf "the pointer steps by %d and visits %d of %d cells" s period m.coresize))
+      | first :: _ as steps ->
+        if List.exists (fun s -> covers m s = Ok ()) steps then Some Pass
+        else match covers m first with Error e -> fail e | Ok () -> Some Pass)
   | XAlive _ | XDead _ | XCell _ -> None
 
 (* The execution kinds, as a behaviour spec for tools/behave.py (`redcode:` relative to the spec). *)

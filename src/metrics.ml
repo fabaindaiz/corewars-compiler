@@ -20,8 +20,9 @@ type loop_metrics = {
 }
 
 type prediction =
-| Step of { loop : int; cell : int; field : Layout.field; k : int; period : int; cover_cycles : int; full : bool }
-| Counter of { loop : int; n : int; loop_cycles : int; dies_after : int option }
+| Step of { loop : int; node : tag option; cell : int; field : Layout.field; k : int; period : int;
+            cover_cycles : int; full : bool }
+| Counter of { loop : int; node : tag option; n : int; loop_cycles : int; dies_after : int option }
 
 type t = {
   length : int;
@@ -37,6 +38,7 @@ type t = {
   div_by_zero : int list;
   loops : loop_metrics list;
   predictions : prediction list;
+  diagnostics : Layout.diagnostic list;
   coresize : int;
 }
 
@@ -53,30 +55,55 @@ let control (op : opcode) : bool =
   | IJMP | IJMZ | IJMN | IDJN | ISEQ | ISNE | ISLT | ICMP -> true
   | IDAT | ISPL | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | ILDP | ISTP -> false
 
-(* Simple paths from [start] while [inside] holds, each cell at most once; [stop t] ends a path
-   at successor t and records it. Warriors are at most a few hundred cells with few branches. *)
-let paths (p : program) ~(inside : int -> bool) ~(stop : int -> bool) (start : int) : int list list =
-  let found = ref [] in
-  let rec go i trail =
-    let trail = i :: trail in
-    List.iter (fun t ->
-      if stop t then found := List.rev trail :: !found
-      else if inside t && not (List.mem t trail) then go t trail) (targets p.succ.(i)) in
-  go start [] ; !found
+let back_edges (p : program) : (int * int) list = List.concat_map (fun (l : Layout.loop) -> l.back_edges) p.loops
+
+(* Removing the depth-first back edges leaves an acyclic graph, so the shortest and longest paths
+   are one pass in topological order: linear, where enumerating paths is exponential in the number
+   of branches. [weight] counts a cell; [terminal] cells are reached but not left (the start is left
+   when [expand_start]). *)
+let dag_ranges (p : program) ~(allowed : int -> bool) ~(terminal : int -> bool) ~(weight : int -> int)
+    ?(expand_start = true) (start : int) : range option array =
+  let n = Array.length p.cells in
+  let backs = back_edges p in
+  let next i = List.filter (fun t -> allowed t && not (List.mem (i, t) backs)) (targets p.succ.(i)) in
+  let leaves i = if i = start then expand_start else not (terminal i) in
+  let state = Array.make n 0 and order = ref [] in
+  let rec visit i =
+    if state.(i) = 0 then begin
+      state.(i) <- 1 ;
+      if leaves i then List.iter (fun t -> if state.(t) <> 1 then visit t) (next i) ;
+      state.(i) <- 2 ; order := i :: !order end in
+  visit start ;
+  let best = Array.make n None in
+  best.(start) <- Some { min = weight start; max = weight start } ;
+  List.iter (fun i -> match best.(i) with
+    | Some r when leaves i ->
+      List.iter (fun t -> let w = weight t in
+        best.(t) <- Some (match best.(t) with
+          | None -> { min = r.min + w; max = r.max + w }
+          | Some b -> { min = Int.min b.min (r.min + w); max = Int.max b.max (r.max + w) })) (next i)
+    | Some _ | None -> ()) !order ;
+  best
 
 let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let in_body i = List.mem i l.body in
   let source = fst (List.hd l.back_edges) in
   let c = p.cells.(source) in
-  let laps = paths p ~inside:(fun i -> in_body i && i <> l.header) ~stop:(fun t -> t = l.header) l.header in
-  let count f = List.map (fun path -> List.length (List.filter f path)) laps in
-  let cycles = range_of (count (fun _ -> true)) in
-  let overhead = range_of (count (fun i -> p.cells.(i).construct <> None && control p.cells.(i).op)) in
+  (* A lap: from the header to a source of this loop's back edges; an inner loop counts one pass. *)
+  let lap weight =
+    let best = dag_ranges p ~allowed:in_body ~terminal:(fun _ -> false) ~weight l.header in
+    range_of (List.concat_map (fun (s, _) -> match best.(s) with Some r -> [r.min; r.max] | None -> []) l.back_edges) in
+  let cycles = lap (fun _ -> 1) in
+  let overhead = lap (fun i -> if p.cells.(i).construct <> None && control p.cells.(i).op then 1 else 0) in
   (* Leaving: from the header to the first cell outside the loop, counting the loop construct's
      own exit jump, which sits outside the natural body. *)
   let own i = p.cells.(i).origin = c.origin && p.cells.(i).construct <> None && c.construct <> None in
-  let outs = paths p ~inside:(fun i -> in_body i || own i) ~stop:(fun t -> not (in_body t || own t)) l.header in
-  let exit = Option.map (fun r -> r.min) (range_of (List.map List.length outs)) in
+  let inside i = in_body i || own i in
+  let reach = dag_ranges p ~allowed:inside ~terminal:(fun _ -> false) ~weight:(fun _ -> 1) l.header in
+  let exits = List.filter_map (fun i -> match reach.(i) with
+    | Some r when List.exists (fun t -> not (inside t)) (targets p.succ.(i)) -> Some r.min
+    | Some _ | None -> None) (List.init (Array.length p.cells) Fun.id) in
+  let exit = Option.map (fun r -> r.min) (range_of exits) in
   let zero = { min = 0; max = 0 } in
   let label = match p.cells.(l.header).labels with x :: _ -> Some x | [] -> None in
   { loop = l; label; node = c.origin; construct = c.construct;
@@ -110,15 +137,17 @@ let rec gcd (a : int) (b : int) : int = if b = 0 then a else gcd b (a mod b)
 let step_of (p : program) (lm : loop_metrics) ~(cell : int) ~(field : Layout.field) ~(k : int) : prediction =
   let k = norm p.coresize k in
   let period = p.coresize / gcd p.coresize k in
-  Step { loop = lm.loop.header; cell; field; k; period; cover_cycles = period * lm.cycles.max;
-         full = (gcd p.coresize k = 1) }
+  Step { loop = lm.loop.header; node = lm.node; cell; field; k; period;
+         cover_cycles = period * lm.cycles.max; full = (gcd p.coresize k = 1) }
 
 let steps (p : program) (lm : loop_metrics) : prediction list =
   let n = Array.length p.cells in
   let body = lm.loop.body in
-  let laps = paths p ~inside:(fun i -> List.mem i body && i <> lm.loop.header)
-      ~stop:(fun t -> t = lm.loop.header) lm.loop.header in
-  let every i = laps <> [] && List.for_all (List.mem i) laps in
+  (* On every lap: no source of this loop's back edges is reachable from the header without it. *)
+  let every i =
+    let avoiding = dag_ranges p ~allowed:(fun t -> List.mem t body && t <> i) ~terminal:(fun _ -> false)
+        ~weight:(fun _ -> 1) lm.loop.header in
+    i = lm.loop.header || List.for_all (fun (s, _) -> s = i || avoiding.(s) = None) lm.loop.back_edges in
   let target (c : cell) = norm p.coresize (c.pos + c.b.value) in
   (* A field is a destination when a write in the loop goes to it: the cell's own B operand, or a
      write whose B operand is indirect through it. *)
@@ -129,10 +158,14 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
   let by_add = List.filter_map (fun i -> let c = p.cells.(i) in
       let field = match c.md with
         | RA | RBA -> Some FA | RB | RAB -> Some FB | RN | RF | RX | RI -> None in
+      (* An immediate A operand makes the instruction itself the A-value (ICWS'94): .A and .AB add
+         its A-number (the #k), .B and .BA its own B-number. *)
+      let amount = match c.md with
+        | RA | RAB -> c.a.value | RB | RBA -> c.b.value | RN | RF | RX | RI -> 0 in
       match field with
       | Some f when (c.op = IADD || c.op = ISUB) && c.a.mode = RImm && c.b.mode = RDir && every i
-                    && target c < n && destination (target c) f ->
-        let k = if c.op = IADD then c.a.value else - c.a.value in
+                    && norm p.coresize amount <> 0 && target c < n && destination (target c) f ->
+        let k = if c.op = IADD then amount else - amount in
         Some (step_of p lm ~cell:(target c) ~field:f ~k)
       | Some _ | None -> None) body in
   let by_mode = List.filter_map (fun j -> let w = p.cells.(j) in
@@ -145,7 +178,7 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
       | (Some _ | None), (Some _ | None) -> None) body in
   by_add @ by_mode
 
-let counter (p : program) (boot : range option) (lm : loop_metrics) : prediction option =
+let counter (p : program) (entry : range option) (lm : loop_metrics) : prediction option =
   let s = p.cells.(fst (List.hd lm.loop.back_edges)) in
   let n_of_field (c : cell) = match s.md with
     | RA | RBA -> Some c.a.value | RB | RAB | RN -> Some c.b.value | RF | RX | RI -> None in
@@ -161,20 +194,29 @@ let counter (p : program) (boot : range option) (lm : loop_metrics) : prediction
     let n = if n = 0 then p.coresize else n in
     let loop_cycles = n * lm.cycles.max in
     let falls_on_dat = s.pos + 1 < Array.length p.cells && p.cells.(s.pos + 1).op = IDAT in
-    let start = match boot with Some r -> r.max | None -> 0 in
-    Counter { loop = lm.loop.header; n; loop_cycles;
-              dies_after = if falls_on_dat then Some (start + loop_cycles + 1) else None })
+    (* Only a loop entered without passing another loop has a known start, and only one with no
+       inner loop has a known length: a lap counts an inner loop as a single pass. *)
+    let nested = List.exists (fun (o : Layout.loop) ->
+        o <> lm.loop && List.for_all (fun i -> List.mem i lm.loop.body) o.body) p.loops in
+    let dies_after = match entry with
+      | Some r when falls_on_dat && not nested -> Some (r.max + loop_cycles + 1)
+      | Some _ | None -> None in
+    Counter { loop = lm.loop.header; node = lm.node; n; loop_cycles; dies_after })
     initial
 
 let measure (p : program) : t =
   let cells = Array.to_list p.cells in
   let seen = reachable p in
   let count f = List.length (List.filter f cells) in
-  let headers = List.map (fun (l : Layout.loop) -> l.header) p.loops in
-  let boot =
-    if headers = [] then None
-    else if List.mem 0 headers then Some { min = 0; max = 0 }
-    else range_of (List.map List.length (paths p ~inside:(fun _ -> true) ~stop:(fun t -> List.mem t headers) 0)) in
+  let headers = List.sort_uniq compare (List.map (fun (l : Layout.loop) -> l.header) p.loops) in
+  let is_header i = List.mem i headers in
+  (* Cycles before each loop starts, over paths that pass no other loop's header. *)
+  let entries =
+    if headers = [] then Array.make (Array.length p.cells) None
+    else dag_ranges p ~allowed:(fun _ -> true) ~terminal:is_header ~expand_start:(not (is_header 0))
+        ~weight:(fun i -> if is_header i then 0 else 1) 0 in
+  let boot = range_of (List.concat_map (fun h -> match entries.(h) with
+    | Some r -> [r.min; r.max] | None -> []) headers) in
   { length = Array.length p.cells;
     code = count (fun c -> c.role = Code);
     epilogue = count (fun c -> c.role = Epilogue);
@@ -188,9 +230,10 @@ let measure (p : program) : t =
     div_by_zero = List.map (fun c -> c.pos) (List.filter divides_by_zero cells);
     loops = List.map (measure_loop p) p.loops;
     predictions = [];
+    diagnostics = p.diagnostics;
     coresize = p.coresize }
   |> fun m -> { m with predictions =
-      List.concat_map (fun lm -> steps p lm @ Option.to_list (counter p m.boot lm)) m.loops }
+      List.concat_map (fun lm -> steps p lm @ Option.to_list (counter p entries.(lm.loop.header) lm)) m.loops }
 
 
 (* The policy: objectives in priority order, compared lexicographically. Speed before size by
@@ -223,6 +266,18 @@ let compare (policy : policy) (x : t) (y : t) : int =
 
 
 (* Reports *)
+(* The counter that bounds a loop, if one was predicted: its iterations. *)
+let counter_of (m : t) (l : loop_metrics) : int option =
+  List.find_map (fun pr -> match pr with
+    | Counter c when c.loop = l.loop.header && c.node = l.node -> Some c.n
+    | Counter _ | Step _ -> None) m.predictions
+
+let show_diagnostic (d : Layout.diagnostic) : string =
+  match d with
+  | Undefined_label l -> sprintf "undefined label `%s` (pMARS rejects the warrior)" l
+  | Duplicate_label (l, a, b) -> sprintf "label `%s` defined at cells %d and %d (pMARS keeps the first)" l a b
+  | Long_line i -> sprintf "cell %d prints a line of 256 characters or more (pMARS hangs on it)" i
+
 let show_range (r : range) : string =
   if r.min = r.max then string_of_int r.min else sprintf "%d..%d" r.min r.max
 
@@ -237,6 +292,7 @@ let to_text ~(maxlength : int) (m : t) : string =
          (match m.boot with Some r -> show_range r | None -> "—") m.spl_sites) ;
   if m.dynamic_jumps > 0 then add (sprintf "dynamic jumps: %d\n" m.dynamic_jumps) ;
   List.iter (fun i -> add (sprintf "kills: cell %d divides by 0\n" i)) m.div_by_zero ;
+  List.iter (fun d -> add (sprintf "diagnostic: %s\n" (show_diagnostic d))) m.diagnostics ;
   if m.loops = [] then add "loops: none\n" ;
   List.iter (fun l ->
     let first = List.hd l.loop.body and last = List.nth l.loop.body (List.length l.loop.body - 1) in
@@ -245,14 +301,24 @@ let to_text ~(maxlength : int) (m : t) : string =
            (match l.node with Some t -> string_of_int t | None -> "—")
            (show_range l.cycles) (show_range l.overhead)
            (match l.exit with Some e -> string_of_int e | None -> "—")) ;
+    (* A pointer only covers what the loop lets it: a counter or an exit can stop it first. *)
+    let bounded = counter_of m l in
+    let if_runs = if l.exit <> None && bounded = None then ", if the loop runs that long" else "" in
+    let mine (loop, node) = loop = l.loop.header && node = l.node in
     List.iter (fun pr -> match pr with
-      | Step s when s.loop = l.loop.header && s.full ->
-        add (sprintf "  predicted: step %d → period %d iterations, covers core in %d cycles\n" (signed m s.k) s.period s.cover_cycles)
-      | Step s when s.loop = l.loop.header ->
-        add (sprintf "  predicted: step %d → period %d iterations, does not visit every cell (%d cycles per period)\n"
-               (signed m s.k) s.period s.cover_cycles)
-      | Counter c when c.loop = l.loop.header ->
-        add (sprintf "  predicted: counter %d → %d cycles in the loop%s\n" c.n c.loop_cycles
+      | Step s when mine (s.loop, s.node) && (match bounded with Some n -> n < s.period | None -> false) ->
+        add (sprintf "  predicted: step %d → visits %d cells before the counter ends\n" (signed m s.k)
+               (Option.value bounded ~default:0))
+      | Step s when mine (s.loop, s.node) && s.full ->
+        add (sprintf "  predicted: step %d → period %d iterations, covers core in %d cycles%s\n"
+               (signed m s.k) s.period s.cover_cycles if_runs)
+      | Step s when mine (s.loop, s.node) ->
+        add (sprintf "  predicted: step %d → period %d iterations, does not visit every cell (%d cycles per period)%s\n"
+               (signed m s.k) s.period s.cover_cycles if_runs)
+      | Counter c when mine (c.loop, c.node) ->
+        let nested = List.exists (fun o -> o != l && List.for_all (fun i -> List.mem i l.loop.body) o.loop.body) m.loops in
+        add (sprintf "  predicted: counter %d → %d cycles in the loop%s%s\n" c.n c.loop_cycles
+               (if nested then " (inner loops counted once)" else "")
                (match c.dies_after with Some d -> sprintf "; dies after %d instructions" d | None -> ""))
       | Step _ | Counter _ -> ()) m.predictions) m.loops ;
   Buffer.contents b
@@ -268,9 +334,10 @@ let to_json (m : t) : string =
                   s.loop s.cell (field s.field) s.k s.period s.cover_cycles s.full
     | Counter c -> sprintf "{\"kind\":\"counter\",\"loop\":%d,\"n\":%d,\"loop_cycles\":%d,\"dies_after\":%s}"
                      c.loop c.n c.loop_cycles (opt string_of_int c.dies_after) in
+  let diagnostics = "[" ^ String.concat "," (List.map (fun d -> str (show_diagnostic d)) m.diagnostics) ^ "]" in
   let loop l = sprintf "{\"header\":%d,\"label\":%s,\"body\":%s,\"node\":%s,\"construct\":%s,\"cycles\":%s,\"overhead\":%s,\"exit\":%s}"
       l.loop.header (opt str l.label) (ints l.loop.body) (opt string_of_int l.node) (opt str l.construct)
       (range l.cycles) (range l.overhead) (opt string_of_int l.exit) in
-  sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[%s]}"
+  sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[%s],\"diagnostics\":%s}"
     m.length m.code m.data m.epilogue m.unreachable m.nonzero m.nonblank (opt range m.boot)
-    m.spl_sites m.dynamic_jumps (ints m.div_by_zero) (String.concat "," (List.map loop m.loops)) (String.concat "," (List.map prediction m.predictions))
+    m.spl_sites m.dynamic_jumps (ints m.div_by_zero) (String.concat "," (List.map loop m.loops)) (String.concat "," (List.map prediction m.predictions)) diagnostics

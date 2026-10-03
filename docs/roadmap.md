@@ -152,7 +152,12 @@ nonblank, boot, per-loop cycles/overhead/exit, step and counter predictions, the
 `Expect` (static checks, `--emit-beh` probes); `--report[=json]`, `--optimize`, `--expect=warn`.
 The prog7 counter prediction (202) equals what pMARS measures.
 **Still missing.** Weighted policies; benchmark validation (`--bench`); process counts for `SPL`;
-no alcotest runs the CLI itself.
+no alcotest runs the CLI itself. Minor findings of the branch review, deferred: an `(expect ...)`
+statement takes a tag and so renumbers later generated labels; DIV/MOD by a zero B-number under
+`.F`/`.X`/`.I` is not flagged; `--emit-beh` can write a spec with no probes or overwrite its own
+`.red`, and accepts `(dead 0)`; `unreachable` ignores dynamic jumps without saying so; `(optimize)`
+with no objective is accepted; JSON escaping uses OCaml's, and the JSON omits policy and coresize;
+a malformed expectation ends in an uncaught `CTError` (i-7d2612-888db5).
 
 ### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
 **State.** Planned. Warnings for possible slowdowns and possible optimizations, from the metrics:

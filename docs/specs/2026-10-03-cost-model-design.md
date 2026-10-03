@@ -77,8 +77,9 @@ type program = { cells : cell array; succ : edge list array; loops : loop list;
 
 - **Labels.** An `ILAB` occupies no cell; it attaches to the next instruction. A label at the end
   attaches to the epilogue. Offsets are resolved as pMARS resolves them.
-- **Diagnostics** (not failures in A): an undefined label, a label defined twice (pMARS keeps the
-  first; i-7d2612-425c66), a line of 256 characters or more (i-7d2612-174acf).
+- **Diagnostics** (not failures in A, but printed by `--report` and in the JSON): an undefined
+  label, a label defined twice (pMARS keeps the first; i-7d2612-425c66), a line of 256 characters
+  or more (i-7d2612-174acf).
 - **Origin.** `compile_expr` returns `(instruction, tag option)` pairs; `pp_instrs` ignores the tag.
   Comments (`ICOM`) are kept out of the cell array.
 - **Variables.** A cell's `vars` comes from `penv`/`lenv`: the cell labelled `LETn` holds `x` in the
@@ -98,7 +99,9 @@ type program = { cells : cell array; succ : edge list array; loops : loop list;
   `DIV`/`MOD` by zero also kill the process; the static view keeps `Next`, and the report says so
   only when the divisor is a constant 0.
 - **Blocks and loops.** Leaders are the entry, every jump or skip target, and every cell after a jump
-  or skip. Loops are natural loops of the back edges found by a depth-first walk from cell 0.
+  or skip. Loops are natural loops of the back edges found by a depth-first walk from cell 0, one
+  loop per header and closing construct: a `do-while` whose body starts with another loop shares
+  its header with that loop and stays a separate loop (review fix, 2026-10-03).
 - **Stated limit.** The view describes the static program. Self-modification (the Dwarf's `ADD` that
   moves its pointer) is modelled as data that changes, not as control that changes; indirect jumps
   are `Dynamic`.
@@ -149,7 +152,14 @@ pattern matches:
 - **Counter.** A `DJN` whose decremented operand has a constant initial value `n` (an immediate on the
   `DJN` itself, or a cell field initialised to `n`): `n` iterations, so the loop runs
   `n × cycles/iter` cycles, and a warrior that ends after it dies after
-  `boot + n × cycles/iter + 1` instructions. prog7: `1 + 100 × 2 + 1 = 202`.
+  `boot + n × cycles/iter + 1` instructions — only for a loop entered without passing another
+  loop and containing no inner loop (a lap counts an inner loop once); otherwise no death is
+  predicted. prog7: `1 + 100 × 2 + 1 = 202`.
+- **Bounds.** A pointer covers only what its loop allows: with a counter of `n < period` iterations
+  it visits `n` cells, and in a loop that can exit (no counter) its coverage is qualified "if the
+  loop runs that long"; `(covers-core)` fails in both cases.
+- **Cost.** Lap, exit and boot figures are shortest and longest paths over the graph without its
+  back edges, computed in one pass in topological order (linear), never by enumerating paths.
 
 ## 3. Policy and expectations
 
