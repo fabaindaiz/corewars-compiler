@@ -11,13 +11,12 @@ execution in the core follows the program's meaning** (`docs/semantics.md`).
 
 ## Where we are
 
-As of 2026-10-02 (s-7d2612-0a037e). `main` compiles the RED constructs in `LANGUAGE.md`; the ten
-example goldens match what the current sources emit (checked with a scratch `ocamlc` build of `src/`
-against a stand-in for `CCSexp`, not with the dune suite). **Seven defects are recorded** below,
-five with a failing check (four behaviour specs, one audit check), and the `execute` suite only
-proves that pMARS assembles the output. A behaviour harness exists now
-(`tools/behave.py`, 3 passing specs, 4 known-failing). The OCaml half of the gate has never run on
-this machine (no opam switch); CI is new and its OCaml job is unverified until its first run.
+As of 2026-10-03 (s-7d2612-0a037e, s-7d2612-cc9344). `main` compiles the RED constructs in
+`LANGUAGE.md`, and the whole gate passes in CI: `dune build` and 29 tests (1 parse, 14 compare,
+14 execute) on OCaml 5.5.1, plus `make check-tools`. **Seven defects are recorded** below, five with
+a failing check (four behaviour specs, one audit check), and the `execute` suite only proves that
+pMARS assembles the output. A behaviour harness exists now (`tools/behave.py`, 3 passing specs,
+4 known-failing). On this machine only `make check-tools` runs (no opam switch).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 Nothing is in motion beyond that branch.
 
@@ -120,7 +119,7 @@ how CI and editors run the suite.
 ### Reproducible install of bbctester · i-7d2612-8f3f22
 **State.** Planned. The code needs the BBCStepTester fork (public name `bbctester`, commit
 2cb3669), which has no `.opam` file; pleiad/BBCTester has an incompatible API under the same name.
-CI clones and `dune install`s it (unverified until CI runs). An opam file with `pin-depends`, or a
+CI clones and `dune install`s it into setup-ocaml's local switch (works since s-7d2612-cc9344). An opam file with `pin-depends`, or a
 vendored submodule with `(vendored_dirs ...)`, would make it one command.
 
 ### The Docker image cannot run the vendored pmars or build the tests · i-7d2612-202da9

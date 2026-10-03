@@ -17,8 +17,9 @@ workspace, and the clone in `$RUNNER_TEMP` is outside it.
 **Architecture.** ✅ Complies.
 **What went wrong on the way.** The workflow was written assuming a global switch; it could not be
 run before pushing.
-**Not verified.** The rest of the `ocaml` job (`dune install` of the fork, `make check-ocaml`,
-the vendored pmars with `libx11-6`) still waits for the next run.
+**Measured.** The next run passed both jobs: `dune build`, then 29 tests (1 parse, 14 compare,
+14 execute) on OCaml 5.5.1 (`ocaml-compiler: "5"`); the vendored pmars ran with `libx11-6`. The four
+known-bug goldens produced by the scratch build match the real compiler's output (`compare` passes).
 
 ## 2026-10-02 · s-7d2612-0a037e — Initialise the agent-guides bundle and bootstrap the repository
 
