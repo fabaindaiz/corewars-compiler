@@ -1,0 +1,6 @@
+# The outer x is stored in the A-field (1); an inner let shadows x and stores in a B-field.
+# (ADD 4 x) refers to the outer x, so after JMP + ADD the outer cell must hold 5 in its A-field.
+# Today the inner store's placement leaks out and the ADD writes the B-field.
+golden: bbctests/known-bugs/let_shadowing.bbc
+known-failing: i-7d2612-ce4c3b
+cell 2 1 DAT.F #5, #0

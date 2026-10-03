@@ -1,0 +1,40 @@
+# Decisions
+
+Everything settled, with what enforces it. A row with `—` in the last column can be broken
+silently; that is allowed, and it is visible here. The prose and measurements live in the document
+each row points to. A decision is made once: reopening one needs a new fact, written in a new row
+that marks the old one as replaced.
+
+New rows get an id from `python3 .agents/tools/bundle.py id d "<the decision>"`, frozen once
+written.
+
+## Code generation
+
+| Id | Decision | Why | Enforced in |
+|---|---|---|---|
+| d-7d2612-123e41 | Generated labels derive from AST tags (`Ast.tag_expr`, `sprintf "LET%d"` and siblings), never from a global counter or `gensym` | bbctester compiles every golden in one process; a counter that is not reset makes each golden depend on the tests run before it. The tag scheme is the compilers-course technique (`docs/references.md`, *Compiler construction*). The dev branch's `gensym` collides with this (i-7d2612-ec4d2d) | `tools/audit.py` (`no-global-counter`); the `compare` suite |
+| d-7d2612-2a4435 | RED comparisons are unsigned modulo CORESIZE, as ICWS'94 defines: `-1` is `7999` on 94b, so `(LT -1 3)` is false | The target stores every value in `0..CORESIZE-1`; a signed reading would need extra instructions in every comparison. Measured: `SLT` with `-1, 3` does not skip (Phase 2 run, `docs/references.md`) | `LANGUAGE.md` documents it — no check |
+| d-7d2612-4403a4 | Not adopted: GADTs, phantom types or a visitor library for the IRs. *A decision, not a rule.* | About 800 lines and four small IRs; exhaustive matches on plain variants already catch a forgotten case (warning 8 is an error in dune's dev profile) | — |
+| d-7d2612-62375b | Environments stay association lists (`aenv`, `penv`, `lenv` in `src/lib.ml`). *A decision, not a rule.* | A warrior is at most 100 instructions on 94b, so lookups are trivially cheap; `Map.Make(String)` would change nothing measurable. Revisit if RED gains macros that grow environments | — |
+
+## Tests
+
+| Id | Decision | Why | Enforced in |
+|---|---|---|---|
+| d-7d2612-5f2a0b | Goldens (`bbctests/**/*.bbc`) compare the emitted redcode byte for byte, column padding included | The padding is part of the output contract a user reads; a whitespace-normalising compare would hide `pp_rarg` changes | bbctester `compare_results` (the `compare` suite) |
+| d-7d2612-6a1527 | A golden's EXPECTED section changes only together with a stated behavioural reason (a behaviour spec, or the reason written in the changelog entry) | Regenerating goldens from the compiler certifies whatever it now does; that is how a semantic bug becomes "expected" | — (review of the changelog entry) |
+| d-7d2612-c5bb3c | Known bugs are recorded, not fixed in passing: a characterization golden in `bbctests/known-bugs/`, a `known-failing` spec in `behtests/`, a roadmap item. Fixing one is its own change | Mixing fixes into unrelated work makes them unreviewable; the mark makes the fix visible the moment it lands | `tools/behave.py` fails when a known-failing spec passes |
+| d-7d2612-b92028 | Behaviour specs run the golden's EXPECTED redcode, not a fresh compile | The specs then run anywhere Python and a C compiler exist, without an opam switch; the `compare` suite is what ties each golden to the compiler | `tools/behave.py` reads `golden:`; the `compare` suite |
+| d-7d2612-6d88cd | Tests run under the 94b hill settings (`pmars/config/94b.opt`: core 8000, 80000 cycles, length 100). Other targets come later as a deliberate feature | 94b is what the goldens' `;redcode-94b` header and the execute suite already assume; several targets need a target parameter in the compiler first (i-7d2612-217183) | `execs/run_test.ml` (the runtime command); `tools/behave.py` (`CONFIG`) |
+
+## Toolchain and repository
+
+| Id | Decision | Why | Enforced in |
+|---|---|---|---|
+| d-7d2612-3d04ba | `pmars/pmars` is a vendored Linux x86-64 pMARS 0.9.4 binary, kept on purpose for the Linux `execute` suite. Local observation on other platforms builds pMARS from `pmars/pmars-0.9.4.zip` with `tools/pmars-host.sh` | The binary needs glibc 2.34 and `libX11.so.6`; it does not run on macOS (exit 126) nor, as built, in the Ubuntu 20.04 Docker image (i-7d2612-202da9) | `execs/run_test.ml`; CI runs on `ubuntu-latest` |
+| d-7d2612-472634 | Nothing under `pmars/` is edited by hand | Third-party code and a binary; a change there is a fork nobody tracks | `.claude/settings.json` `permissions.deny` |
+| d-7d2612-7ea6bd | `AGENTS.md` is the canonical instruction file; `CLAUDE.md` only imports it (`@AGENTS.md`) | One source every assistant reads; two hand-kept files drift | `tools/audit.py` (`claude-imports-agents`) |
+| d-7d2612-cbb430 | The repository's documents are written in English | The existing documents and code are in English; identifiers and commands stay exact in any language | — |
+| d-7d2612-facecc | Repository tooling scripts (`tools/*.py`) are Python 3.11+, standard library only | The bundle's own tool already requires Python 3.11+, so the gate adds no new runtime; OCaml would need the opam switch the tools must run without | — |
+| d-7d2612-9c1875 | Not adopted: dune package management (`dune pkg lock`). *A decision, not a rule.* | Still labelled experimental, and its locking changed during 2026; opam remains the install path (`REFERENCE.md`) | — |
+| d-7d2612-8cdc44 | Not adopted: a repository-wide `ocamlformat` run. *A decision, not a rule.* | It would rewrite every line of every module in one diff and break `git blame`; formatting comes as its own planned change (i-7d2612-2a14f2) | — |

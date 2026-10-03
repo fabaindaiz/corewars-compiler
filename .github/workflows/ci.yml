@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # The half of the gate that needs no OCaml: the structural audit, the behaviour specs (cdb probes
+  # on a pMARS built from the vendored zip) and the agent-guides bundle checks.
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"  # the oldest the bundle's tool supports (`tomllib`)
+      - name: make check-tools
+        run: make check-tools
+      - name: The bundle's checksums verify without the tool
+        run: cd .agents && sha256sum --check --quiet SHA256SUMS
+
+  # The OCaml half: build, alcotest, and the bbctester suites. `execute` runs pmars/pmars, a Linux
+  # x86-64 binary that needs glibc >= 2.34 and libX11 (d-7d2612-3d04ba).
+  ocaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5"  # the Dockerfile pins 5.0.0 (i-7d2612-202da9)
+      - name: Dependencies
+        run: opam install -y dune containers alcotest
+      - name: bbctester (the BBCStepTester fork; it has no opam file, i-7d2612-8f3f22)
+        run: |
+          git clone https://github.com/fabaindaiz/BBCStepTester.git "$RUNNER_TEMP/bbcsteptester"
+          cd "$RUNNER_TEMP/bbcsteptester"
+          git checkout 2cb3669
+          opam exec -- dune build
+          opam exec -- dune install
+      - name: libX11 for the vendored pmars binary
+        run: sudo apt-get update && sudo apt-get install -y libx11-6
+      - name: make check-ocaml
+        run: opam exec -- make check-ocaml

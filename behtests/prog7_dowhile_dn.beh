@@ -1,0 +1,4 @@
+# do-while (DN 100): JMP, then 100 iterations of MOV + DJN, then the epilogue DAT kills it.
+golden: bbctests/examples/prog7.bbc
+alive 201
+dead 202

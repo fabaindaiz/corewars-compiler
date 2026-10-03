@@ -14,6 +14,8 @@ The language syntax is based on s-expressions. The syntax is designed to be easy
 ### Notices
 
 - The project is in development and RED language is not the final version. Important changes can be made until first release.
+- This page is the syntax reference. What each construct means, formally, and what the compiler must preserve is in [docs/semantics.md](docs/semantics.md).
+- Known compiler defects are listed in [docs/roadmap.md](docs/roadmap.md); the ones that change what a program on this page does are marked below.
 
 
 ## Arguments (arg)
@@ -23,7 +25,7 @@ If you want to store some value, you need to use a argument.
 
 An argument have a addressing mode and a value.
 
-- (none) replaced by immediate 0
+- none: the atom `none`, replaced by immediate 0
 - (var) declare a argument using default mode
 - (mode var) declare a argument using specified mode
 
@@ -35,7 +37,9 @@ By default, numbers use immediate mode and strings use direct mode.
 - (number) integer signed or unsigned number
 - (string) string reference to let variable or label
 
-If the string corresponds to some variable in scope, the string will be replaced by a reference to this variable, otherwise the string will be kept referencing a label
+If the string corresponds to some variable in scope, the string will be replaced by a reference to this variable, otherwise the string will be kept referencing a label.
+
+All numbers are taken modulo the core size (8000 on the 94b hill) and stored as `0..7999`, so `-1` is `7999`.
 
 ### Addresing modes (mode)
 
@@ -48,6 +52,8 @@ Addresing modes are used to specify how the argument is used in the instruction.
 - (Inc var) | (> var) indirect addresing to var and increment var
 - (store var) | (! var) store var value in this place (field is automatic)
 
+Every `let` variable needs exactly one `(store x)` in its body: the cell holding it is labelled where the store is. With no store its label is undefined; with two it is defined twice. Neither is reported by the compiler today ([roadmap](docs/roadmap.md), i-7d2612-425c66).
+
 
 ## Conditions (cond)
 
@@ -59,8 +65,10 @@ Unary conditions are used to specify when the control flow is executed based on 
 
 - (JZ x) x is zero
 - (JN x) x is not zero
-- (DZ x) decrement x and x is zero (not available on some control flows)
-- (DN x) decrement x and x is not zero (not available on some control flows)
+- (DZ x) decrement x and x is zero (only in `if`, `if` with else, and `while`)
+- (DN x) decrement x and x is not zero (only in `do-while`)
+
+Known defect: a unary condition always tests the B-field, even when `x` is stored in an A-field (i-7d2612-3744e5).
 
 ### Binary conditions (cond2)
 
@@ -70,6 +78,10 @@ Binary conditions are used to specify when the control flow is executed based on
 - (NE x y) x and y not equals
 - (GT x y) x is greater than y
 - (LT x y) x is less than y
+
+Comparisons are unsigned: values are compared as `0..7999`, so `(LT -1 3)` is false.
+
+Known defect: in `do-while`, `GT` also repeats when `x = y` and `LT` likewise (i-7d2612-fffa6c).
 
 
 ## Instructions
@@ -81,9 +93,15 @@ Instructions are used to specify the operation to be performed. Instruction modi
 All instruction modifiers are automatically generated, but there is an option to select one manually.
 A useful case where to declare them explicitly is when you want to target the entire instruction or both fields.
 
-- I points to the instruction instead of values
-- X points to both fields to the same fields
-- F points to both fields to the opposite fields
+- A from the A-field to the A-field
+- B from the B-field to the B-field
+- AB from the A-field to the B-field
+- BA from the B-field to the A-field
+- F both fields to the same fields
+- X both fields to the opposite fields
+- I the whole instruction
+
+When the compiler cannot infer a modifier from the variables involved (for example, two plain references), it uses `.I`, which differs from the ICWS'94 default for `SLT`, `JMZ`, `JMN`, `DJN` and arithmetic; whether to keep this is undecided (i-7d2612-96f7b1).
 
 ### redcode instructions
 
@@ -106,6 +124,13 @@ Square brackets '[]' indicates that the argument is optional.
 - (DIV [mod] arg1 arg2) div arg1 from arg2
 - (MOD [mod] arg1 arg2) mod arg1 from arg2
 
+#### P-space instructions
+
+- (STP [mod] arg1 arg2) store arg1 into P-space cell arg2
+- (LDP [mod] arg1 arg2) load P-space cell arg1 into arg2
+
+P-space does not exist on hills such as 94nop.
+
 #### Conditional instructions
 
 - (JMZ [mod] arg1 arg2) jump to arg1 if arg2 is zero
@@ -126,12 +151,15 @@ Control flows are used to specify the execution order of the instructions. Use c
 - (while cond body) repeat body while cond is true (one extra instruction + cond)
 - (do-while cond body) repeat body while cond is true (no extra instruction + cond)
 
-- (if-else cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
+- (if cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
 
 
 ### Other instructions
 
 - (let (id arg) body) introduce a new variable in the scope (no extra instruction)
 
-- (seq instrs) execure a sequence of instructions (one extra instruction)
-- (label text) create a label in the code (no extra instruction)
+- (seq instrs) execute a sequence of instructions (no extra instruction)
+- (label text) create a label in the code (no extra instruction). Labels are case-sensitive, `[A-Za-z_][A-Za-z0-9_]*`; do not use names the compiler generates (`LET`, `REP`, `IF`, `IFM`, `IFF`, `WHI`, `WHF`, `DWH` followed by a number) or pMARS keywords (i-7d2612-425c66)
+- (com words ...) a comment line in the output, `; words ...` (no instruction)
+
+Every compiled program ends with an extra `DAT 0, 0`: a program that runs past its last instruction dies there.

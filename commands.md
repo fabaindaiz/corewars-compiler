@@ -5,14 +5,14 @@ dune utop
 
 #### red.ml
 ```bash
-open Dev.Red;
+open Cored.Red;;
 
 ```
 
 #### compile.ml
 ```bash
-open Dev.Ast;
-open Dev.Compile;
+open Cored.Ast;;
+open Cored.Compile;;
 
 ```
 

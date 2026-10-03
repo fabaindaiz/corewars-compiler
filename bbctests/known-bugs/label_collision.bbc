@@ -1,0 +1,18 @@
+NAME: known bug: user label named like a generated label
+DESCRIPTION: characterization of current output (i-7d2612-425c66); pMARS keeps the first LET1, see behtests/label_collision.beh
+SRC:
+(let (x 7)
+  (seq
+    (JMP LET1)
+    (DAT (store x) 0)
+    (label LET1)
+    (JMP (Dir 0)) ))
+EXPECTED:
+;redcode-94b
+
+  JMP    $LET1  , #0     
+LET1  
+  DAT    #7     , #0     
+LET1  
+  JMP    $0     , #0     
+  DAT    #0     , #0     

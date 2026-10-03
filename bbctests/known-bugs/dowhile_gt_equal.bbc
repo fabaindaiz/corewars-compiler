@@ -1,0 +1,22 @@
+NAME: known bug: do-while GT at equality
+DESCRIPTION: characterization of current output (i-7d2612-fffa6c); the loop repeats when x = y, see behtests/dowhile_gt_equal.beh
+SRC:
+(let (x 3)
+  (let (y 3)
+    (seq
+      (JMP (Dir 2))
+      (DAT (store x) (store y))
+      (do-while (GT x y)
+        (NOP)) )))
+EXPECTED:
+;redcode-94b
+
+  JMP    $2     , #0     
+LET1  
+LET2  
+  DAT    #3     , #3     
+DWH9  
+  NOP    #0     , #0     
+  SLT.AB $LET1  , $LET2  
+  JMP    $DWH9  , #0     
+  DAT    #0     , #0     

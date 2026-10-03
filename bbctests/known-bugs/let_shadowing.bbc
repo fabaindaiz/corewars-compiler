@@ -1,0 +1,20 @@
+NAME: known bug: inner let shadows an outer store placement
+DESCRIPTION: characterization of current output (i-7d2612-ce4c3b); ADD 4 x targets the B-field, see behtests/let_shadowing.beh
+SRC:
+(let (x 1)
+  (seq
+    (JMP (Dir 3))
+    (DAT (store x) 0)
+    (let (x 2)
+      (DAT 0 (store x)))
+    (ADD 4 x) ))
+EXPECTED:
+;redcode-94b
+
+  JMP    $3     , #0     
+LET1  
+  DAT    #1     , #0     
+LET8  
+  DAT    #0     , #2     
+  ADD.AB #4     , $LET1  
+  DAT    #0     , #0     

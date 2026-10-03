@@ -1,0 +1,5 @@
+# do-while (GT x y) with x = y = 3: GT is false, so the body runs once and the loop exits into the
+# epilogue DAT. Today the post-condition SLT only exits when x < y, so the loop never ends.
+golden: bbctests/known-bugs/dowhile_gt_equal.bbc
+known-failing: i-7d2612-fffa6c
+dead 10

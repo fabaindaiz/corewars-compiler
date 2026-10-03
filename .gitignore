@@ -38,3 +38,14 @@ _opam/
 
 # Segmentation fault
 core
+
+# OS files
+.DS_Store
+
+# Python (tools/, .agents/tools/)
+__pycache__/
+*.pyc
+
+# Assistant-generated local state
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

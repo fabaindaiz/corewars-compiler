@@ -9,14 +9,17 @@ This software aims to be an easier way to write and optimize code for corewars. 
 ### Instructions of use
 - See REFERENCE.md for develop and run.
 - See LANGUAGE.md for RED language reference.
-- See TUTORIAL.md for a RED language tutorial.
+- See TUTORIAL.md for a RED language tutorial (not written yet).
+- See docs/semantics.md for what each construct means and what the compiler preserves.
+- See docs/roadmap.md for known defects and planned work, and docs/references.md for the research behind them.
+- Working with an AI assistant: AGENTS.md is its entry point (CLAUDE.md imports it).
 
 #### Intepreters
 
 To execute the resulting redcode you can use one of these redcode interpreters.
 
 - [pMARS](https://corewar.co.uk/pmars.htm)
-- [A.R.E.S.](https://corewar.co.uk/ares.htm)
+- [other MARS implementations](https://corewar.co.uk/mars.htm)
 - [python MARS](https://github.com/rodrigosetti/corewar)
 
 #### TODO
@@ -27,20 +30,18 @@ To execute the resulting redcode you can use one of these redcode interpreters.
 
 ## Acknowledgements
 
-- Pleiad for [BBCTester](https://github.com/pleiad/BBCTester)
+- Pleiad for [BBCTester](https://github.com/pleiad/BBCTester), through its fork [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester), which the tests use
 
 
 ## References
 
 #### Getting started
 
-- [basic manual (spanish)](https://fdist.ucm.es/corewar/CoreWar.pdf)
-- [the beginners' guide](https://vyznev.net/corewar/guide.html)
+- [the beginners' guide](https://corewar.co.uk/karonen/guide.htm)
 - [my first corewars book](https://www.corewars.org/docs/book1.html)
 
 #### Redcode learning
 
-- [corewars warrior hints](https://es.scribd.com/document/231018699/Core-War-Hints)
 - [corewars tips & tricks](https://www.corewars.org/docs/tips.html)
 
 #### Redcode wariors
@@ -58,4 +59,5 @@ To execute the resulting redcode you can use one of these redcode interpreters.
 #### Corewars koth
 
 - [KotH](http://www.koth.org/koth.html)
+- [SAL hills](https://sal.discontinuity.info)
 - [hills](https://corewar.co.uk/hills.htm)

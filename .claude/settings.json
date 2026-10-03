@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make init)",
+      "Bash(make check)",
+      "Bash(make check-tools)",
+      "Bash(make check-ocaml)",
+      "Bash(make tests:*)",
+      "Bash(make ctests:*)",
+      "Bash(make compile:*)",
+      "Bash(dune build:*)",
+      "Bash(dune exec execs/run_compile.exe:*)",
+      "Bash(dune exec execs/run_test.exe:*)",
+      "Bash(python3 tools/audit.py)",
+      "Bash(python3 tools/behave.py:*)",
+      "Bash(tools/pmars-host.sh)",
+      "Bash(python3 .agents/tools/bundle.py verify:*)",
+      "Bash(python3 .agents/tools/bundle.py ids:*)",
+      "Bash(python3 .agents/tools/bundle.py id:*)",
+      "Bash(python3 .agents/tools/bundle.py privacy:*)",
+      "Bash(python3 .agents/tools/bundle.py check-local:*)",
+      "Bash(python3 .agents/tools/bundle.py changelog:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ],
+    "deny": [
+      "Edit(./pmars/**)",
+      "Edit(./.agents/README.md)",
+      "Edit(./.agents/CHANGELOG.md)",
+      "Edit(./.agents/SHA256SUMS)",
+      "Edit(./.agents/method/**)",
+      "Edit(./.agents/knowledge/**)",
+      "Edit(./.agents/tools/**)",
+      "Edit(./.agents/agents/**)",
+      "Edit(./.agents/incoming/README.md)",
+      "Edit(./.agents/proposals/README.md)",
+      "Edit(./.agents/proposals/RECEIVED.md)",
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git clean:*)",
+      "Bash(dune promote:*)",
+      "Bash(dune fmt:*)"
+    ]
+  }
+}

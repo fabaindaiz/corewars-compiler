@@ -1,0 +1,4 @@
+# The imp `MOV 0, 1` copies itself one cell ahead and never dies.
+golden: bbctests/examples/prog0.bbc
+cell 1 1 MOV.I $0, $1
+alive 1000

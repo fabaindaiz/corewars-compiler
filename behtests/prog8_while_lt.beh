@@ -1,0 +1,6 @@
+# while (LT y x) with y = 10, x = 100: 90 iterations of SLT + MOV + JMP decrement x down to y,
+# then the exit SLT skips and the epilogue DAT kills the process: 274 instructions in all.
+golden: bbctests/examples/prog8.bbc
+alive 273
+cell 273 1 DAT.F #10, #10
+dead 274

@@ -1,0 +1,36 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# OCaml: two-space indentation, as in src/ (no ocamlformat yet, i-7d2612-2a14f2).
+[*.{ml,mli}]
+indent_style = space
+indent_size = 2
+
+[{dune,dune-project,dune-workspace}]
+indent_style = space
+indent_size = 1
+
+# Goldens: the column padding and the missing final newline are part of the expected output
+# (d-7d2612-5f2a0b); an editor must not touch them.
+[*.bbc]
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{sh,yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+[*.md]
+trim_trailing_whitespace = false

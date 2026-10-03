@@ -17,6 +17,14 @@ eval `opam env`
 opam install dune utop merlin containers alcotest
 ```
 
+The tests also need `bbctester`, from the [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester) fork (pleiad/BBCTester has a different API under the same library name). It has no opam package; install it from source:
+
+```bash
+git clone https://github.com/fabaindaiz/BBCStepTester.git
+cd BBCStepTester && git checkout 2cb3669   # the commit CI uses
+dune build && dune install
+```
+
 A brief description of the installed tools and libraries:
 
 - [dune](https://dune.build/), version 2.9 (or newer), a build manager for ocaml.
@@ -53,8 +61,12 @@ The organization of the repository is as follows:
 
 - `src/`: main OCaml files for the project submodules (ast, parser, red instructions, compiler)
 - `execs/`: OCaml files for top-level executables (compiler, tester)
-- `bbctests/`: folder for black-box compiler tests (uses the BBCTester library, see below)
+- `bbctests/`: folder for black-box compiler tests (uses the bbctester library, see below); `bbctests/known-bugs/` records the current output of programs that trigger a known defect
+- `behtests/`: behaviour specs, run by `tools/behave.py` (see below)
 - `examples/`: folder for example source code files you may wish to interpret or compile directly
+- `pmars/`: the pMARS simulator: a Linux x86-64 binary used by the tests, its configurations, and its source
+- `tools/`: the repository's checks (`audit.py`, `behave.py`) and `pmars-host.sh`
+- `docs/`: architecture, semantics, decisions, roadmap and references
 
 Additionally, the root directory contains configuration files for the dune package manager (`dune-workspace`, `dune-project`), and each OCaml subdirectory also contains `dune` files in order to setup the project structure.
 
@@ -70,11 +82,13 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
   
 - `make clean-tests`: cleans the tests output in the `bbctests` directory 
 
-- `make tests`: execute the tests for the compiler defined in `execs/test.ml` (see below).
+- `make tests`: execute the tests for the compiler defined in `execs/run_test.ml` (see below).
   Variants include: 
-  * `make ctest` for compact representation of the tests execution
-  * you can also add `F=<pat>` where `<pat>` is a pattern to filter which tests should be executed (eg. `make test F=arith` to run only test files whose name contains `arith`)
-  * a few alcotest environment variable can also be set, e.g. `ALCOTEST_QUICK_TESTS=1 make test` to only run the quick tests (see the help documentation of alcotest for more informations)
+  * `make ctests` for compact representation of the tests execution
+  * you can also add `F=<pat>` where `<pat>` is a pattern to filter which test groups should be executed (eg. `make tests F=compare`; the groups are `parse`, `interp`, `errors`, `compare` and `execute`)
+  * a few alcotest environment variable can also be set, e.g. `ALCOTEST_QUICK_TESTS=1 make tests` to only run the quick tests (see the help documentation of alcotest for more informations)
+
+- `make check`: the whole gate. `make check-tools` runs the part that needs only Python 3.11+ and a C compiler (the structural audit, the behaviour specs, the agent-guides bundle checks); `make check-ocaml` builds and runs the OCaml tests
 
 - you can build the executables manually with `make <executable_name>.exe`. For instance, `make run_compile.exe` builds the compiler executable.
 
@@ -108,9 +122,9 @@ A test is built with the `check` function which takes the following parameters:
 - the program to be tested, and the expected value (both of type `result_type`)
 
 Once written, tests can be executed with the relevant call to the Makefile (see above), or by calling
- `dune exec bin/tests.exe` potentially followed by `--` and arguments (for instance `dune exec bin/tests.exe -- --help` to access the documentation).
+ `dune exec execs/run_test.exe` potentially followed by `--` and arguments (for instance `dune exec execs/run_test.exe -- --help` to access the documentation).
 
-There are a few example tests for the parser and interpreter in `execs/run_test.ml`. *You need to add your additional OCaml tests to this file (or define them in an auxiliar file/module, and import the corresponding module and add your tests to the `ocaml_tests` variable).*
+There are a few example tests for the parser in `execs/run_test.ml`. *You need to add your additional OCaml tests to this file (or define them in an auxiliar file/module, and import the corresponding module and add your tests to the `ocaml_tests` variable).*
 
 
 #### Black-box compiler tests
@@ -119,11 +133,19 @@ In order to test your whole compiler pipeline, from a source file down to the ex
 
 You should follow the instructions from that repo to install `bbctester`, and look at the documentation for how to write `.bbc` files (to be placed in the `bbctests` directory).
 
-Instead of using `bbctester`, in this compiler we will use [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester)
+Instead of the original BBCTester, this compiler uses its fork [BBCStepTester](https://github.com/fabaindaiz/BBCStepTester) (library name `bbctester`; installation above).
+
+`run_test.exe` runs every `.bbc` file under `bbctests/` (recursively) in two groups:
+- `compare`: the emitted redcode must equal `EXPECTED` byte for byte.
+- `execute`: `pmars/pmars -A -@ pmars/config/94b.opt` must accept it. `-A` only assembles: nothing is executed. `pmars/pmars` is a Linux x86-64 binary, so this group runs on Linux only.
+
+#### Behaviour specs
+
+What compiled code *does* is checked by `python3 tools/behave.py`, which runs each `behtests/*.beh` spec in pMARS's debugger and checks probes such as "alive after N instructions" or "cell 1 holds `DAT.F #10, #10`". It builds a pMARS for your machine from `pmars/pmars-0.9.4.zip` on first use (`tools/pmars-host.sh`). See `docs/architecture.md` for the spec format.
 
 ## Interactive execution
 
-Remember that to execute your code interactively, use `dune utop` in a terminal, and then load the modules you want to interact with (e.g. `open Dev.Interp;;`).
+Remember that to execute your code interactively, use `dune utop` in a terminal, and then load the modules you want to interact with (e.g. `open Cored.Compile;;`).
 
 ## Resources
 
