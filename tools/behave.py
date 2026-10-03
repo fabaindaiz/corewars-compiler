@@ -10,6 +10,8 @@ A spec (`behtests/<name>.beh`), one directive per line; a line starting with `#`
 (only whole lines: `#` also marks immediate operands in a cell's TEXT):
 
     golden: bbctests/examples/prog8.bbc   the redcode to run: that golden's EXPECTED section
+    redcode: prog8.red                    or a redcode file, relative to the spec's directory
+                                          (what `run_compile.exe --emit-beh` writes); one of the two
     known-failing: i-7d2612-fffa6c        optional: a recorded bug, by its roadmap id
     alive N                               a process is still running after N executed instructions
     dead N                                no process is left after N executed instructions
@@ -47,6 +49,7 @@ CALC_LINE = re.compile(r"^\(cdb\) (\d+)\s*$")
 class Spec:
     path: Path
     golden: Path | None = None
+    redcode: Path | None = None
     known_failing: str | None = None
     probes: list[tuple[str, list[str]]] = field(default_factory=list)
 
@@ -59,6 +62,8 @@ def parse_spec(path: Path) -> Spec:
             continue
         if line.startswith("golden:"):
             spec.golden = ROOT / line.split(":", 1)[1].strip()
+        elif line.startswith("redcode:"):
+            spec.redcode = path.parent / line.split(":", 1)[1].strip()
         elif line.startswith("known-failing:"):
             spec.known_failing = line.split(":", 1)[1].strip()
         else:
@@ -66,8 +71,11 @@ def parse_spec(path: Path) -> Spec:
             if word not in ("alive", "dead", "cell") or not args or not args[0].isdigit() or int(args[0]) < 1:
                 raise SystemExit(f"{path}:{n}: not a probe: {raw!r}")
             spec.probes.append((word, args))
-    if spec.golden is None or not spec.golden.is_file():
-        raise SystemExit(f"{path}: `golden:` missing or not a file")
+    if (spec.golden is None) == (spec.redcode is None):
+        raise SystemExit(f"{path}: needs exactly one of `golden:` and `redcode:`")
+    source = spec.golden or spec.redcode
+    if not source.is_file():
+        raise SystemExit(f"{path}: {source} is not a file")
     if not spec.probes:
         raise SystemExit(f"{path}: no probes")
     return spec
@@ -126,7 +134,7 @@ def check_probe(pmars: str, warrior: Path, word: str, args: list[str]) -> str | 
 def run_spec(pmars: str, spec: Spec) -> list[str]:
     WORK.mkdir(parents=True, exist_ok=True)
     warrior = WORK / (spec.path.stem + ".red")
-    warrior.write_text(expected_redcode(spec.golden))
+    warrior.write_text(expected_redcode(spec.golden) if spec.golden else spec.redcode.read_text())
     failures = []
     for word, args in spec.probes:
         try:

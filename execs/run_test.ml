@@ -290,6 +290,50 @@ let test_objective_unknown () =
   check Alcotest.(option objective) "fast" None (M.objective_of_string "fast")
 
 
+(* Tests for the expectations *)
+module X = Cored.Expect
+
+let outcome : X.outcome option testable =
+  testable (fun f o -> Format.pp_print_string f (match o with
+    | None -> "None" | Some X.Pass -> "Pass" | Some (X.Fail m) -> "Fail " ^ m)) (=)
+
+let test_expect_length_pass () =
+  check outcome "pass" (Some X.Pass) (X.check (metrics_of (example "prog1")) (XLength (Le, 4), None))
+
+let test_expect_length_fail () =
+  check outcome "fail" (Some (X.Fail "expect length <= 3: the warrior is 4 cells"))
+    (X.check (metrics_of (example "prog1")) (XLength (Le, 3), None))
+
+let test_expect_cycles_in_loop_fail () =
+  let src = golden_src (example "prog8") in
+  let mov = "(MOV I (Dir x) (Dec x))" in
+  let src = between src "" mov ^ mov ^ " (expect (cycles <= 2))" ^ between src mov "\000" in
+  let e = parse_exp (sexp_from_string src) in
+  let tagged = tag_expr e in
+  let t = Option.get (while_tag tagged) in
+  let m = M.measure (L.of_expr e) in
+  check Alcotest.int "collected" 1 (List.length (X.collect tagged)) ;
+  check outcome "fail"
+    (Some (X.Fail (Printf.sprintf "expect cycles <= 2: the while of node %d executes 3 per iteration" t)))
+    (X.check m (List.hd (X.collect tagged)))
+
+let test_expect_no_enclosing_loop () =
+  check outcome "fail" (Some (X.Fail "expect cycles <= 3: no loop encloses this expectation"))
+    (X.check (metrics_of (example "prog8")) (XCycles (Le, 3), Some 999))
+
+let test_expect_global_no_loop () =
+  check outcome "fail" (Some (X.Fail "expect cycles <= 3: the program has no loop"))
+    (X.check (metrics_of (example "prog0")) (XCycles (Le, 3), None))
+
+let test_expect_step_prog1 () =
+  check outcome "pass" (Some X.Pass) (X.check (metrics_of (example "prog1")) (XStep 4, None))
+
+let test_expect_to_beh () =
+  check Alcotest.string "spec"
+    "# written by run_compile.exe --emit-beh\nredcode: prog7.red\nalive 201\ndead 202\n"
+    (X.to_beh ~redcode:"prog7.red" [XAlive 201; XDead 202; XLength (Le, 5)])
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -332,6 +376,15 @@ let ocaml_tests = [
     test_case "plain source" `Quick test_parse_source_plain ;
     test_case "program header" `Quick test_parse_source_header ;
     test_case "unknown objective" `Quick test_objective_unknown ;
+  ] ;
+  "expect", [
+    test_case "length: pass" `Quick test_expect_length_pass ;
+    test_case "length: fail" `Quick test_expect_length_fail ;
+    test_case "cycles inside a while: fail" `Quick test_expect_cycles_in_loop_fail ;
+    test_case "no enclosing loop" `Quick test_expect_no_enclosing_loop ;
+    test_case "global, no loop" `Quick test_expect_global_no_loop ;
+    test_case "prog1: step" `Quick test_expect_step_prog1 ;
+    test_case "behaviour spec text" `Quick test_expect_to_beh ;
   ] ;
   "interp", [
 

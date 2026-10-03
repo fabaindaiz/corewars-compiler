@@ -1,0 +1,10 @@
+(program
+  (expect (length <= 5))
+  (expect (alive 201))
+  (expect (dead 202))
+  (let (x 10)
+    (seq
+      (JMP (Dir 2))
+      (DAT 0 (store x))
+      (do-while (DN 100)
+        (MOV (Dir -1) (Inc x)) ))))

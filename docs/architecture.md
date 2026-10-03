@@ -62,7 +62,7 @@ changes every golden that contains one: that is a change to the output contract,
 | You want to show | Add | Run |
 |---|---|---|
 | the exact redcode a program compiles to | a `.bbc` in `bbctests/examples/` (copy `bbctests/examples/prog2.bbc`) | `make tests F=compare` |
-| what the compiled warrior does in the core | a `.beh` in `behtests/` pointing at a golden (copy `behtests/prog8_while_lt.beh`) | `python3 tools/behave.py` |
+| what the compiled warrior does in the core | a `.beh` in `behtests/` pointing at a golden (copy `behtests/prog8_while_lt.beh`), or `(expect (alive N))`-style expectations in the RED source exported with `run_compile.exe --emit-beh` (a spec with `redcode:` instead of `golden:`) | `python3 tools/behave.py` |
 | a bug, before fixing it | a `.bbc` in `bbctests/known-bugs/` with the current output, a `.beh` marked `known-failing: <roadmap id>`, and the roadmap item | both of the above |
 | a function's result | an alcotest case in `execs/run_test.ml` (`ocaml_tests`) | `make tests F=parse` |
 
