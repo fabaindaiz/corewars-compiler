@@ -1,0 +1,21 @@
+# This repository's own fields. Carrier-owned: never listed in SHA256SUMS, never written by a release.
+carrier = "r-7d2612"
+adopted = "2026-10-02"
+upstream = "r-5ed7e8"
+harvested_through = "2026-10-02"
+adapted = [
+  "AGENTS.md is the canonical root file and CLAUDE.md only imports it, so every assistant reads one source",
+  "the gate is `make check`, split into `check-tools` (Python 3.11+ and a C compiler) and `check-ocaml` (the opam switch), because the OCaml toolchain is not present on every machine that works here",
+  "the structural audit is tools/audit.py, beside the repository's other check scripts",
+  "the invariant's own test is a set of behaviour specs (behtests/, run by tools/behave.py) that probe compiled code in the simulator's debugger, because the existing execute suite only assembles",
+  "known defects are recorded as known-failing specs and checks that fail the gate once they pass, instead of being fixed during adoption",
+  "roadmap headings carry the id after the middle dot (### <idea> · i-...), because bundle.py ids only reads a heading definition there; the method template puts it first",
+  "the conversation follows the user's language while the repository's documents stay in English",
+]
+declined = [
+  "nested area instruction files: the source is about eight hundred lines and the area detail fits in docs/architecture.md; revisit when an area grows rules of its own",
+  "hooks in .claude/settings.json: the permissions and the CI gate cover every rule so far; revisit when a rule needs to run at a lifecycle event",
+  "separate Cursor and Copilot surfaces: only Claude Code is in use; AGENTS.md is already the file the others read",
+  "a commit skill: the commit rule is a few lines in the root file",
+  "an .ocamlformat file and a formatting step in the gate during adoption: formatting every module is a structural change of its own, planned separately",
+]

@@ -1,0 +1,18 @@
+#!/bin/sh
+# The bundle's gate before every commit, by anyone: `bundle.py verify` (checksums, links, privacy of
+# .agents/). Enabled once per clone with
+#   git config core.hooksPath .githooks
+# The tool needs Python 3.11 or newer; this hook looks for one when `python3` is older.
+root="$(git rev-parse --show-toplevel)"
+for py in python3 python3.14 python3.13 python3.12 python3.11; do
+  if command -v "$py" >/dev/null 2>&1 &&
+     "$py" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
+    # Before the bootstrap mints this repository's id, the folder is still a release as it arrived.
+    if [ -f "$root/.agents/carrier.toml" ]; then
+      exec "$py" "$root/.agents/tools/bundle.py" verify
+    fi
+    exec "$py" "$root/.agents/tools/bundle.py" verify --release
+  fi
+done
+echo "pre-commit: no Python 3.11+ found, so bundle.py verify did not run; install one or commit with --no-verify knowingly" >&2
+exit 1
