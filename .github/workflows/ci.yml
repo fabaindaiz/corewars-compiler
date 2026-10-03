@@ -39,8 +39,9 @@ jobs:
           git clone https://github.com/fabaindaiz/BBCStepTester.git "$RUNNER_TEMP/bbcsteptester"
           cd "$RUNNER_TEMP/bbcsteptester"
           git checkout 2cb3669
-          opam exec -- dune build
-          opam exec -- dune install
+          # setup-ocaml creates a local switch (_opam) in the workspace; outside it, name it.
+          opam exec --switch="$GITHUB_WORKSPACE" -- dune build
+          opam exec --switch="$GITHUB_WORKSPACE" -- dune install
       - name: libX11 for the vendored pmars binary
         run: sudo apt-get update && sudo apt-get install -y libx11-6
       - name: make check-ocaml

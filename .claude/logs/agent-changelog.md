@@ -5,6 +5,21 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-03 · s-7d2612-cc9344 — Point the CI bbctester install at setup-ocaml's local switch
+
+**What.** In `.github/workflows/ci.yml`, the bbctester build and install run with
+`opam exec --switch="$GITHUB_WORKSPACE"`.
+**Areas.** `.github/workflows/ci.yml`.
+**Why.** The first CI run (after s-7d2612-0a037e) passed the `tools` job — so `tools/pmars-host.sh`
+builds with gcc on Ubuntu and the behaviour specs pass there — but the `ocaml` job failed at the
+bbctester step: "No switch is currently set". setup-ocaml v3 creates a local switch (`_opam`) in the
+workspace, and the clone in `$RUNNER_TEMP` is outside it.
+**Architecture.** ✅ Complies.
+**What went wrong on the way.** The workflow was written assuming a global switch; it could not be
+run before pushing.
+**Not verified.** The rest of the `ocaml` job (`dune install` of the fork, `make check-ocaml`,
+the vendored pmars with `libx11-6`) still waits for the next run.
+
 ## 2026-10-02 · s-7d2612-0a037e — Initialise the agent-guides bundle and bootstrap the repository
 
 **What.** Took the agent-guides bundle 0.0.25 into `.agents/` (from the template's release export)
