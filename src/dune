@@ -1,4 +1,4 @@
 (library
  (name cored)
- (modules red ast analyse compile lib util parse layout)
+ (modules red ast analyse compile lib util parse layout metrics)
  (libraries containers))

@@ -154,6 +154,69 @@ let test_layout_duplicate_label () =
   check Alcotest.(list diagnostic) "diagnostics" [L.Duplicate_label ("LET1", 1, 2)] p.diagnostics
 
 
+(* Tests for the metrics *)
+module M = Cored.Metrics
+
+let range : M.range testable =
+  testable (fun f (r : M.range) -> Format.fprintf f "{%d;%d}" r.min r.max) (=)
+
+let r (a : int) (b : int) : M.range = { M.min = a; max = b }
+
+let contains (s : string) (sub : string) : bool =
+  let n = String.length sub in
+  let rec go i = i + n <= String.length s && (String.sub s i n = sub || go (i + 1)) in
+  go 0
+
+let metrics_of (path : string) : M.t = M.measure (layout_of path)
+
+let test_metrics_prog1 () =
+  let m = metrics_of (example "prog1") in
+  check Alcotest.(list int) "length code epilogue data nonzero nonblank"
+    [4; 3; 1; 0; 3; 4] [m.length; m.code; m.epilogue; m.data; m.nonzero; m.nonblank] ;
+  check Alcotest.(option range) "boot" (Some (r 0 0)) m.boot ;
+  check Alcotest.int "one loop" 1 (List.length m.loops) ;
+  let l = List.hd m.loops in
+  check range "cycles" (r 3 3) l.cycles ;
+  check range "overhead" (r 0 0) l.overhead ;
+  check Alcotest.(option int) "exit" None l.exit
+
+let test_metrics_prog7 () =
+  let m = metrics_of (example "prog7") in
+  check Alcotest.(option range) "boot" (Some (r 1 1)) m.boot ;
+  let l = List.hd m.loops in
+  check Alcotest.(list int) "cells" [2; 3] l.loop.body ;
+  check range "cycles" (r 2 2) l.cycles ;
+  check range "overhead" (r 1 1) l.overhead ;
+  check Alcotest.(option string) "construct" (Some "do-while") l.construct
+
+let test_metrics_prog8 () =
+  let m = metrics_of (example "prog8") in
+  check Alcotest.(option range) "boot" (Some (r 1 1)) m.boot ;
+  let l = List.hd m.loops in
+  check range "cycles" (r 3 3) l.cycles ;
+  check range "overhead" (r 2 2) l.overhead ;
+  check Alcotest.(option int) "exit" (Some 2) l.exit
+
+let test_metrics_prog0_no_loops () =
+  let m = metrics_of (example "prog0") in
+  check Alcotest.int "loops" 0 (List.length m.loops) ;
+  check Alcotest.(option range) "boot" None m.boot ;
+  check Alcotest.bool "loops: none" true (contains (M.to_text ~maxlength:100 m) "loops: none")
+
+let test_metrics_prog4_dynamic () =
+  check Alcotest.int "dynamic jumps" 4 (metrics_of (example "prog4")).dynamic_jumps
+
+let test_metrics_div_by_zero () =
+  let m = M.measure (layout_of_src "(seq (DIV 0 (Dir 1)) (DAT 1 1))") in
+  check Alcotest.(list int) "cells" [0] m.div_by_zero ;
+  check Alcotest.bool "report" true (contains (M.to_text ~maxlength:100 m) "kills: cell 0 divides by 0")
+
+let test_metrics_json_keys () =
+  let j = M.to_json (metrics_of (example "prog1")) in
+  check Alcotest.bool "length" true (contains j "\"length\":4") ;
+  check Alcotest.bool "cycles" true (contains j "\"cycles\":{\"min\":3,\"max\":3}")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -174,6 +237,15 @@ let ocaml_tests = [
     test_case "undefined label" `Quick test_layout_undefined_label ;
     test_case "long line" `Quick test_layout_long_line ;
     test_case "duplicate label" `Quick test_layout_duplicate_label ;
+  ] ;
+  "metrics", [
+    test_case "prog1" `Quick test_metrics_prog1 ;
+    test_case "prog7" `Quick test_metrics_prog7 ;
+    test_case "prog8" `Quick test_metrics_prog8 ;
+    test_case "prog0: no loops" `Quick test_metrics_prog0_no_loops ;
+    test_case "prog4: dynamic jumps" `Quick test_metrics_prog4_dynamic ;
+    test_case "division by zero" `Quick test_metrics_div_by_zero ;
+    test_case "json keys" `Quick test_metrics_json_keys ;
   ] ;
   "interp", [
 
