@@ -40,8 +40,7 @@ check-ocaml:
 ifeq ($(PLATFORM),Linux-x86_64)
 	dune exec execs/run_test.exe
 else
-	dune exec execs/run_test.exe -- test parse
-	dune exec execs/run_test.exe -- test compare
+	dune exec execs/run_test.exe -- test '^([^e]|e[^x]|ex[^e]).*$$'  # every group but execute
 	@echo "check-ocaml: the execute group did not run ($(PLATFORM) cannot run pmars/pmars)"
 endif
 
