@@ -11,6 +11,7 @@ type range = { min : int; max : int }
 
 type loop_metrics = {
   loop : Layout.loop;
+  label : string option;  (* the header cell's first label *)
   node : tag option;
   construct : string option;
   cycles : range;
@@ -36,6 +37,7 @@ type t = {
   div_by_zero : int list;
   loops : loop_metrics list;
   predictions : prediction list;
+  coresize : int;
 }
 
 let range_of (xs : int list) : range option =
@@ -76,7 +78,8 @@ let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let outs = paths p ~inside:(fun i -> in_body i || own i) ~stop:(fun t -> not (in_body t || own t)) l.header in
   let exit = Option.map (fun r -> r.min) (range_of (List.map List.length outs)) in
   let zero = { min = 0; max = 0 } in
-  { loop = l; node = c.origin; construct = c.construct;
+  let label = match p.cells.(l.header).labels with x :: _ -> Some x | [] -> None in
+  { loop = l; label; node = c.origin; construct = c.construct;
     cycles = Option.value cycles ~default:zero; overhead = Option.value overhead ~default:zero; exit }
 
 let divides_by_zero (c : cell) : bool =
@@ -184,14 +187,47 @@ let measure (p : program) : t =
     dynamic_jumps = count (fun c -> List.mem Dynamic p.succ.(c.pos));
     div_by_zero = List.map (fun c -> c.pos) (List.filter divides_by_zero cells);
     loops = List.map (measure_loop p) p.loops;
-    predictions = [] }
+    predictions = [];
+    coresize = p.coresize }
   |> fun m -> { m with predictions =
       List.concat_map (fun lm -> steps p lm @ Option.to_list (counter p m.boot lm)) m.loops }
+
+
+(* The policy: objectives in priority order, compared lexicographically. Speed before size by
+   default: one more instruction per loop iteration cost about 20 benchmark points where eight more
+   cells cost about 4 (docs/specs/2026-10-03-cost-model-design.md). *)
+type objective = Speed | Size | Stealth | Boot
+
+type policy = objective list
+
+let default_policy : policy = [Speed; Size]
+
+let objective_of_string (s : string) : objective option =
+  match s with
+  | "speed" -> Some Speed | "size" -> Some Size | "stealth" -> Some Stealth | "boot" -> Some Boot
+  | _ -> None
+
+let string_of_objective (o : objective) : string =
+  match o with Speed -> "speed" | Size -> "size" | Stealth -> "stealth" | Boot -> "boot"
+
+let compare (policy : policy) (x : t) (y : t) : int =
+  let worst m = List.fold_left (fun acc l -> Int.max acc l.cycles.max) 0 m.loops in
+  let total m = List.fold_left (fun acc l -> acc + l.cycles.max) 0 m.loops in
+  let boot m = match m.boot with Some r -> r.max | None -> max_int in
+  let by o = match o with
+    | Speed -> let c = Int.compare (worst x) (worst y) in if c <> 0 then c else Int.compare (total x) (total y)
+    | Size -> Int.compare x.length y.length
+    | Stealth -> Int.compare x.nonblank y.nonblank
+    | Boot -> Int.compare (boot x) (boot y) in
+  List.fold_left (fun acc o -> if acc <> 0 then acc else by o) 0 policy
 
 
 (* Reports *)
 let show_range (r : range) : string =
   if r.min = r.max then string_of_int r.min else sprintf "%d..%d" r.min r.max
+
+(* A step is stored modulo CORESIZE; shown signed, so a predecrement reads -1, not 7999. *)
+let signed (m : t) (k : int) : int = if k > m.coresize / 2 then k - m.coresize else k
 
 let to_text ~(maxlength : int) (m : t) : string =
   let b = Buffer.create 256 in
@@ -204,17 +240,17 @@ let to_text ~(maxlength : int) (m : t) : string =
   if m.loops = [] then add "loops: none\n" ;
   List.iter (fun l ->
     let first = List.hd l.loop.body and last = List.nth l.loop.body (List.length l.loop.body - 1) in
-    add (sprintf "loop %d..%d (%s, node %s)   cycles/iter %s   overhead %s   exit %s\n"
-           first last (Option.value l.construct ~default:"user code")
+    add (sprintf "loop %d..%d (%s, %s, node %s)   cycles/iter %s   overhead %s   exit %s\n"
+           first last (Option.value l.label ~default:"—") (Option.value l.construct ~default:"user code")
            (match l.node with Some t -> string_of_int t | None -> "—")
            (show_range l.cycles) (show_range l.overhead)
            (match l.exit with Some e -> string_of_int e | None -> "—")) ;
     List.iter (fun pr -> match pr with
       | Step s when s.loop = l.loop.header && s.full ->
-        add (sprintf "  predicted: step %d → period %d iterations, covers core in %d cycles\n" s.k s.period s.cover_cycles)
+        add (sprintf "  predicted: step %d → period %d iterations, covers core in %d cycles\n" (signed m s.k) s.period s.cover_cycles)
       | Step s when s.loop = l.loop.header ->
         add (sprintf "  predicted: step %d → period %d iterations, does not visit every cell (%d cycles per period)\n"
-               s.k s.period s.cover_cycles)
+               (signed m s.k) s.period s.cover_cycles)
       | Counter c when c.loop = l.loop.header ->
         add (sprintf "  predicted: counter %d → %d cycles in the loop%s\n" c.n c.loop_cycles
                (match c.dies_after with Some d -> sprintf "; dies after %d instructions" d | None -> ""))
@@ -232,8 +268,8 @@ let to_json (m : t) : string =
                   s.loop s.cell (field s.field) s.k s.period s.cover_cycles s.full
     | Counter c -> sprintf "{\"kind\":\"counter\",\"loop\":%d,\"n\":%d,\"loop_cycles\":%d,\"dies_after\":%s}"
                      c.loop c.n c.loop_cycles (opt string_of_int c.dies_after) in
-  let loop l = sprintf "{\"header\":%d,\"body\":%s,\"node\":%s,\"construct\":%s,\"cycles\":%s,\"overhead\":%s,\"exit\":%s}"
-      l.loop.header (ints l.loop.body) (opt string_of_int l.node) (opt str l.construct)
+  let loop l = sprintf "{\"header\":%d,\"label\":%s,\"body\":%s,\"node\":%s,\"construct\":%s,\"cycles\":%s,\"overhead\":%s,\"exit\":%s}"
+      l.loop.header (opt str l.label) (ints l.loop.body) (opt string_of_int l.node) (opt str l.construct)
       (range l.cycles) (range l.overhead) (opt string_of_int l.exit) in
   sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[%s]}"
     m.length m.code m.data m.epilogue m.unreachable m.nonzero m.nonblank (opt range m.boot)

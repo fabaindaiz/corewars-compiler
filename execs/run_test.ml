@@ -54,7 +54,7 @@ let rec while_tag (e : tag eexpr) : tag option =
   | EFlow1 (_, _, b, _) | ELet (_, _, b, _) -> while_tag b
   | EFlow2 (_, _, b1, b2, _) -> (match while_tag b1 with Some t -> Some t | None -> while_tag b2)
   | ESeq (es, _) -> List.find_map while_tag es
-  | EComment _ | ELabel _ | EPrim2 _ -> None
+  | EComment _ | ELabel _ | EPrim2 _ | EExpect _ -> None
 
 let is_mov (e : emitted) : bool =
   match e.instr with INSTR (IMOV, _, _, _) -> true | INSTR _ | ICOM _ | ILAB _ -> false
@@ -257,6 +257,39 @@ let test_predict_partial_cover () =
   check step_t "step" (as_pairs [(2, 4000, 12000, false)]) (as_pairs (steps m))
 
 
+(* Tests for the policy and the program header *)
+let objective : M.objective testable =
+  testable (fun f o -> Format.pp_print_string f (match o with
+    | M.Speed -> "speed" | M.Size -> "size" | M.Stealth -> "stealth" | M.Boot -> "boot")) (=)
+
+let expectation : expectation testable =
+  testable (fun f _ -> Format.pp_print_string f "<expectation>") (=)
+
+let test_policy_default () =
+  check Alcotest.(list objective) "default" [M.Speed; M.Size] M.default_policy
+
+let test_policy_compare_speed_first () =
+  let base = metrics_of (example "prog1") in
+  let mk cycles length =
+    { base with M.length; loops = [{ (List.hd base.loops) with cycles = r cycles cycles }] } in
+  let fast_long = mk 3 8 and slow_short = mk 4 4 in
+  check Alcotest.bool "speed first" true (M.compare M.default_policy fast_long slow_short < 0) ;
+  check Alcotest.bool "size first" true (M.compare [M.Size; M.Speed] fast_long slow_short > 0)
+
+let test_parse_source_plain () =
+  let src = parse_source (sexp_from_string (golden_src (example "prog1"))) in
+  check Alcotest.(option (list string)) "optimize" None src.optimize ;
+  check Alcotest.(list expectation) "expects" [] src.expects
+
+let test_parse_source_header () =
+  let src = parse_source (sexp_from_string "(program (optimize size) (expect (length <= 8)) (MOV 0 1))") in
+  check Alcotest.(option (list string)) "optimize" (Some ["size"]) src.optimize ;
+  check Alcotest.(list expectation) "expects" [XLength (Le, 8)] src.expects
+
+let test_objective_unknown () =
+  check Alcotest.(option objective) "fast" None (M.objective_of_string "fast")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -292,6 +325,13 @@ let ocaml_tests = [
     test_case "counter from 0" `Quick test_predict_counter_zero ;
     test_case "prog7: prediction = behaviour spec" `Quick test_predict_matches_behaviour ;
     test_case "partial cover" `Quick test_predict_partial_cover ;
+  ] ;
+  "policy", [
+    test_case "default policy" `Quick test_policy_default ;
+    test_case "compare: speed first" `Quick test_policy_compare_speed_first ;
+    test_case "plain source" `Quick test_parse_source_plain ;
+    test_case "program header" `Quick test_parse_source_header ;
+    test_case "unknown objective" `Quick test_objective_unknown ;
   ] ;
   "interp", [
 

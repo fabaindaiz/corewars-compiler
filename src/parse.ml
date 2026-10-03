@@ -63,6 +63,31 @@ let parse_imod (sexp : sexp) : imod =
   | `Atom "X" -> MX
   | _ -> raise (CTError (sprintf "Not a valid imod: %s" (to_string sexp)))
 
+let parse_int (sexp : sexp) : int =
+  match sexp with
+  | `Atom s ->
+    (match int_of_string_opt s with
+    | Some n -> n
+    | None -> raise (CTError (sprintf "Not a number: %s" s)))
+  | `List _ -> raise (CTError (sprintf "Not a number: %s" (to_string sexp)))
+
+let parse_expectation (sexp : sexp) : expectation =
+  let measured name n = match name with
+    | "length" -> Some (fun c -> XLength (c, n)) | "cycles" -> Some (fun c -> XCycles (c, n))
+    | "overhead" -> Some (fun c -> XOverhead (c, n)) | "boot" -> Some (fun c -> XBoot (c, n))
+    | _ -> None in
+  let bad () = raise (CTError (sprintf "Not a valid expectation: %s" (to_string sexp))) in
+  match sexp with
+  | `List [`Atom m; `Atom "<="; n] ->
+    (match measured m (parse_int n) with Some f -> f Le | None -> bad ())
+  | `List [`Atom "step"; k] -> XStep (parse_int k)
+  | `List [`Atom "alive"; n] -> XAlive (parse_int n)
+  | `List [`Atom "dead"; n] -> XDead (parse_int n)
+  | `List [`Atom m; n] -> (match measured m (parse_int n) with Some f -> f Eq | None -> bad ())
+  | `List [`Atom "covers-core"] -> XCoversCore
+  | `List [`Atom "cell"; addr; `Atom text; n] -> XCell (parse_int addr, text, parse_int n)
+  | _ -> bad ()
+
 let rec parse_exp (sexp : sexp) : expr =
   match sexp with
   | `List (`Atom "com" :: exps) -> Comment (List.fold_left (fun res s -> res ^ " " ^ (String.escaped (to_string s))) "" exps)
@@ -80,6 +105,7 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "SPL" -> Prim2 (Spl, MN, parse_arg e, ANone)
     | `Atom "NOP" -> Prim2 (Nop, MN, parse_arg e, ANone)
     | `Atom "repeat" -> Flow1 (Repeat, Cond0, parse_exp e)
+    | `Atom "expect" -> Expect (parse_expectation e)
     | _ -> raise (CTError (sprintf "Not a valid unary expr: %s" (to_string sexp))) )
   | `List [eop; e1; e2] ->
     (match eop with 
@@ -129,6 +155,23 @@ let rec parse_exp (sexp : sexp) : expr =
     | _ -> raise (CTError (sprintf "Not a valid ternary expr: %s" (to_string sexp))) )
   | _ -> raise (CTError (sprintf "Not a valid expr: %s" (to_string sexp)))
 
+
+(* A source: a plain expression, or (program (optimize o ...) (expect e) ... body) *)
+let parse_source (sexp : sexp) : source =
+  match sexp with
+  | `List (`Atom "program" :: items) ->
+    let optimize = ref None and expects = ref [] and bodies = ref [] in
+    List.iter (fun item -> match item with
+      | `List (`Atom "optimize" :: os) ->
+        optimize := Some (List.map (fun o -> match o with
+          | `Atom s -> s
+          | `List _ -> raise (CTError (sprintf "Not an objective: %s" (to_string o)))) os)
+      | `List [`Atom "expect"; e] -> expects := parse_expectation e :: !expects
+      | `Atom _ | `List _ -> bodies := parse_exp item :: !bodies) items ;
+    (match !bodies with
+    | [body] -> { optimize = !optimize; expects = List.rev !expects; body }
+    | [] | _ :: _ :: _ -> raise (CTError "a (program ...) needs exactly one body expression"))
+  | `Atom _ | `List _ -> { optimize = None; expects = []; body = parse_exp sexp }
 
 (* parse a program from a file *)
 let sexp_from_file : string -> CCSexp.sexp =

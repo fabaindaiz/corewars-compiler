@@ -178,6 +178,7 @@ let rec compile_expr (e : tag eexpr) (env : env) : emitted list =
     (compile_expr body env')
   | ESeq (exps, _) ->
     List.fold_left (fun res exp -> res @ (compile_expr exp env)) [] exps
+  | EExpect _ -> []
 
 let compile_body (e : expr) : emitted list =
   compile_expr (tag_expr e) empty_env

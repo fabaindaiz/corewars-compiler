@@ -163,3 +163,41 @@ Control flows are used to specify the execution order of the instructions. Use c
 - (com words ...) a comment line in the output, `; words ...` (no instruction)
 
 Every compiled program ends with an extra `DAT 0, 0`: a program that runs past its last instruction dies there.
+
+
+## Program header, optimization and expectations
+
+A file may wrap its single body expression in an optional header. A file without it is unchanged.
+
+```
+(program
+  (optimize speed size)
+  (expect (length <= 8))
+  body)
+```
+
+- (program items) the header: any number of `optimize` and `expect` items, and exactly one body expression
+- (optimize objectives) the order in which the compiler weighs its metrics: `speed` (cycles per loop iteration), `size` (warrior length), `stealth` (cells a scanner can see), `boot` (cycles before the first loop). The default is `speed size`; `run_compile.exe --optimize size,speed` overrides the header. The compiler measures and reports today; it does not yet change its output by policy.
+
+### Expectations (expect)
+
+`(expect e)` states what the compiled warrior must do. It emits no code. In the header it applies to the whole warrior; as a statement inside a `repeat`, `while` or `do-while` body it applies to that loop.
+
+Checked when compiling (a failure stops the compilation, or is a warning with `--expect=warn`):
+
+- (length <= N) the warrior is at most N cells, the final `DAT` included
+- (cycles N) | (cycles <= N) instructions executed per iteration of the loop
+- (overhead <= N) of those, the control instructions the compiler added
+- (boot <= N) cycles before the first loop starts
+- (step K) a pointer in the loop advances K cells per iteration
+- (covers-core) that pointer visits every cell of the core
+
+`length`, `cycles`, `overhead` and `boot` accept both `(m N)` (exactly N) and `(m <= N)`.
+
+Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE` writes them as a behaviour spec for `tools/behave.py`):
+
+- (alive N) a process is still running after N executed instructions
+- (dead N) no process is left after N executed instructions
+- (cell ADDR "TEXT" N) after N instructions, cell ADDR holds the instruction TEXT
+
+`run_compile.exe --report` prints the measured metrics and predictions on standard error; `--report=json` prints them as JSON instead of the redcode. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).

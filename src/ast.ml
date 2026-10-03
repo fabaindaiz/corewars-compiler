@@ -85,6 +85,24 @@ type flow2 =
 | IfElse
 
 
+(* What the programmer expects of the compiled warrior: checked at compile time against the
+   metrics, or exported as behaviour probes (alive, dead, cell). *)
+type cmp =
+| Eq
+| Le
+
+type expectation =
+| XLength of cmp * int
+| XCycles of cmp * int
+| XOverhead of cmp * int
+| XBoot of cmp * int
+| XStep of int
+| XCoversCore
+| XAlive of int
+| XDead of int
+| XCell of int * string * int  (* address, text, after N instructions *)
+
+
 type expr =
 | Comment of string
 | Label of string
@@ -93,6 +111,7 @@ type expr =
 | Flow2 of flow2 * cond * expr * expr
 | Let of string * arg * expr
 | Seq of expr list
+| Expect of expectation
 
 type 'a eexpr =
 | EComment of string
@@ -102,6 +121,10 @@ type 'a eexpr =
 | EFlow2 of flow2 * cond * 'a eexpr * 'a eexpr * 'a
 | ELet of string * arg * 'a eexpr * 'a
 | ESeq of 'a eexpr list * 'a
+| EExpect of expectation * 'a
+
+(* A source file: an optional (program ...) header around one body expression. *)
+type source = { optimize : string list option; expects : expectation list; body : expr }
 
 
 type tag = int
@@ -136,6 +159,8 @@ let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
       | [] -> [], cur ) in
     let (tag_e, next_tag) = tag_seq exprs (cur + 1) in
     (ESeq (tag_e, cur), next_tag)
+  | Expect (x) ->
+    (EExpect (x, cur), cur + 1)
 
 let tag_expr (e : expr) : tag eexpr =
   let (tagged, _) = tag_expr_help e 1 in tagged
