@@ -89,6 +89,80 @@ let blank (c : cell) : bool =
   c.op = IDAT && (c.md = RN || c.md = RF)
   && c.a.mode = RDir && c.a.value = 0 && c.b.mode = RDir && c.b.value = 0
 
+(* Predictions: heuristics for two patterns, reported as predictions and absent when nothing
+   matches. *)
+let writes (op : opcode) : bool =
+  match op with
+  | IMOV | IADD | ISUB | IMUL | IDIV | IMOD -> true
+  | IDAT | ISPL | IJMP | INOP | IJMZ | IJMN | IDJN | ICMP | ISEQ | ISNE | ISLT | ILDP | ISTP -> false
+
+let base_field (m : rmode) : Layout.field option =
+  match m with
+  | RBInd | RBInc | RBDec -> Some FB
+  | RAInd | RAInc | RADec -> Some FA
+  | RImm | RDir -> None
+
+let rec gcd (a : int) (b : int) : int = if b = 0 then a else gcd b (a mod b)
+
+let step_of (p : program) (lm : loop_metrics) ~(cell : int) ~(field : Layout.field) ~(k : int) : prediction =
+  let k = norm p.coresize k in
+  let period = p.coresize / gcd p.coresize k in
+  Step { loop = lm.loop.header; cell; field; k; period; cover_cycles = period * lm.cycles.max;
+         full = (gcd p.coresize k = 1) }
+
+let steps (p : program) (lm : loop_metrics) : prediction list =
+  let n = Array.length p.cells in
+  let body = lm.loop.body in
+  let laps = paths p ~inside:(fun i -> List.mem i body && i <> lm.loop.header)
+      ~stop:(fun t -> t = lm.loop.header) lm.loop.header in
+  let every i = laps <> [] && List.for_all (List.mem i) laps in
+  let target (c : cell) = norm p.coresize (c.pos + c.b.value) in
+  (* A field is a destination when a write in the loop goes to it: the cell's own B operand, or a
+     write whose B operand is indirect through it. *)
+  let destination t f =
+    List.exists (fun j -> let w = p.cells.(j) in
+      writes w.op && ((j = t && f = FB && w.b.mode = RDir)
+                      || (base_field w.b.mode = Some f && target w = t))) body in
+  let by_add = List.filter_map (fun i -> let c = p.cells.(i) in
+      let field = match c.md with
+        | RA | RBA -> Some FA | RB | RAB -> Some FB | RN | RF | RX | RI -> None in
+      match field with
+      | Some f when (c.op = IADD || c.op = ISUB) && c.a.mode = RImm && c.b.mode = RDir && every i
+                    && target c < n && destination (target c) f ->
+        let k = if c.op = IADD then c.a.value else - c.a.value in
+        Some (step_of p lm ~cell:(target c) ~field:f ~k)
+      | Some _ | None -> None) body in
+  let by_mode = List.filter_map (fun j -> let w = p.cells.(j) in
+      let k = match w.b.mode with
+        | RBInc | RAInc -> Some 1 | RBDec | RADec -> Some (-1)
+        | RImm | RDir | RAInd | RBInd -> None in
+      match k, base_field w.b.mode with
+      | Some k, Some f when writes w.op && every j && target w < n ->
+        Some (step_of p lm ~cell:(target w) ~field:f ~k)
+      | (Some _ | None), (Some _ | None) -> None) body in
+  by_add @ by_mode
+
+let counter (p : program) (boot : range option) (lm : loop_metrics) : prediction option =
+  let s = p.cells.(fst (List.hd lm.loop.back_edges)) in
+  let n_of_field (c : cell) = match s.md with
+    | RA | RBA -> Some c.a.value | RB | RAB | RN -> Some c.b.value | RF | RX | RI -> None in
+  let initial =
+    if s.op <> IDJN || not (List.mem (Jump lm.loop.header) p.succ.(s.pos)) then None
+    else if s.b.mode = RImm then n_of_field s
+    else if s.b.mode = RDir then
+      let t = norm p.coresize (s.pos + s.b.value) in
+      if t < Array.length p.cells then n_of_field p.cells.(t) else None
+    else None in
+  Option.map (fun n ->
+    (* DJN decrements first: a counter at 0 wraps and runs CORESIZE iterations. *)
+    let n = if n = 0 then p.coresize else n in
+    let loop_cycles = n * lm.cycles.max in
+    let falls_on_dat = s.pos + 1 < Array.length p.cells && p.cells.(s.pos + 1).op = IDAT in
+    let start = match boot with Some r -> r.max | None -> 0 in
+    Counter { loop = lm.loop.header; n; loop_cycles;
+              dies_after = if falls_on_dat then Some (start + loop_cycles + 1) else None })
+    initial
+
 let measure (p : program) : t =
   let cells = Array.to_list p.cells in
   let seen = reachable p in
@@ -111,6 +185,8 @@ let measure (p : program) : t =
     div_by_zero = List.map (fun c -> c.pos) (List.filter divides_by_zero cells);
     loops = List.map (measure_loop p) p.loops;
     predictions = [] }
+  |> fun m -> { m with predictions =
+      List.concat_map (fun lm -> steps p lm @ Option.to_list (counter p m.boot lm)) m.loops }
 
 
 (* Reports *)
@@ -132,7 +208,17 @@ let to_text ~(maxlength : int) (m : t) : string =
            first last (Option.value l.construct ~default:"user code")
            (match l.node with Some t -> string_of_int t | None -> "—")
            (show_range l.cycles) (show_range l.overhead)
-           (match l.exit with Some e -> string_of_int e | None -> "—"))) m.loops ;
+           (match l.exit with Some e -> string_of_int e | None -> "—")) ;
+    List.iter (fun pr -> match pr with
+      | Step s when s.loop = l.loop.header && s.full ->
+        add (sprintf "  predicted: step %d → period %d iterations, covers core in %d cycles\n" s.k s.period s.cover_cycles)
+      | Step s when s.loop = l.loop.header ->
+        add (sprintf "  predicted: step %d → period %d iterations, does not visit every cell (%d cycles per period)\n"
+               s.k s.period s.cover_cycles)
+      | Counter c when c.loop = l.loop.header ->
+        add (sprintf "  predicted: counter %d → %d cycles in the loop%s\n" c.n c.loop_cycles
+               (match c.dies_after with Some d -> sprintf "; dies after %d instructions" d | None -> ""))
+      | Step _ | Counter _ -> ()) m.predictions) m.loops ;
   Buffer.contents b
 
 let to_json (m : t) : string =
@@ -140,9 +226,15 @@ let to_json (m : t) : string =
   let opt f = function Some x -> f x | None -> "null" in
   let str s = sprintf "\"%s\"" (String.escaped s) in
   let ints xs = "[" ^ String.concat "," (List.map string_of_int xs) ^ "]" in
+  let field f = match f with FA -> "\"A\"" | FB -> "\"B\"" in
+  let prediction pr = match pr with
+    | Step s -> sprintf "{\"kind\":\"step\",\"loop\":%d,\"cell\":%d,\"field\":%s,\"k\":%d,\"period\":%d,\"cover_cycles\":%d,\"full\":%b}"
+                  s.loop s.cell (field s.field) s.k s.period s.cover_cycles s.full
+    | Counter c -> sprintf "{\"kind\":\"counter\",\"loop\":%d,\"n\":%d,\"loop_cycles\":%d,\"dies_after\":%s}"
+                     c.loop c.n c.loop_cycles (opt string_of_int c.dies_after) in
   let loop l = sprintf "{\"header\":%d,\"body\":%s,\"node\":%s,\"construct\":%s,\"cycles\":%s,\"overhead\":%s,\"exit\":%s}"
       l.loop.header (ints l.loop.body) (opt string_of_int l.node) (opt str l.construct)
       (range l.cycles) (range l.overhead) (opt string_of_int l.exit) in
-  sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[]}"
+  sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[%s]}"
     m.length m.code m.data m.epilogue m.unreachable m.nonzero m.nonblank (opt range m.boot)
-    m.spl_sites m.dynamic_jumps (ints m.div_by_zero) (String.concat "," (List.map loop m.loops))
+    m.spl_sites m.dynamic_jumps (ints m.div_by_zero) (String.concat "," (List.map loop m.loops)) (String.concat "," (List.map prediction m.predictions))

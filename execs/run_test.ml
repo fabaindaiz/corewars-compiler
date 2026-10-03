@@ -217,6 +217,46 @@ let test_metrics_json_keys () =
   check Alcotest.bool "cycles" true (contains j "\"cycles\":{\"min\":3,\"max\":3}")
 
 
+(* Tests for the predictions *)
+let steps (m : M.t) : (int * int * int * bool) list =
+  List.filter_map (fun p -> match p with
+    | M.Step s -> Some (s.k, s.period, s.cover_cycles, s.full)
+    | M.Counter _ -> None) m.predictions
+
+let counters (m : M.t) : (int * int * int option) list =
+  List.filter_map (fun p -> match p with
+    | M.Counter c -> Some (c.n, c.loop_cycles, c.dies_after)
+    | M.Step _ -> None) m.predictions
+
+let step_t = Alcotest.(list (pair (pair int int) (pair int bool)))
+let as_pairs = List.map (fun (k, p, c, f) -> ((k, p), (c, f)))
+
+let test_predict_prog1_step () =
+  check step_t "step" (as_pairs [(4, 2000, 6000, false)]) (as_pairs (steps (metrics_of (example "prog1"))))
+
+let test_predict_prog7_counter () =
+  check Alcotest.(list (triple int int (option int))) "counter" [(100, 200, Some 202)]
+    (counters (metrics_of (example "prog7")))
+
+let test_predict_prog7_step () =
+  check step_t "step" (as_pairs [(1, 8000, 16000, true)]) (as_pairs (steps (metrics_of (example "prog7"))))
+
+let test_predict_counter_zero () =
+  let m = M.measure (layout_of_src "(do-while (DN 0) (NOP))") in
+  check Alcotest.(list int) "n" [8000] (List.map (fun (n, _, _) -> n) (counters m))
+
+let test_predict_matches_behaviour () =
+  let spec = read_file "behtests/prog7_dowhile_dn.beh" in
+  let dead = List.find_map (fun l -> Scanf.sscanf_opt l "dead %d" Fun.id) (String.split_on_char '\n' spec) in
+  check Alcotest.(list (option int)) "dies_after = dead N" [dead]
+    (List.map (fun (_, _, d) -> d) (counters (metrics_of (example "prog7"))))
+
+let test_predict_partial_cover () =
+  let m = M.measure (layout_of_src
+    "(let (p 0) (seq (JMP (Dir 2)) (DAT (store p) 0) (repeat (seq (ADD 2 p) (MOV 0 (Ind p))))))") in
+  check step_t "step" (as_pairs [(2, 4000, 12000, false)]) (as_pairs (steps m))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -246,6 +286,12 @@ let ocaml_tests = [
     test_case "prog4: dynamic jumps" `Quick test_metrics_prog4_dynamic ;
     test_case "division by zero" `Quick test_metrics_div_by_zero ;
     test_case "json keys" `Quick test_metrics_json_keys ;
+    test_case "prog1: fixed-step pointer" `Quick test_predict_prog1_step ;
+    test_case "prog7: counter" `Quick test_predict_prog7_counter ;
+    test_case "prog7: postincrement pointer" `Quick test_predict_prog7_step ;
+    test_case "counter from 0" `Quick test_predict_counter_zero ;
+    test_case "prog7: prediction = behaviour spec" `Quick test_predict_matches_behaviour ;
+    test_case "partial cover" `Quick test_predict_partial_cover ;
   ] ;
   "interp", [
 
