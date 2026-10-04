@@ -100,19 +100,28 @@ def battle(warrior: Path, opponent: Path, rounds: int, config: Path | None) -> t
     if config:
         args[1:1] = ["-@", str(config)]
     out = subprocess.run(args + [str(warrior), str(opponent)], capture_output=True, text=True, timeout=600)
-    first = out.stdout.strip().splitlines()[:1]
-    if not first:
-        raise RuntimeError(f"pmars gave no result for {warrior.name} against {opponent.name}: {out.stderr.strip()}")
-    wins, ties = (int(x) for x in first[0].split()[:2])
-    return wins, ties
+    # -k prints one "wins ties" line per warrior, ours first; some warriors also print a listing
+    # (an ;assert's output, a debug directive), so the result is the first line of two numbers.
+    results = [l.split() for l in out.stdout.splitlines() if re.fullmatch(r"\s*\d+\s+\d+\s*", l)]
+    if not results:
+        raise RuntimeError(f"pmars gave no result for {warrior.name} against {opponent.name}: {out.stderr.strip()[:200]}")
+    return int(results[0][0]), int(results[0][1])
 
 
 def score(warrior: Path, opponents: list[Path], rounds: int, config: Path | None) -> float:
-    total = 0.0
+    """The mean over the opponents pMARS can run; one it cannot assemble here is left out, and said."""
+    total, counted, skipped = 0.0, 0, []
     for o in opponents:
-        w, t = battle(warrior, o, rounds, config)
+        try:
+            w, t = battle(warrior, o, rounds, config)
+        except RuntimeError:
+            skipped.append(o.name)
+            continue
         total += (3 * w + t) * 100 / rounds
-    return round(total / len(opponents), 1)
+        counted += 1
+    if skipped:
+        print(f"  ({warrior.name}: {len(skipped)} opponent(s) left out: {', '.join(skipped[:5])})", file=sys.stderr)
+    return round(total / counted, 1)
 
 
 def compile_red(src: Path) -> Path:

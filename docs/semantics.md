@@ -285,7 +285,8 @@ Where this repository sits on it:
 
 In the order a contributor would use them; links in `docs/references.md`.
 
-1. ICWS'94 draft — the target's semantics, and the only executable one (its reference simulator).
+1. ICWS'94 draft — the target's semantics as the community uses it (never ratified), with a
+   benchmark instruction interpreter in ANSI C; pMARS is the practical reference.
 2. Nielson & Nielson, *Semantics with Applications* — While, its operational semantics, and a
    provably correct compiler to an abstract machine with jumps.
 3. Pierce et al., *Programming Language Foundations* (Software Foundations vol. 2).
