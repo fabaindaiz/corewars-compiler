@@ -395,6 +395,15 @@ let test_minor_div_by_zero_b () =
   check Alcotest.(list int) "DIV.F #5, $0 divides by its own B-number, 0" [0] m.div_by_zero
 
 
+let test_minor_probe_count_positive () =
+  check_raises "dead 0" (Cored.Parse.CTError "Not a valid expectation: (dead 0) (N must be at least 1)")
+    (fun () -> ignore (parse_expectation (sexp_from_string "(dead 0)")))
+
+let test_minor_optimize_needs_objective () =
+  check_raises "(optimize)" (Cored.Parse.CTError "an (optimize ...) needs at least one objective")
+    (fun () -> ignore (parse_source (sexp_from_string "(program (optimize) (MOV 0 1))")))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -458,6 +467,8 @@ let ocaml_tests = [
   "minor", [
     test_case "an expect statement keeps generated labels" `Quick test_minor_expect_keeps_labels ;
     test_case "DIV.F by a zero B-number" `Quick test_minor_div_by_zero_b ;
+    test_case "execution probes need N >= 1" `Quick test_minor_probe_count_positive ;
+    test_case "(optimize) needs an objective" `Quick test_minor_optimize_needs_objective ;
   ] ;
   "interp", [
 

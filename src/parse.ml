@@ -77,15 +77,19 @@ let parse_expectation (sexp : sexp) : expectation =
     | "overhead" -> Some (fun c -> XOverhead (c, n)) | "boot" -> Some (fun c -> XBoot (c, n))
     | _ -> None in
   let bad () = raise (CTError (sprintf "Not a valid expectation: %s" (to_string sexp))) in
+  (* A probe runs N instructions in cdb (`skip N-1`): N = 0 has nothing to run. *)
+  let count n = let k = parse_int n in
+    if k < 1 then raise (CTError (sprintf "Not a valid expectation: %s (N must be at least 1)" (to_string sexp)))
+    else k in
   match sexp with
   | `List [`Atom m; `Atom "<="; n] ->
     (match measured m (parse_int n) with Some f -> f Le | None -> bad ())
   | `List [`Atom "step"; k] -> XStep (parse_int k)
-  | `List [`Atom "alive"; n] -> XAlive (parse_int n)
-  | `List [`Atom "dead"; n] -> XDead (parse_int n)
+  | `List [`Atom "alive"; n] -> XAlive (count n)
+  | `List [`Atom "dead"; n] -> XDead (count n)
   | `List [`Atom m; n] -> (match measured m (parse_int n) with Some f -> f Eq | None -> bad ())
   | `List [`Atom "covers-core"] -> XCoversCore
-  | `List [`Atom "cell"; addr; `Atom text; n] -> XCell (parse_int addr, text, parse_int n)
+  | `List [`Atom "cell"; addr; `Atom text; n] -> XCell (parse_int addr, text, count n)
   | _ -> bad ()
 
 let rec parse_exp (sexp : sexp) : expr =
@@ -162,6 +166,7 @@ let parse_source (sexp : sexp) : source =
   | `List (`Atom "program" :: items) ->
     let optimize = ref None and expects = ref [] and bodies = ref [] in
     List.iter (fun item -> match item with
+      | `List [`Atom "optimize"] -> raise (CTError "an (optimize ...) needs at least one objective")
       | `List (`Atom "optimize" :: os) ->
         optimize := Some (List.map (fun o -> match o with
           | `Atom s -> s
