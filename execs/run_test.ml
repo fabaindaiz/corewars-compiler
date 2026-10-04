@@ -711,6 +711,10 @@ let test_phase2_self_loop_terminates () =
 
 
 (* Tests from the phase-2 branch review *)
+let test_review2_generated_label_is_not_a_name () =
+  let m = M.measure (layout_of_src "(seq (repeat (NOP)) (if (JZ 0) (NOP)) (DAT 0 0))") in
+  check Alcotest.(pair int int) "data, unreachable" (0, 3) (m.data, m.unreachable)
+
 let test_review2_unary_arity_message () =
   check Alcotest.string "error" "p.src:1:5: error: Not a valid unary cond: (JZ F F x)\n"
     (error_of "(if (JZ F F x) (NOP))")
@@ -832,6 +836,7 @@ let ocaml_tests = [
     test_case "a labelled DAT never run is data" `Quick test_phase2_labelled_dat_is_data ;
   ] ;
   "review2", [
+    test_case "a generated label does not name data" `Quick test_review2_generated_label_is_not_a_name ;
     test_case "a unary cond with too many arguments" `Quick test_review2_unary_arity_message ;
   ] ;
   "interp", [

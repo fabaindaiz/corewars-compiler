@@ -215,8 +215,10 @@ let measure (p : program) : t =
   let cells = Array.to_list p.cells in
   let seen = reachable p in
   (* A cell never executed is data when it holds a variable, or when it is a DAT the program names,
-     as a bomber's (label bomb) (DAT 0 0); anything else never executed is dead code. *)
-  let is_data (c : cell) = c.vars <> [] || (c.op = IDAT && c.labels <> []) in
+     as a bomber's (label bomb) (DAT 0 0) (a generated label names no data); anything else never
+     executed is dead code. *)
+  let named (c : cell) = List.exists (fun l -> not (String.starts_with ~prefix:"_" l)) c.labels in
+  let is_data (c : cell) = c.vars <> [] || (c.op = IDAT && named c) in
   let count f = List.length (List.filter f cells) in
   let headers = List.sort_uniq compare (List.map (fun (l : Layout.loop) -> l.header) p.loops) in
   let is_header i = List.mem i headers in
