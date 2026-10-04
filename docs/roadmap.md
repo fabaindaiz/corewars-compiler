@@ -27,7 +27,7 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 
 | Archetype | Cycles/iter RED / hand | Cells RED / hand | Score RED / hand | Gap |
 |---|---|---|---|---|
-| imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT` (i-7d2612-400784) |
+| imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT`, kept by decision (d-7d2612-1c1c67) |
 | scanner | 2 / 2 per empty cell (was 3) | 7 / 6 | 54, 58 / 56, 57 (was 42) | closed by jump threading (d-7d2612-3f3f32) |
 | SEQ scanner | — | — | — | not expressible (i-7d2612-2581ff) |
 | imp spiral, quickscan | — | — | — | need label arithmetic or constants (i-7d2612-a3f2b6) and compile-time repetition (i-7d2612-8e9549) |
@@ -210,6 +210,14 @@ golden that moves or compares through a pointer without a modifier.
 **Decide first.** Whether an indirect use reads the whole target (`.I`) by default, whether
 conditions accept a modifier, or a compound operator for the scan.
 
+### The epilogue DAT differs from empty core in its modes · i-7d2612-ed9f79
+**State.** Planned (s-7d2612-14641b). The epilogue is meant to be indistinguishable from empty core
+(d-7d2612-1c1c67), but pMARS fills empty core with `DAT.F $0, $0` (`pmars.c` in the vendored zip,
+lines 165–166) and the epilogue is `DAT.F #0, #0`. A `JMZ`/`JMN` scanner sees both as zero; an
+`SEQ.I`/`SNE.I` scanner comparing against an empty cell sees the epilogue.
+**Collides with.** Every golden: each ends in the epilogue (d-7d2612-6a1527 needs the reason).
+**Decide first.** Whether to emit `DAT $0, $0` (the user's question, 2026-10-04).
+
 ### Constants as named EQU · i-7d2612-a3f2b6
 **State.** Planned. Constant optimizers (optiMAX, mopt) tune `EQU` constants; RED inlines them.
 
@@ -246,8 +254,8 @@ A `let` whose `(store x)` sits in a `DAT` of its own costs a cell and, when the 
 a `JMP` around it (prog7, prog8: `JMP $2` then `DAT`): one more cell and one more cycle of boot.
 The variable can live in a field the program never reads as code — the epilogue `DAT`, or an
 instruction field the opcode ignores.
-Also the epilogue `DAT` itself: every archetype is one cell longer than its hand-written form for
-it, and none of the six can fall off its end (s-7d2612-14641b).
+Not the epilogue `DAT` itself: every archetype is one cell longer than its hand-written form for
+it, and the user decided to keep it (d-7d2612-1c1c67).
 **Collides with.** d-7d2612-6a1527 (goldens change); i-7d2612-ce4c3b (placement analysis must be right
 first).
 **Decide first.** Whether the compiler may move a `(store x)` the user wrote, or only suggest it

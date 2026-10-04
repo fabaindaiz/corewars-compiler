@@ -37,6 +37,10 @@ hand (was 42). No `prog*` golden had a jump to a jump. The two guard tests (a us
 `--report`, because `Layout` keyed a loop by the construct that emitted its back edge; it is now
 keyed by the label the back edge jumps to (cost-model spec updated). The 21-branch metric test's
 minimum moved from 22 to 21 cycles: its last `if` now jumps straight to the loop head.
+The epilogue `DAT` stays (the user's decision, d-7d2612-1c1c67): pMARS discards a label with no
+instruction after it, measured. It is meant to be indistinguishable from empty core, but pMARS's
+empty core is `DAT.F $0, $0` (read in the vendored source) and the epilogue is `DAT.F #0, #0`:
+recorded as i-7d2612-ed9f79 and put to the user.
 **Left undone.** Imp spiral and quickscan (need label arithmetic or constants and compile-time
 repetition), Mice's copy-by-index and a Silk-style paper; the benchmark is a script described in the
 research note, not a check (i-7d2612-f27a91). The decisions the gaps raise are put to the user, not

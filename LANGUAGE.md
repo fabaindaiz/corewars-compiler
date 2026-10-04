@@ -164,7 +164,7 @@ A jump the compiler generated that would land on a `JMP` the compiler generated 
 - (label text) create a label in the code (no extra instruction). Labels are case-sensitive, `[A-Za-z][A-Za-z0-9_]*`: a name starting with `_` is reserved for the labels the compiler generates (`_LET1`, `_WHI9`, …), and a pMARS keyword (`MOV`, `END`, …) cannot be a label; both are compile errors. A label so long that an emitted line reaches 256 characters is a compile error (pMARS hangs on such lines)
 - (com words ...) a comment line in the output, `; words ...` (no instruction)
 
-Every compiled program ends with an extra `DAT 0, 0`: a program that runs past its last instruction dies there.
+Every compiled program ends with an extra `DAT 0, 0`: a label at the end of a program needs an instruction after it (pMARS discards a trailing label), and a program that runs past its last instruction dies there. It costs one cell of length.
 
 
 ## Program header, optimization and expectations

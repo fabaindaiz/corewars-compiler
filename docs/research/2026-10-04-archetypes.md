@@ -58,10 +58,15 @@ RED warrior is one cell longer than its hand-written form.
    against 56 and 57 by hand. The extra cycle is the whole 14 points. **Closed** the same day: the
    user pulled threading forward (d-7d2612-3f3f32), and the compiled scanner now emits
    `JMZ.B $_REP4` and scores 54 and 58.
-2. **One extra cell, always: the epilogue `DAT`.** `compile_prog` appends `DAT 0, 0` so a program
-   that falls off its end dies there (`LANGUAGE.md`). None of the six can fall off: each ends in a
-   `repeat` or an imp. Five of them also end in a data cell (a variable's `DAT` or a `bomb`) that
-   would serve as the end. Related to i-7d2612-400784 (variables in existing cells).
+2. **One extra cell, always: the epilogue `DAT`.** `compile_prog` appends `DAT 0, 0` after every
+   program. None of the six can fall off its end: each ends in a `repeat` or an imp. **Kept, by the
+   user's decision** (d-7d2612-1c1c67): it exists because pMARS discards a label with no
+   instruction after it (measured: a trailing `fin` is reported as "Discarding these labels" and a
+   `JMP fin` is then "Undefined label"), and it is meant to be indistinguishable from empty core,
+   so it costs length and nothing else. One difference remains: pMARS fills empty core with
+   `DAT.F $0, $0` (`pmars.c`, lines 165–166, in the vendored `pmars/pmars-0.9.4.zip`), while the epilogue
+   is `DAT.F #0, #0`; a `JMZ`/`JMN` scanner cannot tell them apart, an `SEQ.I`/`SNE.I` scanner
+   can (i-7d2612-ed9f79).
 3. **`unreachable` counts declared data as dead code.** core-clear and scanner hold their bomb as
    `(label bomb) (DAT 0 0)`; `--report` counts it as unreachable code, because only a `let`
    variable's cell counts as data. A phase-4 warning on unreachable cells (i-7d2612-90d6e1) would
