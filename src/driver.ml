@@ -73,7 +73,7 @@ and compile_file ~read f report optimize warn emit_beh warn_mode hill_flag : out
     | None -> stop (sprintf "%s: error: unknown hill `%s`: one of %s" f k Hill.keys)) named in
   let target = Option.value hill ~default:Hill.default in
   let maxlength = target.length in
-  let variants = Optimize.measure_all ~consts:src.consts ~coresize:target.coresize src.body in
+  let variants = Optimize.measure_all ~consts:src.consts ~coresize:target.coresize ?start:src.start src.body in
   let opts, _, chosen = Optimize.pick policy variants in
   (* A variant faster than the chosen one is one the policy declined for an objective it ranks
      higher: only then is a loop's extra control instruction worth a warning. *)
@@ -91,7 +91,7 @@ and compile_file ~read f report optimize warn emit_beh warn_mode hill_flag : out
     | None -> sprintf "%s: warning: %s\n" f w.message)
       (Warnings.check ~mode:warn_mode ~policy ~expects ~faster (metrics ()) tagged) in
   let warnings = String.concat "" costs ^ String.concat "" (List.map (sprintf "warning: %s\n") failures) in
-  let redcode = Compile.compile_prog ~opts ~consts:src.consts ?hill ~meta:src.meta src.body ^ "\n" in
+  let redcode = Compile.compile_prog ~opts ~consts:src.consts ?hill ~meta:src.meta ?start:src.start src.body ^ "\n" in
   let files = match emit_beh with
     | None -> []
     | Some path ->

@@ -380,7 +380,7 @@ let header (hill : Hill.t) ~(asserted : bool) (meta : (string * string) list) : 
   ^ String.concat "" (List.map (fun (k, v) -> sprintf ";%s %s\n" k v) meta)
   ^ (if asserted then sprintf ";assert CORESIZE==%d && MAXLENGTH==%d\n" hill.coresize hill.length else "")
 
-let compile_prog ?opts ?(consts = []) ?hill ?(meta = []) (e : expr) : string =
+let compile_prog ?opts ?(consts = []) ?hill ?(meta = []) ?start (e : expr) : string =
   let names = List.map fst consts in
   let target = Option.value hill ~default:Hill.default in
   Consts.check_divisions consts e ;
@@ -391,7 +391,13 @@ let compile_prog ?opts ?(consts = []) ?hill ?(meta = []) (e : expr) : string =
   if cells > target.length then
     error (sprintf "the warrior is %d cells; %s allows %d" cells target.key target.length) ;
   let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr_operand v)) consts) in
-  let text = header target ~asserted:(hill <> None) meta ^ equs ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
+  (* (start l): pMARS starts the warrior at l's cell (ORG l); without it, at the first cell. *)
+  let org = match start with
+    | None -> ""
+    | Some l ->
+      if not (List.mem (ILAB l) instrs) then error (sprintf "(start %s): no label `%s` in the program" l l) ;
+      sprintf "ORG %s\n" l in
+  let text = header target ~asserted:(hill <> None) meta ^ equs ^ org ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
   let too_long line = String.length line >= max_line in
   let lines = String.split_on_char '\n' text in
   match List.find_index too_long lines with

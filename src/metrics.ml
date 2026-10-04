@@ -282,8 +282,8 @@ let measure (p : program) : t =
   (* Cycles before each loop starts, over paths that pass no other loop's header. *)
   let entries =
     if headers = [] then Array.make (Array.length p.cells) None
-    else dag_ranges p ~allowed:(fun _ -> true) ~terminal:is_header ~expand_start:(not (is_header 0))
-        ~weight:(fun i -> if is_header i then 0 else 1) 0 in
+    else dag_ranges p ~allowed:(fun _ -> true) ~terminal:is_header ~expand_start:(not (is_header p.entry))
+        ~weight:(fun i -> if is_header i then 0 else 1) p.entry in
   let boot = range_of (List.concat_map (fun h -> match entries.(h) with
     | Some r -> [r.min; r.max] | None -> []) headers) in
   { length = Array.length p.cells;

@@ -710,7 +710,7 @@ let test_phase2_labelled_dat_is_data () =
   let counts src = let m = M.measure (layout_of_src src) in (m.data, m.unreachable) in
   let pair = Alcotest.(pair int int) in
   (* core-clear: the pointer's cell and the bomb, (label bomb) (DAT 0 0), are both data *)
-  check pair "clear" (2, 0) (counts (golden_src "bbctests/archetypes/clear.bbc")) ;
+  check pair "clear" (2, 0) (counts "(let (p 4) (seq (repeat (MOV I bomb (Inc p))) (DAT 0 (store p)) (label bomb) (DAT 0 0)))") ;
   check pair "a dead MOV is unreachable" (0, 1) (counts "(seq (repeat (NOP)) (label x) (MOV 0 1))") ;
   check pair "an unlabelled dead DAT is unreachable" (0, 1) (counts "(seq (repeat (NOP)) (DAT 0 0))")
 
@@ -1133,6 +1133,20 @@ let test_amodes_on_numbers () =
     (contains (error_of "(let (x 3) (seq (MOV 0 (} x)) (DAT 0 (store x))))") "its (store x) decides")
 
 
+let clear_with_start =
+  "(program (start top) (let (p 4) (seq (DAT 0 (store p)) (label top) (repeat (MOV I bomb (Inc p))) (label bomb) (DAT 0 0))))"
+
+let test_start_entry () =
+  let out = out_of clear_with_start in
+  check Alcotest.string "ORG" "ORGtop" (squash (line_with "ORG" out)) ;
+  let o = drive [("p.src", clear_with_start)] ["--report"; "p.src"] in
+  (* measured from top: the pointer's cell before it is data, not dead code, and the loop starts at once *)
+  check Alcotest.bool "boot 0" true (contains o.err "boot 0") ;
+  check Alcotest.bool "nothing dead" true (contains o.err "unreachable 0") ;
+  check Alcotest.bool "an unknown label" true
+    (contains (error_of "(program (start nowhere) (MOV 0 1))") "(start nowhere): no label `nowhere`")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1263,6 +1277,7 @@ let ocaml_tests = [
   ] ;
   "phase6", [
     test_case "A-field modes on numbers and labels" `Quick test_amodes_on_numbers ;
+    test_case "(start label) is the entry point" `Quick test_start_entry ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

@@ -112,6 +112,9 @@ unsigned modulo `M`.
 ⟨(OP m a₁ a₂), σ⟩      →  ⟨skip, σ′⟩    where σ′ is one ICWS'94 execution of the compiled instruction
 ```
 
+**The entry.** A program runs from its first emitted cell, or from the cell of its `(start l)`
+(d-7d2612-3bce15): pMARS starts there (`ORG l`), and `Layout` measures reachability and boot from there.
+
 **Falling off the end.** A program that reaches `skip` executes the epilogue `DAT $0, $0` that
 `compile_prog` appends, and the process dies. The epilogue is exactly pMARS's empty core
 (d-7d2612-f7ae87), so it is visible to no scan. So "terminates" in RED means "the warrior dies";

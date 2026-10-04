@@ -37,7 +37,9 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
 - **A warrior fits its hill's MAXLENGTH (100 on 94b), epilogue included, and every line is under
   256 characters** (longer lines hang pMARS). Enforced: `Compile.compile_prog` rejects both
   (`test_hills_rules`, `test_phase1_long_line_is_an_error`); the `execute` suite assembles under 94b.
-- **Execution starts at the first emitted instruction** (no `ORG`/`END` is emitted). Enforced: —.
+- **Execution starts at the first emitted instruction, or at the `(start label)`** (emitted as `ORG
+  label`; d-7d2612-3bce15); the metrics measure from the same cell. Enforced: `test_start_entry`,
+  `behtests/archetype_clear.beh`.
 - **A rewrite after emission (jump threading, the peephole) never passes or removes a cell that
   does more than jump**: a user's `JMP` or label, a variable, an operand that moves a pointer, a
   cell a skip or a numeric offset counts (d-7d2612-3f3f32, d-7d2612-b9a097). Both phase reviews

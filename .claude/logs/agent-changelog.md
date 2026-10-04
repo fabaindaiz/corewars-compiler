@@ -9,7 +9,10 @@ reference is at the end of this file: insert new entries directly below this par
 
 **What.** On branch `feat/phase-6`, from `feat/phase-5` (none merged). The user's decisions: typed
 templates plus `for` for the macro layer, labels fresh per expansion, A-field modes on numbers and
-labels only, `(start label)` for the entry point. Built so far: the A-field modes (d-7d2612-0e831c).
+labels only, `(start label)` for the entry point. Built so far: the A-field modes (d-7d2612-0e831c);
+`(start label)` (d-7d2612-3bce15): the core-clear archetype now keeps its pointer before its code and scores
+exactly as the hand-written one (46.6 / 18.8, was 42.1 / 15.9); its golden and spec changed for
+that reason.
 **Areas.** `src/ast.ml`, `src/parse.ml`, `src/util.ml`, `execs/run_test.ml`, `bbctests/`,
 `behtests/`, `LANGUAGE.md`, `docs/semantics.md`, `docs/decisions.md`, `docs/roadmap.md`.
 **What went wrong.** Nothing yet.

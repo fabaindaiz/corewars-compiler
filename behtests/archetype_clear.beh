@@ -1,5 +1,8 @@
-# The first MOV writes the bomb to p + 4 (cell 6) and post-increments p (cell 2) to 5.
+# The pointer p (cell 0, 4) sits before the code; (start top) makes pMARS start at cell 1. The first
+# MOV writes the bomb (DAT #0, #0) to p + 4 = cell 4, where the epilogue was empty core, and p
+# becomes 5; the next writes cell 5.
 golden: bbctests/archetypes/clear.bbc
-cell 1 2 DAT.F #0, #5
-cell 1 6 DAT.F #0, #0
+cell 1 0 DAT.F #0, #5
+cell 1 4 DAT.F #0, #0
+cell 3 5 DAT.F #0, #0
 alive 1000

@@ -1,7 +1,9 @@
-(let (p 4)
-  (seq
-    (repeat
-      (MOV I bomb (Inc p)))
-    (DAT 0 (store p))
-    (label bomb)
-    (DAT 0 0)))
+(program
+  (start top)
+  (let (p 4)
+    (seq
+      (DAT 0 (store p))
+      (label top)
+      (repeat (MOV I bomb (Inc p)))
+      (label bomb)
+      (DAT 0 0))))

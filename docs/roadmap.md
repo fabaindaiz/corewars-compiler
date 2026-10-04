@@ -267,7 +267,7 @@ always gets the B variant (`@`, `<`, `>`). The fast Silk-style paper copies thro
 written on the variable.
 
 ### An entry point other than the first cell · i-7d2612-e725ef
-**State.** Planned (s-7d2612-9b0d20). Execution starts at the first emitted instruction (no `ORG`);
+**State.** Done (s-7d2612-140ece): `(start label)` (d-7d2612-3bce15); the core-clear archetype uses it. Was: Execution starts at the first emitted instruction (no `ORG`);
 a warrior that keeps a pointer before its code (the hand-written core-clear, Mice's copy-by-index)
 is rearranged in RED, which costs the core-clear 4 points against Wilkies.
 **Decide first.** A header item `(start label)` emitting `ORG label`, and what Layout and the

@@ -49,6 +49,7 @@ type program = {
   loops : loop list;
   diagnostics : diagnostic list;
   coresize : int;
+  entry : int;  (* the cell execution starts at: the (start label), else the first *)
 }
 
 let default_coresize = 8000
@@ -87,7 +88,7 @@ let place_cells (body : Compile.emitted list) : raw list =
   List.rev acc
 
 
-let build ?(coresize = default_coresize) ?(consts = []) (body : Compile.emitted list) : program =
+let build ?(coresize = default_coresize) ?(consts = []) ?start (body : Compile.emitted list) : program =
   let raws = Array.of_list (place_cells body) in
   let n = Array.length raws in
   let table = Hashtbl.create 16 in
@@ -175,7 +176,10 @@ let build ?(coresize = default_coresize) ?(consts = []) (body : Compile.emitted 
       | Some t when not visited.(t) -> dfs t
       | Some _ | None -> ()) succ.(i) ;
     on_stack.(i) <- false in
-  if n > 0 then dfs 0 ;
+  let entry = match start with
+    | Some l -> (match Hashtbl.find_opt table l with Some t -> t | None -> add (Undefined_label l) ; 0)
+    | None -> 0 in
+  if n > 0 then dfs entry ;
   let preds = Array.make n [] in
   Array.iteri (fun i es -> List.iter (fun e -> match index e with
     | Some t -> preds.(t) <- i :: preds.(t) | None -> ()) es) succ ;
@@ -213,7 +217,7 @@ let build ?(coresize = default_coresize) ?(consts = []) (body : Compile.emitted 
     let body = List.sort_uniq compare (List.concat_map natural edges) in
     let owner = match k with `Owner o -> Some o | `Label _ | `Origin _ -> None in
     { header = h; body; back_edges = edges; owner }) keys in
-  { cells; succ; loops; diagnostics = List.rev !diags; coresize }
+  { cells; succ; loops; diagnostics = List.rev !diags; coresize; entry }
 
 let reachable (p : program) : bool array =
   let n = Array.length p.cells in
@@ -221,6 +225,6 @@ let reachable (p : program) : bool array =
   let rec go i = if i < n && not seen.(i) then begin
     seen.(i) <- true ;
     List.iter (fun e -> match e with Next t | Jump t | Skip t -> go t | Dynamic -> ()) p.succ.(i) end in
-  go 0 ; seen
+  go p.entry ; seen
 
 let of_expr ?coresize (e : expr) : program = build ?coresize (Compile.compile_body e)

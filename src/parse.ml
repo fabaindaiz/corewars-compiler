@@ -253,7 +253,7 @@ let parse_source (sexp : sexp) : source =
   match sexp with
   | `List (`Atom "program" :: items) ->
     let optimize = ref None and expects = ref [] and consts = ref [] and bodies = ref [] in
-    let hill = ref None and meta = ref [] in
+    let hill = ref None and meta = ref [] and start = ref None in
     let words item ws = String.concat " " (List.map (fun w -> match w with
       | `Atom s -> s
       | `List _ -> fail item (sprintf "Not a word: %s" (to_string w))) ws) in
@@ -264,6 +264,9 @@ let parse_source (sexp : sexp) : source =
           | `Atom s -> s
           | `List _ -> fail o (sprintf "Not an objective: %s" (to_string o))) os)
       | `List [`Atom "expect"; e] -> expects := parse_expectation e :: !expects
+      | `List [`Atom "start"; `Atom l] ->
+        if !start <> None then fail item "(start ...) is given twice" ;
+        start := Some (label_name item l)
       | `List [`Atom "hill"; `Atom h] ->
         if !hill <> None then fail item "(hill ...) is given twice" ;
         hill := Some h
@@ -292,9 +295,9 @@ let parse_source (sexp : sexp) : source =
       | `Atom _ | `List _ -> bodies := parse_exp item :: !bodies) items ;
     (match !bodies with
     | [body] -> { optimize = !optimize; expects = List.rev !expects; consts = List.rev !consts;
-                  hill = !hill; meta = List.rev !meta; body }
+                  hill = !hill; meta = List.rev !meta; start = !start; body }
     | [] | _ :: _ :: _ -> fail sexp "a (program ...) needs exactly one body expression")
-  | `Atom _ | `List _ -> { optimize = None; expects = []; consts = []; hill = None; meta = []; body = parse_exp sexp }
+  | `Atom _ | `List _ -> { optimize = None; expects = []; consts = []; hill = None; meta = []; start = None; body = parse_exp sexp }
 
 (* parse a program from a file *)
 let sexp_from_file : string -> CCSexp.sexp =
