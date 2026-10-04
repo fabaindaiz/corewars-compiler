@@ -1,0 +1,31 @@
+NAME: a three-point imp ring in RED
+DESCRIPTION: three processes reach imp, imp+step and imp+2*step in order (step 2667, an EQU; jumps through label arithmetic); phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_impring.beh
+SRC:
+(program
+  (const step 2667)
+  (seq
+    (SPL (Dir 2))
+    (SPL (Dir 1))
+    (JMP (Dec vec))
+    (JMP (+ imp (* 2 step)))
+    (JMP (+ imp step))
+    (JMP imp)
+    (label vec)
+    (DAT 0 0)
+    (label imp)
+    (MOV I (# 0) (Dir step))))
+EXPECTED:
+;redcode-94b
+step EQU 2667
+
+  SPL    $2     , #0     
+  SPL    $1     , #0     
+  JMP    <vec   , #0     
+  JMP    $imp+(2*step), #0     
+  JMP    $imp+step, #0     
+  JMP    $imp   , #0     
+vec   
+  DAT    #0     , #0     
+imp   
+  MOV.I  #0     , $step  
+  DAT    $0     , $0     

@@ -26,7 +26,12 @@ expressions `(op a b)` emitted for pMARS, a new `Consts` module resolving names 
 expressions. No golden changed. The `compare` suite now parses goldens as sources, so a golden may
 carry a header. Also corrected: `LANGUAGE.md` still said the compiler did not change its output by
 policy, untrue since phase 3.
-**Left undone.** The imp ring archetype's record, phase 4's warnings, the smaller pending items.
+The imp ring archetype (three points, step 2667, a launcher of this session's own design), by hand
+and in RED: equal cycles, 9 cells against 8, Wilkies 76 and 76 against 76 and 77. Its spec first
+probed one instruction too late (I counted an extra step), and a probe moved one step earlier still
+passed: the state it probed persists. The spec now also probes that each next cell is still empty
+one instruction before, which a mutation shows it tells apart.
+**Left undone.** Phase 4's warnings, the smaller pending items.
 
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
 

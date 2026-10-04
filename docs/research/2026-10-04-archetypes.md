@@ -42,11 +42,17 @@ code), and `archetypes/NAME.src`, the same warrior in RED. The RED versions are 
 | scanner | `repeat` (`ADD`, `if (JN @p)` bomb) | 2 (empty cell) | **3** (empty cell); 2 threaded | 6 | 7; 6 with `p` in the `repeat`'s `JMP` | 56, 57 | **42, 42**; 54, 58 compiled with threading; 63, 61 with `p` in the `JMP` |
 | paper | `repeat` (reset, `do-while (JN n)` copy, `SPL @d`, `ADD`) | 6 + 2 per cell | 6 + 2 per cell | 7 | 8 | 78, 80 | 80, 79 |
 | SEQ scanner | `repeat` (`ADD F` to two pointers, `if (NE I @a @b)` bomb) | 3 (pair of empty cells) | not expressible; 3 with `(NE I ...)` | 7 | 9 | 36, 37 | 37, 37 |
+| imp ring (3 points) | `SPL`, `JMP <vec` onto three `JMP`s to `imp`, `(+ imp step)`, `(+ imp (* 2 step))`, `(const step 2667)` | 1 per process | 1 per process | 8 | 9 | 76, 77 | 76, 76 |
 
 The scanner's last figures are from phase 3 (the same day): `(repeat body (store p))` keeps its
 pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3), 6 cells like the hand-written one; it then scored
 63 and 61, above the hand-written 56 and 57. Why it scores higher was not investigated; the two
 layouts differ (the hand-written pointer is a `DAT` of its own, RED's lives in the loop's `JMP`).
+
+The imp ring row was measured later the same day, once constants and label arithmetic existed
+(d-7d2612-d9339f): it is a three-point ring (one process per point), not a spiral (several per
+point); its launcher is this study's own design. `--report` counts its trampolines as unreachable,
+because they are reached through `JMP <vec`, a jump the static view does not follow.
 
 The SEQ scanner row was measured after conditions gained a modifier the same day (gap 5); its two
 extra cells are the pointer cell (the hand-written one keeps its pointers in the `SNE.I` itself)
@@ -104,7 +110,8 @@ scanner two (its pointer cell).
    `MOV.B`: it writes the B-field of the target. Every bomber here needs `(MOV I b (Ind b))`. A
    bomb is a whole instruction, so the default is wrong for the commonest use of `MOV` through a
    pointer; the same question as gap 5, from the other side.
-7. **What could not be written at all.** An imp spiral launches processes at `imp + k × 2667`,
+7. **What could not be written at all** (the imp ring can be since constants and label arithmetic,
+   d-7d2612-d9339f; the quickscan still waits for compile-time repetition, by the user's decision). An imp spiral launches processes at `imp + k × 2667`,
    and a quickscan unrolls a score of comparisons at `start + k × step`: both need arithmetic on
    labels or named constants (RED has neither; `EQU` constants are i-7d2612-a3f2b6) and a way to
    repeat a fragment at compile time (snippets, i-7d2612-8e9549; the dev branch's macro layer,

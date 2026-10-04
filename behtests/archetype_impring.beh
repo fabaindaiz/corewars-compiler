@@ -1,0 +1,11 @@
+# SPL $2 (1), SPL $1 (2) leave three processes on JMP <vec (3-5); each lands one cell lower (5, 4,
+# 3) and jumps to imp, imp+step, imp+2*step (6-8; imp is cell 7, step 2667). Instruction 9 runs the
+# imp at 7 and copies it to 2674, 10 runs that copy and writes 5341, 11 writes 8 = 7 + 3*2667 - 8000
+# (until then the epilogue, empty core). Each copy appears exactly one instruction after the last.
+golden: bbctests/archetypes/impring.bbc
+cell 9 2674 MOV.I #0, $2667
+cell 9 5341 DAT.F $0, $0
+cell 10 5341 MOV.I #0, $2667
+cell 10 8 DAT.F $0, $0
+cell 11 8 MOV.I #0, $2667
+alive 10000

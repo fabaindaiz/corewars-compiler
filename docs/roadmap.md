@@ -30,7 +30,8 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 | imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT`, kept by decision (d-7d2612-1c1c67) |
 | scanner | 2 / 2 per empty cell (was 3) | 6 / 6 (was 7) | 63, 61 / 56, 57 (was 42) | cycles closed by jump threading (d-7d2612-3f3f32); the pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3) |
 | SEQ scanner | 3 / 3 per pair of empty cells | 9 / 7 | 37, 37 / 36, 37 | expressible with `(NE I ...)` (d-7d2612-8f9340); +1 cell for the pointers, +1 epilogue |
-| imp spiral, quickscan | — | — | — | need label arithmetic or constants (i-7d2612-a3f2b6) and compile-time repetition (i-7d2612-8e9549) |
+| imp ring (3 points) | 1 / 1 per process | 9 / 8 | 76, 76 / 76, 77 | none but the epilogue; written with constants and label arithmetic (d-7d2612-d9339f) |
+| quickscan | — | — | — | waits for compile-time repetition, the macro layer (i-7d2612-ec4d2d), by the user's decision |
 
 ## Where we are
 
@@ -193,7 +194,7 @@ Write the classic warriors in RED and measure each against its hand-written form
 **State.** Half done (s-7d2612-14641b). Seven archetypes — imp, dwarf, stone, core-clear, a `JMZ`
 scanner, a SEQ scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
 (`bbctests/archetypes/`), behaviour specs (`behtests/archetype_*.beh`) and the measurements in
-`docs/research/2026-10-04-archetypes.md`. **Still missing:** an imp spiral and a quickscan (label arithmetic and repetition), Mice's
+`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd). **Still missing:** a spiral (several processes per point) and a quickscan (label arithmetic and repetition), Mice's
 copy-by-index (its pointer precedes its code; RED has no `ORG`), Silk-style paper; and the
 benchmark comparison as a check rather than a script in `_build/` (i-7d2612-f27a91).
 Originally planned: Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
