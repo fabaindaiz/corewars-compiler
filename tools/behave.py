@@ -121,7 +121,11 @@ def check_probe(pmars: str, warrior: Path, word: str, args: list[str]) -> str | 
     if len(args) < 3:
         return "cell needs N ADDR TEXT"
     addr, want = int(args[1]), args[2]
-    out = cdb(pmars, warrior, f"skip {n - 1}\nlist {addr}\n")
+    out = cdb(pmars, warrior, f"skip {n - 1}\ncalc CYCLE\nlist {addr}\n")
+    # A dead warrior ends cdb before `list` runs, and the only listing left would be the start-up
+    # one: the cycle count is printed only while a process is alive.
+    if not any(CALC_LINE.match(line) for line in out):
+        return f"dead after {n} instructions: cell {addr} was never listed"
     cell = re.compile(rf"^(?:\(cdb\) )?0*{addr}\s+(\S.*)$")
     # The last listing of the cell is `list`'s: cdb also prints the instruction at the start (cell 0,
     # before anything runs) and after `skip`, which can be the same address.
