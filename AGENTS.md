@@ -20,8 +20,7 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   (`no-global-counter`), the `compare` suite.
 - **Every comparison keeps its strict meaning in every layout** (`if`, `while`, `do-while`),
   unsigned modulo CORESIZE (d-7d2612-2a4435). `SLT` is strict `<`; a post-condition that loops at
-  equality is a different program. Enforced: `behtests/` (`tools/behave.py`). **Violated today:**
-  `do-while` with `GT`/`LT` (i-7d2612-fffa6c, known-failing spec).
+  equality is a different program. Enforced: `behtests/` (`dowhile_*.beh`, `prog8_while_lt.beh`).
 - **A variable is read and written through the modifier that selects its field** (A or B, decided
   by where its `(store x)` sits). The wrong modifier reads the other field of the same cell.
   Enforced: `behtests/` (`cond1_afield.beh`, `let_shadowing.beh`).

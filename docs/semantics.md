@@ -118,10 +118,12 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 | `DN a` | rejected | `DJN t, a` |
 | `EQ a b` | `SEQ a, b; JMP t` | `SNE a, b; JMP t` |
 | `NE a b` | `SNE a, b; JMP t` | `SEQ a, b; JMP t` |
-| `GT a b` | `SLT b, a; JMP t` | `SLT a, b; JMP t` — **loops when a ≥ b** (i-7d2612-fffa6c) |
-| `LT a b` | `SLT a, b; JMP t` | `SLT b, a; JMP t` — **loops when a ≤ b** (i-7d2612-fffa6c) |
+| `GT a b` | `SLT b, a; JMP t` | `SLT b, a; SNE #0, #1; JMP t` |
+| `LT a b` | `SLT a, b; JMP t` | `SLT a, b; SNE #0, #1; JMP t` |
 
-`SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`.
+`SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
+`GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the
+jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-fffa6c).
 
 ## 6. Correctness, and how it is checked
 

@@ -1,5 +1,5 @@
-NAME: known bug: do-while GT at equality
-DESCRIPTION: characterization of current output (i-7d2612-fffa6c); the loop repeats when x = y, see behtests/dowhile_gt_equal.beh
+NAME: do-while GT at equality
+DESCRIPTION: GT is strict: with x = y the body runs once and the loop exits; fixed in i-7d2612-fffa6c, see behtests/dowhile_gt_equal.beh
 SRC:
 (let (x 3)
   (let (y 3)
@@ -17,6 +17,7 @@ LET2
   DAT    #3     , #3     
 DWH9  
   NOP    #0     , #0     
-  SLT.AB $LET1  , $LET2  
+  SLT.BA $LET2  , $LET1  
+  SNE.AB #0     , #1     
   JMP    $DWH9  , #0     
   DAT    #0     , #0     

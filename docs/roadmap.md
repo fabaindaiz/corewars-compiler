@@ -33,7 +33,7 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check (four behaviour specs, one audit check); i-7d2612-888db5 is half done.
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next:** phase 1 continues with the `do-while` layout (i-7d2612-fffa6c); i-7d2612-3744e5 and i-7d2612-ce4c3b are done.
+**Next:** phase 1 continues with long lines (i-7d2612-174acf) and the located AST (i-7d2612-888db5, i-7d2612-1703ff); three fixes are done.
 
 ## Phase 1 — Correctness, before the output changes
 
@@ -60,15 +60,17 @@ captures the inner `x`.
 **Decide first.** Stop the walk at a shadowing `let`, or uniquify names before analysis.
 
 ### do-while with GT or LT loops at equality · i-7d2612-fffa6c
-**State.** Planned. Known-failing: `behtests/dowhile_gt_equal.beh`, golden
-`bbctests/known-bugs/dowhile_gt_equal.bbc`.
-`compile_cond2` in post-condition mode emits `SLT a1, a2; JMP head` for `GT`, which repeats while
+**State.** Done (s-7d2612-2c7e4d). Post-condition `GT`/`LT` emit `SLT; SNE #0, #1; JMP head`: strict,
+one more cell, the same two cycles per iteration. `behtests/dowhile_gt_equal.beh` passes; new specs
+`dowhile_gt_count.beh` and `dowhile_lt_count.beh` pin the exact instruction count (8) and the final
+value; the golden moved to `bbctests/examples/dowhile_gt_equal.bbc`.
+Before the fix, `compile_cond2` in post-condition mode emitted `SLT a1, a2; JMP head` for `GT`, which repeats while
 `a1 >= a2`; `LT` repeats while `a1 <= a2`. Pre-conditions (`if`, `while`) are correct. Measured: with
 `x = y = 3` the compiled loop is still running after 10 instructions; ICWS'94 `SLT` is strict.
 **Collides with.** Every golden that contains a `do-while` with `GT`/`LT` (none today).
 **Decided** (2026-10-03, user): `SLT b, a; SNE #0, #1; JMP head` — one more cell per `do-while`
 with `GT`/`LT`, the same cycles per iteration — plus a performance warning from subproject B where
-a construct costs extra. Built in subproject C (i-7d2612-7eadd5).
+a construct costs extra. Built in phase 1; the warning waits for phase 4 (i-7d2612-90d6e1).
 
 ### Four distinct CTError exceptions, none caught · i-7d2612-888db5
 **State.** Half done. Known-failing check: `tools/audit.py` `single-error-type`.

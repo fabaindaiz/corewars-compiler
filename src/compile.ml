@@ -86,20 +86,24 @@ let compile_cond1 (cond : cond1) (mode : mcond) : opcode =
     | Cdz -> raise (CTError (sprintf "DN cond is not available on postcondition"))
     | Cdn -> IDJN )
 
-let compile_cond2 (cond : cond2) (mode : mcond) (a1 : arg) (a2 : arg) : opcode * arg * arg =
+(* The test, its operands, and whether an always-skipping SNE must follow it. A pre-condition jumps
+   past the body when the condition is false; a post-condition jumps back when it is true. SEQ/SNE
+   can skip on either outcome, but SLT only skips when strictly less: a post-condition GT or LT
+   skips past an always-skipping SNE when true, and runs it, skipping the jump, when false. *)
+let compile_cond2 (cond : cond2) (mode : mcond) (a1 : arg) (a2 : arg) : opcode * arg * arg * bool =
   match mode with
   | Cpre ->
     (match cond with
-    | Ceq -> ISEQ, a1, a2
-    | Cne -> ISNE, a1, a2
-    | Cgt -> ISLT, a2, a1
-    | Clt -> ISLT, a1, a2 )
+    | Ceq -> ISEQ, a1, a2, false
+    | Cne -> ISNE, a1, a2, false
+    | Cgt -> ISLT, a2, a1, false
+    | Clt -> ISLT, a1, a2, false )
   | Cpos ->
     (match cond with
-    | Ceq -> ISNE, a1, a2
-    | Cne -> ISEQ, a1, a2
-    | Cgt -> ISLT, a1, a2
-    | Clt -> ISLT, a2, a1 )
+    | Ceq -> ISNE, a1, a2, false
+    | Cne -> ISEQ, a1, a2, false
+    | Cgt -> ISLT, a2, a1, true
+    | Clt -> ISLT, a1, a2, true )
 
 let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag : tag) (construct : string) : emitted list =
   let emit = emit ~origin:tag ~construct in
@@ -117,9 +121,10 @@ let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag
       | TB | TNum | TRef -> RB) in
     [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))]
   | Cond2 (op, a1, a2) ->
-    let opcode, a1, a2 = (compile_cond2 op mode a1 a2) in
+    let opcode, a1, a2, always_skip = (compile_cond2 op mode a1 a2) in
     let rmod, rarg1, rarg2 = (compile_args a1 a2 MDef RI env) in
-    [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2)) ; emit (jump_label label)]
+    let skip = if always_skip then [emit (INSTR (ISNE, RAB, RRef (RImm, 0), RRef (RImm, 1)))] else [] in
+    [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))] @ skip @ [emit (jump_label label)]
 
 
 let compile_prim2 (op : prim2) : opcode =

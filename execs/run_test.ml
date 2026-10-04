@@ -504,6 +504,19 @@ let test_phase1_initializer_resolved_where_bound () =
   check Alcotest.(list string) "y refers to the outer x" ["LET1"] labels
 
 
+let opcodes (src : string) : opcode list =
+  List.filter_map (fun (e : emitted) -> match e.instr with
+    | INSTR (op, _, _, _) -> Some op | ICOM _ | ILAB _ -> None)
+    (compile_body (parse_exp (sexp_from_string src)))
+
+let opcode : opcode testable = testable (fun f o -> Format.pp_print_string f (pp_opcode o)) (=)
+
+let test_phase1_dowhile_gt_layout () =
+  check Alcotest.(list opcode) "SLT y, x; SNE #0, #1; JMP head"
+    [IJMP; IDAT; ISUB; ISLT; ISNE; IJMP]
+    (opcodes "(let (x 5) (let (y 3) (seq (JMP (Dir 2)) (DAT (store x) (store y)) (do-while (GT x y) (SUB 1 x)))))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -588,6 +601,7 @@ let ocaml_tests = [
     test_case "a unary condition tests its variable's field" `Quick test_phase1_cond1_tests_the_variable_field ;
     test_case "an inner let does not move an outer variable" `Quick test_phase1_shadowing_keeps_outer_field ;
     test_case "an initializer is resolved where its let binds it" `Quick test_phase1_initializer_resolved_where_bound ;
+    test_case "do-while GT: strict, one extra cell" `Quick test_phase1_dowhile_gt_layout ;
   ] ;
   "interp", [
 

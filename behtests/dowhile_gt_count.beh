@@ -1,0 +1,6 @@
+# JMP, one iteration that repeats (body, SLT, JMP), one that exits (body, SLT, SNE, then the
+# epilogue DAT): 8 instructions, and x ends at 3.
+golden: bbctests/examples/dowhile_gt_count.bbc
+alive 7
+cell 7 1 DAT.F #3, #3
+dead 8

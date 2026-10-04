@@ -81,7 +81,7 @@ Binary conditions are used to specify when the control flow is executed based on
 
 Comparisons are unsigned: values are compared as `0..7999`, so `(LT -1 3)` is false.
 
-Known defect: in `do-while`, `GT` also repeats when `x = y` and `LT` likewise (i-7d2612-fffa6c).
+In `do-while`, `GT` and `LT` add a third instruction (`SNE #0, #1`, which always skips) so the comparison stays strict; the loop still costs two instructions per iteration.
 
 
 ## Instructions

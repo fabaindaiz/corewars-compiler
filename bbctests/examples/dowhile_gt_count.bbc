@@ -1,0 +1,23 @@
+NAME: do-while GT counts down
+DESCRIPTION: x from 5 to 3 while x > 3: one repeat, one exit; i-7d2612-fffa6c, see behtests/dowhile_gt_count.beh
+SRC:
+(let (x 5)
+  (let (y 3)
+    (seq
+      (JMP (Dir 2))
+      (DAT (store x) (store y))
+      (do-while (GT x y)
+        (SUB 1 x)) )))
+EXPECTED:
+;redcode-94b
+
+  JMP    $2     , #0     
+LET1  
+LET2  
+  DAT    #5     , #3     
+DWH9  
+  SUB.A  #1     , $LET1  
+  SLT.BA $LET2  , $LET1  
+  SNE.AB #0     , #1     
+  JMP    $DWH9  , #0     
+  DAT    #0     , #0     
