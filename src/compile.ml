@@ -340,21 +340,46 @@ let rec peephole ?(consts = []) ?(coresize = Hill.default.coresize) (body : emit
      expression neither form covers counts every cell. Addresses are modulo the core: $7998 is $-2
      on a core of 8000, and a label plus 8003 its cell plus 3. *)
   let near d = let m = ((d mod coresize) + coresize) mod coresize in if 2 * m > coresize then m - coresize else m in
-  let spans = List.concat (List.mapi (fun j ((e : emitted), _) -> match e.instr with
-    | INSTR (_, _, a, b) ->
-      List.filter_map (fun r -> match r with
-        | RRef ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), d) -> let d = near d in Some (j, min j (j + d), max j (j + d))
-        | RExp ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), x) ->
-          (match linear x with
-          | Some (None, d) -> let d = near d in Some (j, min j (j + d), max j (j + d))
-          | Some (Some l, d) ->
-            let base = Hashtbl.find at l in
-            let t = base + near d in
-            (* cell n is the epilogue, which follows the body and belongs to the warrior *)
-            if t < 0 || t > n then None else Some (j, min base t, max base t)
-          | None -> Some (j, min_int, max_int))
-        | RRef (RImm, _) | RExp (RImm, _) | RLab _ | RNone -> None) [a; b]
+  let from_number j d = let d = near d in Some (j, min j (j + d), max j (j + d)) in
+  let from_expr j x = match linear x with
+    | Some (None, d) -> from_number j d
+    | Some (Some l, d) ->
+      let base = Hashtbl.find at l in
+      let t = base + near d in
+      (* cell n is the epilogue, which follows the body and belongs to the warrior *)
+      if t < 0 || t > n then None else Some (j, min base t, max base t)
+    | None -> Some (j, min_int, max_int) in
+  let operands = List.concat (List.mapi (fun j ((e : emitted), _) -> match e.instr with
+    | INSTR (_, _, a, b) -> List.map (fun r -> (j, r)) [a; b]
     | ILAB _ | ICOM _ -> []) (Array.to_list cells)) in
+  let direct = List.filter_map (fun (j, r) -> match r with
+    | RRef ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), d) -> from_number j d
+    | RExp ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), x) -> from_expr j x
+    | RRef (RImm, _) | RExp (RImm, _) | RLab _ | RNone -> None) operands in
+  (* A cell an indirect operand goes through is a pointer: the numbers in its fields count cells from
+     it, as an operand written there would ((let (p 6) ...) and (Ind p) reach six cells past p's). *)
+  let indirect m = match m with
+    | RAInd | RBInd | RADec | RBDec | RAInc | RBInc -> true
+    | RDir | RImm -> false in
+  let pointers = List.sort_uniq Int.compare (List.filter_map (fun (j, r) -> match r with
+    | RLab (m, l) when indirect m -> Hashtbl.find_opt at l
+    | RRef (m, d) when indirect m -> Some (j + near d)
+    | RExp (m, x) when indirect m ->
+      (match linear x with
+      | Some (None, d) -> Some (j + near d)
+      | Some (Some l, d) -> Some (Hashtbl.find at l + near d)
+      | None -> None)
+    | RLab _ | RRef _ | RExp _ | RNone -> None) operands) in
+  let through = List.concat_map (fun c ->
+      if c < 0 || c >= n then [] else match (fst cells.(c)).instr with
+        | INSTR (_, _, a, b) ->
+          List.filter_map (fun r -> match r with
+            | RRef (_, d) -> from_number c d
+            | RExp (_, x) -> from_expr c x
+            | RLab (_, l) -> from_expr c (XName l)
+            | RNone -> None) [a; b]
+        | ILAB _ | ICOM _ -> []) pointers in
+  let spans = direct @ through in
   let counted i = List.exists (fun (j, lo, hi) -> j <> i && lo <= i && i <= hi) spans in
   let dead i = match cells.(i) with
     | ({ instr = INSTR ((IJMP | IJMZ | IJMN), _, RLab (RDir, l), b); construct = Some _; stores = []; _ }, labels) ->

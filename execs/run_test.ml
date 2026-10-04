@@ -1224,6 +1224,15 @@ let test_review6_template_label_is_the_users () =
   check Alcotest.bool "a labelled DAT in a template is data, not dead code" false
     (contains (error_of "(program (define (b) (seq (JMP 0) (label bomb) (DAT 0 0))) (b))") "dead code")
 
+(* A cell used as a pointer counts, through its value, the cells between it and its target: removing
+   one of them would move the target and not the value *)
+let test_review6_pointer_values_count () =
+  let src p = Printf.sprintf "(program (start top) (let (p %d) (seq (DAT 0 (store p)) (label top) (if (EQ 1 1) (NOP)) (MOV 9 (Ind p)) (JMP 0) (label target) (DAT 7 7))))" p in
+  check Alcotest.(list string) "a let pointer across the jump: kept" ["SEQ.AB#1,#1"] (lines_with "SEQ" (out_of (src 6))) ;
+  check Alcotest.(list string) "a let pointer before it: fused" ["SNE.AB#1,#1"] (lines_with "SNE" (out_of (src (-1)))) ;
+  let labelled = "(seq (label ptr) (DAT 0 6) (label top) (if (EQ 1 1) (NOP)) (MOV 9 (Ind ptr)) (JMP 0) (label target) (DAT 7 7))" in
+  check Alcotest.(list string) "a labelled pointer across the jump: kept" ["SEQ.AB#1,#1"] (lines_with "SEQ" (out_of ("(program (start top) " ^ labelled ^ ")")))
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1389,6 +1398,7 @@ let ocaml_tests = [
     test_case "a for's variable is not rebound inside it" `Quick test_review6_for_variable_rebound ;
     test_case "a template's label is a label" `Quick test_review6_template_label_is_a_label ;
     test_case "a template's label is the user's" `Quick test_review6_template_label_is_the_users ;
+    test_case "a pointer's value counts cells" `Quick test_review6_pointer_values_count ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

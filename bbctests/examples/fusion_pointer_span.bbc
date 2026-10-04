@@ -1,0 +1,24 @@
+NAME: a pointer's value keeps an if's jump
+DESCRIPTION: p (6) points from its cell across the if's jump to target: fusing the if would move target and not p, so the jump stays (d-7d2612-6222c1); see behtests/fusion_pointer_span.beh
+SRC:
+(program
+  (start top)
+  (let (p 6)
+    (seq (DAT 0 (store p)) (label top) (if (EQ 1 1) (NOP)) (MOV 9 (Ind p)) (JMP 0)
+      (label target) (DAT 7 7))))
+EXPECTED:
+;redcode-94b
+ORG top
+
+_LET1 
+  DAT    #0     , #6     
+top   
+  SEQ.AB #1     , #1     
+  JMP    $_IF8  , #0     
+  NOP    #0     , #0     
+_IF8  
+  MOV.AB #9     , @_LET1 
+  JMP    #0     , #0     
+target
+  DAT    #7     , #7     
+  DAT    $0     , $0     

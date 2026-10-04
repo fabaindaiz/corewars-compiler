@@ -183,7 +183,9 @@ cells across it. An operand counts across a cell when the cell lies between wher
 and what it reaches: its own cell for a number, its label for a label plus a number (`first+400`);
 the address is taken modulo the core (`$7998` is `$-2` on 8000 cells), a label plus a number that
 reaches outside the warrior counts nothing (the warrior moves as a whole), and an expression of
-another form counts every cell.
+another form counts every cell. A cell an indirect operand goes through is a pointer, and the numbers
+in its fields count cells from it the same way (`(let (p 6) ...)` read as `(Ind p)` counts the six
+cells past p's; d-7d2612-65d788). This holds for the removal of a jump to the next cell too.
 
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the

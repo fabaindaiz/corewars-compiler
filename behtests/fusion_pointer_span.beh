@@ -1,0 +1,4 @@
+# From top (cell 1): SEQ skips the jump (1), NOP (2), MOV writes 9 through p, six cells past p's
+# cell 0: target, cell 6 (3).
+golden: bbctests/examples/fusion_pointer_span.bbc
+cell 3 6 DAT.F #7, #9

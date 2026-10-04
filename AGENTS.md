@@ -42,7 +42,8 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   `behtests/archetype_clear.beh`.
 - **A rewrite after emission (jump threading, the peephole) never passes or removes a cell that
   does more than jump**: a user's `JMP` or label, a variable, an operand that moves a pointer, a
-  cell a skip or a numeric offset counts (d-7d2612-3f3f32, d-7d2612-b9a097). Both phase reviews
+  cell a skip, a numeric offset or a pointer's value counts (d-7d2612-3f3f32, d-7d2612-b9a097,
+  d-7d2612-65d788). Both phase reviews
   found a miscompile here. Enforced: the `review2`, `review3` and `phase3` groups, each guard
   mutated.
 
