@@ -160,6 +160,7 @@ Control flows are used to specify the execution order of the instructions. Use c
 
 - (if cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
 
+With the default policy, a jump the compiler generated that would land on the very next cell (an empty `else`, an empty `if`, an empty rotated `while`) is left out, unless it also does something: a `DJN` decrements, a `<`/`>` operand moves a pointer, a cell that holds a variable or carries your label stays, and so does a jump right after a `SEQ`/`SNE`/`SLT`, which would otherwise skip a different cell.
 
 A jump the compiler generated that would land on a `JMP` the compiler generated goes straight to that `JMP`'s target: an `if` at the end of a `repeat` jumps back to the loop's head when its condition is false, one cycle sooner. It changes no cell count, never touches a jump you wrote, and never passes a `JMP` that carries one of your labels or that only jumps reach (it would be left dead).
 

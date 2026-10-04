@@ -5,9 +5,10 @@ open Compile
    equally good variants, so a transformation is applied only when it improves the first objective
    of the policy that tells the variants apart (docs/specs/2026-10-04-optimizer-design.md). *)
 let candidates : options list =
-  let all = List.concat_map (fun rotate_unary ->
-      List.map (fun rotate_binary -> { rotate_unary; rotate_binary }) [false; true]) [false; true] in
-  let applied o = List.length (List.filter Fun.id [o.rotate_unary; o.rotate_binary]) in
+  let bools = [false; true] in
+  let all = List.concat_map (fun rotate_unary -> List.concat_map (fun rotate_binary ->
+      List.map (fun peephole -> { rotate_unary; rotate_binary; peephole }) bools) bools) bools in
+  let applied o = List.length (List.filter Fun.id [o.rotate_unary; o.rotate_binary; o.peephole]) in
   List.stable_sort (fun a b -> Int.compare (applied a) (applied b)) all
 
 (* The whole program is compiled once per candidate: at most 100 cells each, so eight compiles cost
@@ -23,7 +24,7 @@ let choose (policy : Metrics.policy) (e : Ast.expr) : options * emitted list * M
 (* For the report: the transformations applied, by name. *)
 let describe (o : options) : string =
   match List.filter_map (fun (on, name) -> if on then Some name else None)
-          [(o.rotate_unary, "rotate-unary"); (o.rotate_binary, "rotate-binary")] with
+          [(o.rotate_unary, "rotate-unary"); (o.rotate_binary, "rotate-binary"); (o.peephole, "peephole")] with
   | [] -> "none"
   | names -> String.concat ", " names
 

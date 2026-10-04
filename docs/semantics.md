@@ -139,6 +139,11 @@ to the test, which loops back while `c` holds. The compiler emits it when the po
 iteration for one more boot cycle; with a binary one it saves nothing per iteration, so today's
 objectives never pick it.
 
+**Peephole** (d-7d2612-b9a097). When the policy prefers it, a generated `JMP`, `JMZ` or `JMN` aimed
+at the next cell is removed and its labels move to that cell, unless the cell before can skip, its
+operand moves a pointer, it holds a variable or it carries a user's label. Removing it changes
+neither what runs nor in which order, only one cycle and one cell.
+
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the
 jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-fffa6c).

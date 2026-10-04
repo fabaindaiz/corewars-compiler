@@ -275,9 +275,10 @@ first).
 **Decided** (2026-10-04, user): it may not move one; the user writes where it goes.
 
 ### Peephole cleanup of jumps · i-7d2612-ec59a0
-**State.** Half done (s-7d2612-14641b): jumps to jumps are threaded, pulled forward into phase 2 by
-the user (d-7d2612-3f3f32, `Compile.thread_jumps`). Still planned: a `JMP` to the next cell, an `if`
-whose body is empty.
+**State.** Done. Jumps to jumps are threaded, pulled forward into phase 2 by the user
+(s-7d2612-14641b, d-7d2612-3f3f32, `Compile.thread_jumps`); a generated jump to the next cell (an
+empty `if`, `else` or rotated `while`) is removed under the policy (s-7d2612-f082c8,
+d-7d2612-b9a097, `Compile.peephole`). No existing golden had one.
 Jumps to jumps, a `JMP` to the next cell, an `if` whose body is empty: local rewrites over the
 emitted sequence, each kept only when `--report` shows the policy's metric improving.
 **Measured** (s-7d2612-14641b): the RED scanner's `if` inside a `repeat` jumps to the `repeat`'s

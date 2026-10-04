@@ -814,6 +814,23 @@ let test_phase3_repeat_data_store_once () =
     (contains (error_of "(let (p 1) (seq (repeat (NOP) (store p)) (DAT 0 (store p))))") "stored twice")
 
 
+let vars : (string -> string, unit, string) format = "(let (x 1) (let (p 9) (seq %s (DAT (store x) (store p)))))"
+
+let test_phase3_peephole_removes_jumps_to_next () =
+  let ops_of body = opcodes (chosen (Printf.sprintf vars body)) in
+  check ops "empty if" [IDAT] (ops_of "(if (JN x) (seq))") ;
+  check ops "empty else" [IJMZ; INOP; IDAT] (ops_of "(if (JN x) (NOP) (seq))") ;
+  check ops "empty rotated while" [IJMN; IDAT] (ops_of "(while (JN x) (seq))")
+
+let test_phase3_peephole_keeps_effects () =
+  let ops_of body = opcodes (chosen (Printf.sprintf vars body)) in
+  check ops "after a skip" [ISEQ; IJMP; IDAT] (ops_of "(if (EQ x 0) (seq))") ;
+  check ops "DJN decrements" [IDJN; IDAT] (ops_of "(if (DZ x) (seq))") ;
+  check ops "a predecrement" [IJMZ; IDAT] (ops_of "(if (JN (Dec p)) (seq))") ;
+  check ops "a user label" [IJMZ; IDAT] (ops_of "(seq (label here) (if (JN x) (seq)))") ;
+  check ops "a store" [IJMZ; IDAT] (opcodes (chosen "(let (y 1) (seq (if (JN (store y)) (seq)) (DAT 0 0)))"))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -944,6 +961,8 @@ let ocaml_tests = [
     test_case "the command line uses the choice" `Quick test_phase3_driver_uses_the_choice ;
     test_case "(repeat body arg): data in the loop's JMP" `Quick test_phase3_repeat_data ;
     test_case "(repeat body (store p)) counts as p's store" `Quick test_phase3_repeat_data_store_once ;
+    test_case "peephole: a jump to the next cell goes" `Quick test_phase3_peephole_removes_jumps_to_next ;
+    test_case "peephole: what a jump does besides jumping stays" `Quick test_phase3_peephole_keeps_effects ;
   ] ;
   "interp", [
 

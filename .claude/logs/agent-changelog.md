@@ -28,6 +28,12 @@ after 9, not 8: the entry `JMP` goes to the test, not the body).
 Then `(repeat body arg)` (d-7d2612-d9e5d3): the scanner archetype keeps `p` in its `repeat`'s
 `JMP`, 6 cells like the hand-written one; its golden and spec changed for that reason (the source
 changed), and it scored 63 and 61 against the hand-written 56 and 57, not investigated further.
+And the peephole option (d-7d2612-b9a097): a generated jump to the next cell goes unless it does
+something else; each of its five guards was mutated to see its test fail. No existing golden had
+such a jump; new golden and spec `empty_else_peephole`, checked against the unoptimized layout.
+More went wrong: `effect` is a keyword in OCaml 5.5 (effect handlers) and could not name a
+function; a mutation loop split its patterns on `|`, which OCaml or-patterns contain, and three
+mutations had to be rerun.
 **Left undone.** A `--report=json` field for the optimizations applied; data in a `while`'s back
 jump; the scanner's score above the hand-written one is unexplained.
 

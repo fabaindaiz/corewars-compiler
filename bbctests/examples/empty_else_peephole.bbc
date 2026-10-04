@@ -1,0 +1,22 @@
+NAME: an if-else with an empty else
+DESCRIPTION: the then-branch's JMP to the end would land on the next cell: the default policy's peephole removes it; see behtests/empty_else_peephole.beh
+SRC:
+(let (x 1)
+  (seq
+    (if (JN x) (MOV 7 flag) (seq))
+    (JMP 0)
+    (DAT 0 (store x))
+    (label flag) (DAT 0 0)))
+EXPECTED:
+;redcode-94b
+
+  JMZ.B  $_IFM4 , $_LET1 
+  MOV.AB #7     , $flag  
+_IFM4 
+_IFF4 
+  JMP    #0     , #0     
+_LET1 
+  DAT    #0     , #1     
+flag  
+  DAT    #0     , #0     
+  DAT    $0     , $0     

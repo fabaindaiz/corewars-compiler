@@ -173,9 +173,9 @@ let at (m : meta) (f : unit -> 'a) : 'a =
 
 (* The optional transformations the policy chooses between (Optimize.choose); no_opts emits the
    code every construct had before any of them existed. *)
-type options = { rotate_unary : bool; rotate_binary : bool }
+type options = { rotate_unary : bool; rotate_binary : bool; peephole : bool }
 
-let no_opts = { rotate_unary = false; rotate_binary = false }
+let no_opts = { rotate_unary = false; rotate_binary = false; peephole = false }
 
 let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted list =
   match e with
@@ -283,8 +283,40 @@ let thread_jumps (body : emitted list) : emitted list =
       { e with instr = INSTR (op, md, RLab (RDir, final [l] l), b) }
     | { instr = INSTR _ | ILAB _ | ICOM _; _ } -> e) body
 
+(* A generated JMP, JMZ or JMN aimed at the next cell does nothing but cost a cycle and a cell (an
+   empty if or else, an empty rotated while). It stays when removing it would change more than
+   that: the cell before can skip (it would skip a different cell), its operand decrements or
+   increments, it holds a variable, or it carries a user's label. Its labels move to the next cell,
+   where it went anyway. Removing one can make another jump aim at its next cell: repeated until
+   nothing changes. *)
+let rec peephole (body : emitted list) : emitted list =
+  let cells = Array.of_list (List.rev (snd (List.fold_left (fun (pending, acc) (e : emitted) ->
+      match e.instr with
+      | ILAB l -> (l :: pending, acc)
+      | ICOM _ -> (pending, acc)
+      | INSTR _ -> ([], (e, pending) :: acc)) ([], []) body))) in
+  let at = Hashtbl.create 16 in
+  Array.iteri (fun i (_, labels) -> List.iter (fun l -> Hashtbl.replace at l i) labels) cells ;
+  let skips i = i >= 0 && (match (fst cells.(i)).instr with
+    | INSTR ((ISEQ | ISNE | ISLT | ICMP), _, _, _) -> true
+    | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
+             | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> false) in
+  let moves_a_pointer (b : rarg) = match b with
+    | RRef ((RADec | RBDec | RAInc | RBInc), _) | RLab ((RADec | RBDec | RAInc | RBInc), _) -> true
+    | RNone | RRef ((RImm | RDir | RAInd | RBInd), _) | RLab ((RImm | RDir | RAInd | RBInd), _) -> false in
+  let user_label l = not (String.starts_with ~prefix:"_" l) in
+  let dead i = match cells.(i) with
+    | ({ instr = INSTR ((IJMP | IJMZ | IJMN), _, RLab (RDir, l), b); construct = Some _; stores = []; _ }, labels) ->
+      Hashtbl.find_opt at l = Some (i + 1) && not (skips (i - 1)) && not (moves_a_pointer b)
+      && not (List.exists user_label labels)
+    | ({ instr = INSTR _ | ILAB _ | ICOM _; _ }, _) -> false in
+  match List.find_opt dead (List.init (Array.length cells) Fun.id) with
+  | None -> body
+  | Some i -> let gone = fst cells.(i) in peephole (List.filter (fun e -> e != gone) body)
+
 let compile_body ?(opts = no_opts) (e : expr) : emitted list =
-  thread_jumps (compile_expr opts (tag_expr (Rename.uniquify e)) empty_env)
+  let body = thread_jumps (compile_expr opts (tag_expr (Rename.uniquify e)) empty_env) in
+  if opts.peephole then peephole body else body
 
 
 let prelude = "

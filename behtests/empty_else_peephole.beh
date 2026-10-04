@@ -1,0 +1,6 @@
+# x = 1: JMZ falls through (1), MOV writes 7 into flag (2), and the next cell is already the JMP #0
+# that follows the if (3): the then-branch's jump to the end is gone. flag is cell 4.
+golden: bbctests/examples/empty_else_peephole.bbc
+cell 2 4 DAT.F #0, #7
+cell 3 2 JMP.B #0, #0
+alive 100
