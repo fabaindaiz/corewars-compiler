@@ -1018,6 +1018,12 @@ let test_net_step () =
   check Alcotest.(list (pair int int)) "3 + 5" [(4, 8)] (steps_of_loop m "repeat")
 
 
+let test_json_names_optimizations () =
+  let json src = (drive [("p.src", src)] ["--report=json"; "p.src"]).out in
+  check Alcotest.bool "rotated" true (contains (json countdown) "\"optimizations\":[\"rotate-unary\"]") ;
+  check Alcotest.bool "none" true (contains (json "(MOV 0 1)") "\"optimizations\":[]")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1147,6 +1153,7 @@ let ocaml_tests = [
   ] ;
   "netstep", [
     test_case "a pointer's step is its net change per lap" `Quick test_net_step ;
+    test_case "--report=json names the optimizations" `Quick test_json_names_optimizations ;
   ] ;
   "gaps", [
     test_case "which names may be labels" `Quick test_gaps_label_names ;

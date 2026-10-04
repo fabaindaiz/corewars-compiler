@@ -97,7 +97,7 @@ and compile_file ~read f report optimize warn emit_beh warn_mode : output =
       let red = Filename.remove_extension path ^ ".red" in
       [(red, redcode); (path, Expect.to_beh ~redcode:(Filename.basename red) probes)] in
   match report with
-  | Json -> { out = Metrics.to_json ~policy (metrics ()) ^ "\n"; err = warnings; code = 0; files }
+  | Json -> { out = Metrics.to_json ~policy ~optimizations:(Optimize.names opts) (metrics ()) ^ "\n"; err = warnings; code = 0; files }
   | Text ->
     let r = sprintf "%spolicy: %s\noptimizations: %s\n" (Metrics.to_text ~maxlength (metrics ()))
         (String.concat " > " (List.map Metrics.string_of_objective policy)) (Optimize.describe opts) in

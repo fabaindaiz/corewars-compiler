@@ -381,7 +381,7 @@ let json_string (s : string) : string =
   Buffer.add_char b '"' ;
   Buffer.contents b
 
-let to_json ?policy (m : t) : string =
+let to_json ?policy ?optimizations (m : t) : string =
   let range r = sprintf "{\"min\":%d,\"max\":%d}" r.min r.max in
   let opt f = function Some x -> f x | None -> "null" in
   let str = json_string in
@@ -402,3 +402,6 @@ let to_json ?policy (m : t) : string =
     (match policy with
      | Some ps -> sprintf ",\"policy\":[%s]" (String.concat "," (List.map (fun o -> str (string_of_objective o)) ps))
      | None -> "")
+    ^ (match optimizations with
+       | Some os -> sprintf ",\"optimizations\":[%s]" (String.concat "," (List.map str os))
+       | None -> "")

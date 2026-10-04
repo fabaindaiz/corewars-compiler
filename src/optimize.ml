@@ -29,9 +29,12 @@ let choose ?consts (policy : Metrics.policy) (e : Ast.expr) : options * emitted 
   pick policy (measure_all ?consts e)
 
 (* For the report: the transformations applied, by name. *)
+let names (o : options) : string list =
+  List.filter_map (fun (on, name) -> if on then Some name else None)
+    [(o.rotate_unary, "rotate-unary"); (o.rotate_binary, "rotate-binary"); (o.peephole, "peephole")]
+
 let describe (o : options) : string =
-  match List.filter_map (fun (on, name) -> if on then Some name else None)
-          [(o.rotate_unary, "rotate-unary"); (o.rotate_binary, "rotate-binary"); (o.peephole, "peephole")] with
+  match names o with
   | [] -> "none"
   | names -> String.concat ", " names
 

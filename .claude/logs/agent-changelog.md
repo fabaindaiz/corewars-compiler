@@ -48,7 +48,8 @@ older tests that recorded the gaps (the long-line error without a location, "sto
 The net step (i-7d2612-fbe7c8, half): a pointer's step is the sum of its changes per lap, or
 nothing when unknown; the paper archetype's step warning disappeared with the wrong prediction it
 came from.
-**Left undone.** Summing through inner loops with known trip counts, a JSON field for the optimizations,
+`--report=json` names the optimizations applied (`"optimizations":[...]`).
+**Left undone.** Summing through inner loops with known trip counts,
 compile-error goldens (i-7d2612-70ea22), the scanner's score.
 
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
