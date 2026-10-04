@@ -105,7 +105,7 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
 
 - you can run the executables manually as follows:
   * `make compile src=examples/prog.src`: builds/runs the compiler on the source file `examples/prog.src`, outputs the generated redcode
-  * `dune exec execs/run_compile.exe -- [--optimize o1,o2] [--report[=json]] [--expect=warn] [--emit-beh FILE] <file>`: `--report` prints the measured metrics and predictions on standard error (`=json`: JSON on standard output instead of the redcode); `--optimize` sets the policy; `--expect=warn` turns failed expectations into warnings; `--emit-beh` writes the execution expectations as a behaviour spec and the redcode beside it (see LANGUAGE.md)
+  * `dune exec execs/run_compile.exe -- [--optimize o1,o2] [--report[=json]] [--expect=warn] [--emit-beh FILE] <file>`: `--report` prints the measured metrics and predictions on standard error (`=json`: JSON on standard output instead of the redcode); `--optimize` sets the policy; `--expect=warn` turns failed expectations into warnings; `--emit-beh FILE.beh` writes the execution expectations as a behaviour spec and the redcode beside it as `FILE.red` (see LANGUAGE.md). A compile error prints `error: ...` and exits with code 1. The command line itself is `Cored.Driver` (`src/driver.ml`), tested in the `driver` group
 
 - you can also ask specific files to be built, eg.:
   * `make examples/prog.s`: looks up `examples/prog.src`, compiles it, and generates the redcode file `examples/prog.s`

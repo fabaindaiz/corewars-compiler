@@ -177,11 +177,11 @@ A file may wrap its single body expression in an optional header. A file without
 ```
 
 - (program items) the header: any number of `optimize` and `expect` items, and exactly one body expression
-- (optimize objectives) the order in which the compiler weighs its metrics: `speed` (cycles per loop iteration), `size` (warrior length), `stealth` (cells a scanner can see), `boot` (cycles before the first loop). The default is `speed size`; `run_compile.exe --optimize size,speed` overrides the header. The compiler measures and reports today; it does not yet change its output by policy.
+- (optimize objectives) at least one objective, in the order in which the compiler weighs its metrics: `speed` (cycles per loop iteration), `size` (warrior length), `stealth` (cells a scanner can see), `boot` (cycles before the first loop). The default is `speed size`; `run_compile.exe --optimize size,speed` overrides the header. The compiler measures and reports today; it does not yet change its output by policy.
 
 ### Expectations (expect)
 
-`(expect e)` states what the compiled warrior must do. It emits no code. In the header it applies to the whole warrior; as a statement inside a `repeat`, `while` or `do-while` body it applies to that loop.
+`(expect e)` states what the compiled warrior must do. It emits no code and does not change the labels the compiler generates. In the header it applies to the whole warrior; as a statement inside a `repeat`, `while` or `do-while` body it applies to that loop.
 
 Checked when compiling (a failure stops the compilation, or is a warning with `--expect=warn`):
 
@@ -194,10 +194,10 @@ Checked when compiling (a failure stops the compilation, or is a warning with `-
 
 `length`, `cycles`, `overhead` and `boot` accept both `(m N)` (exactly N) and `(m <= N)`.
 
-Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE` writes them as a behaviour spec for `tools/behave.py`):
+Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` writes them as a behaviour spec for `tools/behave.py`, and the redcode beside it as `FILE.red`; it refuses a program with none of these). N is at least 1:
 
 - (alive N) a process is still running after N executed instructions
 - (dead N) no process is left after N executed instructions
 - (cell ADDR "TEXT" N) after N instructions, cell ADDR holds the instruction TEXT
 
-`run_compile.exe --report` prints the measured metrics and predictions on standard error; `--report=json` prints them as JSON instead of the redcode. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).
+`run_compile.exe --report` prints the measured metrics and predictions on standard error; `--report=json` prints them as JSON instead of the redcode. Any compile error prints `error: ...` on standard error and exits with code 1. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).

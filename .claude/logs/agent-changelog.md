@@ -5,6 +5,31 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-03 · s-7d2612-2206a5 — Fix the review's minor findings and merge the cost model into main
+
+**What.** Fixed the branch review's minor findings, each test-first: an `(expect ...)` takes no tag
+(adding one no longer renumbers `WHI9` to `WHI11`); DIV/MOD by a zero B-number under `.F`/`.X`/`.I`
+is flagged; probes need N ≥ 1 and `(optimize)` needs an objective; `unreachable` says when it ignores
+dynamic jumps; JSON strings are escaped as JSON and the JSON carries policy and coresize; the command
+line moved into `Cored.Driver` (a function, nine in-process tests), where every `CTError` becomes
+`error: ...` and exit 1, a missing file is an error, and `--emit-beh` requires a `.beh` path and an
+execution expectation; `check-ocaml` runs an `--emit-beh` spec end to end. Declined `Stdlib.Arg`
+(d-7d2612-7edd7d). Merged `feat/cost-model` into `main` (fast-forward) and pushed.
+**Areas.** `src/ast.ml`, `src/parse.ml`, `src/metrics.ml`, `src/driver.ml`, `execs/`, `Makefile`,
+`LANGUAGE.md`, `REFERENCE.md`, `AGENTS.md`, `docs/`, `.claude/skills/troubleshoot-redcode/`.
+**Why.** The user asked to complete the pending changes, push to main, and include all the
+documentation.
+**Architecture.** ✅ Complies: no emitted byte changed for any existing program (`compare` green).
+**What went wrong on the way.** The first test for the label shift put the expectation at the end
+of a `seq`, where nothing follows it, and passed before any fix; moved before the `while`, it failed
+as expected (`WHI9` vs `WHI11`). A comparison of the CLI's stdout against the golden was garbled by
+`head -c -1`, which macOS `head` does not support; the equality is pinned by `test_driver_plain`
+instead.
+**What was left undone.** The roadmap's correctness items and subprojects B and C; one `CTError`
+type with locations (i-7d2612-888db5 is half done).
+**Measured.** `make check`: audit 11 checks, 0 failing, 1 known-failing; behave 7 specs, 0
+unexpected; 74 alcotest cases besides `execute`; the end-to-end `--emit-beh` spec `ok (2 probes)`.
+
 ## 2026-10-03 · s-7d2612-a654a5 — Implement the cost model, ordered IR and expectations (subproject A)
 
 **What.** On branch `feat/cost-model`, following `docs/plans/2026-10-03-cost-model.md`:

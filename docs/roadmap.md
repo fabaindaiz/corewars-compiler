@@ -11,16 +11,16 @@ execution in the core follows the program's meaning** (`docs/semantics.md`).
 
 ## Where we are
 
-As of 2026-10-03 (s-7d2612-a654a5). The compiler now measures what it emits: the cost model
-(i-7d2612-aeab0f) is built on branch `feat/cost-model`, not yet merged; `run_compile.exe --report`
-shows the metrics and predictions, and `(expect ...)` checks them. The gate runs locally (an opam
-switch in `_opam/`): `dune build` and 52 tests besides `execute`, which needs Linux x86-64.
-**Seven defects are recorded** below, five with a failing check (four behaviour specs, one audit
-check), and the `execute` suite only proves that pMARS assembles the output. `origin/dev` holds a
-half-done restructure that defines a different language (i-7d2612-ec4d2d).
+As of 2026-10-03 (s-7d2612-2206a5). `main` measures what it compiles: the cost model
+(i-7d2612-aeab0f) is merged, with the review's findings fixed. `run_compile.exe --report` shows the
+metrics and predictions, `(expect ...)` checks them or exports them to pMARS, and the command line
+is `Cored.Driver`, tested in-process. The gate runs locally with an opam switch in `_opam/`:
+`dune build`, 74 alcotest cases besides `execute` (Linux x86-64 only), an `--emit-beh` spec run end
+to end in pMARS, the audit and seven behaviour specs. **Seven defects are recorded** below, five
+with a failing check (four behaviour specs, one audit check); i-7d2612-888db5 is half done.
+`origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next, by cost to the invariant and verifiability:** merge `feat/cost-model`; then the
-correctness fixes with known-failing specs; then subproject B (warnings, i-7d2612-90d6e1), which
+**Next, by cost to the invariant and verifiability:** the correctness fixes with known-failing specs; then subproject B (warnings, i-7d2612-90d6e1), which
 needs the cost model, and C (i-7d2612-7eadd5), which carries three decisions already taken.
 
 ## Correctness — recorded defects
@@ -74,10 +74,11 @@ captures the inner `x`.
 **Decide first.** Stop the walk at a shadowing `let`, or uniquify names before analysis.
 
 ### Four distinct CTError exceptions, none caught · i-7d2612-888db5
-**State.** Planned. Known-failing check: `tools/audit.py` `single-error-type`.
+**State.** Half done. Known-failing check: `tools/audit.py` `single-error-type`.
 `lib`, `util`, `parse` and `compile` each declare `exception CTError of string`; they are four
-exceptions, `run_compile` catches none, and a user error ends as an uncaught exception (exit 2).
-`util.ml` also raises "please report this bug" through the same type.
+exceptions. **Done:** `Cored.Driver` catches all four by name, so the CLI prints `error: ...` and
+exits 1 (d-7d2612-8bba52). **Still missing:** one exception type, locations, and keeping internal
+errors ("please report this bug" in `util.ml`) apart from user errors.
 **Decide first.** One user-error exception (with a location, i-7d2612-1703ff) plus `failwith`-style
 internal errors, converted to a message and exit code in the driver.
 
@@ -94,8 +95,9 @@ specs for working programs. Missing: specs for `repeat`, `if-else`, `while` with
 indirection, `SPL`; and folding them into the OCaml suite if wanted.
 
 ### Compile-error tests · i-7d2612-70ea22
-**State.** Planned. bbctester supports `STATUS: CT error` with EXPECTED as a pattern; no golden
-uses it. Blocked in practice by i-7d2612-888db5 (errors escape as exceptions).
+**State.** Half done. The command line's error path is tested through `Cored.Driver`
+(`test_driver_compile_error_is_clean`, `test_driver_missing_file`). Still no golden uses bbctester's
+`STATUS: CT error`.
 
 ### Classic warriors re-expressed in RED as end-to-end tests · i-7d2612-34b61d
 **State.** Planned. Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
@@ -145,19 +147,18 @@ errors, then make the file say so.
 ## Cost model and optimization
 
 ### Cost model, ordered IR and expectations (subproject A) · i-7d2612-aeab0f
-**State.** Done on branch `feat/cost-model` (s-7d2612-a654a5), not merged. Spec
+**State.** Done, merged into `main` (s-7d2612-a654a5, s-7d2612-2206a5). Spec
 `docs/specs/2026-10-03-cost-model-design.md`, plan `docs/plans/2026-10-03-cost-model.md`.
 `Layout` (cells, successors, loops, label diagnostics), `Metrics` (length, roles, nonzero,
 nonblank, boot, per-loop cycles/overhead/exit, step and counter predictions, the policy),
 `Expect` (static checks, `--emit-beh` probes); `--report[=json]`, `--optimize`, `--expect=warn`.
 The prog7 counter prediction (202) equals what pMARS measures.
-**Still missing.** Weighted policies; benchmark validation (`--bench`); process counts for `SPL`;
-no alcotest runs the CLI itself. Minor findings of the branch review, deferred: an `(expect ...)`
-statement takes a tag and so renumbers later generated labels; DIV/MOD by a zero B-number under
-`.F`/`.X`/`.I` is not flagged; `--emit-beh` can write a spec with no probes or overwrite its own
-`.red`, and accepts `(dead 0)`; `unreachable` ignores dynamic jumps without saying so; `(optimize)`
-with no objective is accepted; JSON escaping uses OCaml's, and the JSON omits policy and coresize;
-a malformed expectation ends in an uncaught `CTError` (i-7d2612-888db5).
+**Still missing.** Weighted policies; benchmark validation (`--bench`); process counts for `SPL`.
+The review's minor findings were all fixed (s-7d2612-2206a5): expectations keep labels, DIV/MOD by a
+zero B-number under `.F`/`.X`/`.I`, `--emit-beh` checks, probe counts from 1, `(optimize)` needs an
+objective, `unreachable` qualified when jumps are dynamic, JSON escaping with policy and coresize,
+clean compile errors, and the CLI under test (`Cored.Driver`); `Stdlib.Arg` declined
+(d-7d2612-7edd7d).
 
 ### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
 **State.** Planned. Warnings for possible slowdowns and possible optimizations, from the metrics:

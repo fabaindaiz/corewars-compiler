@@ -23,7 +23,11 @@ written.
 |---|---|---|---|
 | d-7d2612-5b410d | The cost model (`Layout`, `Metrics`, `Expect`) measures the emitted program and changes no emitted code; optimizations that change output come later, each measured with it | Measuring and changing in one step would leave no baseline to compare against | the `compare` suite; `test_emit_text_unchanged` in `execs/run_test.ml` |
 | d-7d2612-2b781f | The default optimization policy is speed (worst cycles per loop iteration), then size (length); the user overrides it with `(optimize ...)` or `--optimize` | Measured on 94b against the Wilkies benchmark: one more instruction per iteration cost about 20 points, eight more cells about 4 (`docs/specs/2026-10-03-cost-model-design.md`) | `Metrics.default_policy`; `test_policy_default` |
-| d-7d2612-57b438 | A failed static expectation is a compile error (exit 1) unless `--expect=warn` | An expectation is a contract the programmer wrote; a warning nobody reads would let a slower warrior ship | `execs/run_compile.ml` — no test runs the CLI |
+| d-7d2612-57b438 | A failed static expectation is a compile error (exit 1) unless `--expect=warn` | An expectation is a contract the programmer wrote; a warning nobody reads would let a slower warrior ship | `test_driver_expectation_fails` (was `—`: no test ran the CLI until `Cored.Driver`) |
+| d-7d2612-71226e | An `(expect ...)` takes no tag, so adding one never renumbers the labels generated after it | An expectation emits no code; letting it shift `WHI9` to `WHI11` made adding one change the output | `test_minor_expect_keeps_labels` |
+| d-7d2612-817aad | The command line lives in `Cored.Driver` as a function from arguments (and a file reader) to standard output, standard error, files and exit code; `execs/run_compile.ml` only performs the result | The CLI could not be tested without running a process; now nine alcotest cases cover it | the `driver` group in `execs/run_test.ml` |
+| d-7d2612-8bba52 | A compile error ends as `error: ...` on standard error and exit code 1, never as an uncaught exception | An uncaught `CTError` printed an OCaml backtrace and exit 2, which read as a compiler crash | `Driver.run` (catches the four `CTError`s by name); `test_driver_compile_error_is_clean` |
+| d-7d2612-7edd7d | Not adopted: `Stdlib.Arg` for the command line. *A decision, not a rule.* | `--report` and `--report=json` are two forms of one option, which `Arg` does not express; the hand-written parser is a dozen lines in `Driver.parse_args` | — |
 
 ## Tests
 

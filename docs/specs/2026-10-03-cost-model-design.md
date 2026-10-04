@@ -209,7 +209,8 @@ policy: speed > size
 ```
 
 **Files.** `src/layout.ml` (IR), `src/metrics.ml` (metrics, predictions, policy), `src/expect.ml`
-(static checks, probe export); `src/parse.ml` and `src/ast.ml` accept `program`, `optimize`,
+(static checks, probe export), and — after the branch review — `src/driver.ml` (the command line as
+a testable function); `src/parse.ml` and `src/ast.ml` accept `program`, `optimize`,
 `expect`; `execs/run_compile.ml` gains `--report`, `--optimize`, `--expect`, `--emit-beh`. Dependency
 chain: `red` ← `ast` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics` ← `expect`.
 

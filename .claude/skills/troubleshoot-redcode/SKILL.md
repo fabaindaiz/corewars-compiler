@@ -1,6 +1,6 @@
 ---
 name: troubleshoot-redcode
-description: Diagnose a compiled warrior that misbehaves, a RED program the compiler rejects, or pMARS output that looks wrong - loops that never end, a variable that reads the wrong value, a jump that lands on DAT, "Undefined label", "redefinition of label", exit codes 2/3/126, an uncaught CTError, or a hang. Use when a symptom is reported, before changing the compiler.
+description: Diagnose a compiled warrior that misbehaves, a RED program the compiler rejects, or pMARS output that looks wrong - loops that never end, a variable that reads the wrong value, a jump that lands on DAT, "Undefined label", "redefinition of label", exit codes 1/2/3/126, a compile "error:", or a hang. Use when a symptom is reported, before changing the compiler.
 allowed-tools: Bash, Read
 ---
 
@@ -19,7 +19,7 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 | a jump to a user label lands on a data cell; pMARS warns "redefinition of label" | user label named like a generated one (`LET1`, `IF3`, …); pMARS keeps the first | i-7d2612-425c66 |
 | pMARS "Undefined label 'LETn'" | the `let` variable has no `(store x)` | i-7d2612-425c66 |
 | an outer variable is written in the wrong field | an inner `let` of the same name leaked its `store` placement | i-7d2612-ce4c3b |
-| `Fatal error: exception Cored.….CTError(...)`, exit 2 | four separate `CTError` exceptions, none caught by the CLI | i-7d2612-888db5 |
+| `error: ...` from `run_compile.exe`, exit 1 | a compile error in the RED program (the message says which form); the compiler still has four `CTError` types, caught by `Cored.Driver` | i-7d2612-888db5, d-7d2612-8bba52 |
 | pMARS hangs while assembling | a line of 256+ characters (a long label) | i-7d2612-174acf |
 | `(LT -1 3)` is false | not a bug: values are unsigned mod CORESIZE (`-1` = 7999) | d-7d2612-2a4435 |
 | `cannot execute binary file`, exit 126 | `pmars/pmars` is Linux x86-64; use `tools/pmars-host.sh` | d-7d2612-3d04ba |
