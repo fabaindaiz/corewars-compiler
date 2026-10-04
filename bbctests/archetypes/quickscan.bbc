@@ -1,0 +1,134 @@
+NAME: a quickscan in RED
+DESCRIPTION: sixteen probes written with a template and for compare cell pairs across the core, a stub per probe records where, then a bomb and a core-clear; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_quickscan.beh
+SRC:
+(program
+  (hill 94nop)
+  (name quickscan)
+  (strategy compare cell pairs across the core, bomb a difference, then clear)
+  (const step 400)
+  (const gap 100)
+  (define (probe (k Num))
+    (if (NE I (Dir (+ first (* k step))) (Dir (+ first (+ (* k step) gap))))
+      (JMP (+ hits (* 2 (- k 1))))))
+  (define (hit (k Num))
+    (seq (MOV (# (- (+ first (* k step)) ptr)) ptr) (JMP found)))
+  (seq
+    (label first)
+    (for k 1 16 (probe k))
+    (JMP clear)
+    (label hits)
+    (for k 1 16 (hit k))
+    (label found)
+    (MOV I bomb (Ind ptr))
+    (ADD gap ptr)
+    (MOV I bomb (Ind ptr))
+    (label clear)
+    (repeat (MOV I bomb (Inc ptr)))
+    (label ptr)
+    (DAT 0 300)
+    (label bomb)
+    (DAT 0 0)))
+EXPECTED:
+;redcode-94nop
+;name quickscan
+;strategy compare cell pairs across the core, bomb a difference, then clear
+;assert CORESIZE==8000 && MAXLENGTH==100
+step EQU 400
+gap EQU 100
+
+first 
+  SEQ.I  $first+(1*step), $first+((1*step)+gap)
+  JMP    $hits+(2*(1-1)), #0     
+_IF7  
+  SEQ.I  $first+(2*step), $first+((2*step)+gap)
+  JMP    $hits+(2*(2-1)), #0     
+_IF10 
+  SEQ.I  $first+(3*step), $first+((3*step)+gap)
+  JMP    $hits+(2*(3-1)), #0     
+_IF13 
+  SEQ.I  $first+(4*step), $first+((4*step)+gap)
+  JMP    $hits+(2*(4-1)), #0     
+_IF16 
+  SEQ.I  $first+(5*step), $first+((5*step)+gap)
+  JMP    $hits+(2*(5-1)), #0     
+_IF19 
+  SEQ.I  $first+(6*step), $first+((6*step)+gap)
+  JMP    $hits+(2*(6-1)), #0     
+_IF22 
+  SEQ.I  $first+(7*step), $first+((7*step)+gap)
+  JMP    $hits+(2*(7-1)), #0     
+_IF25 
+  SEQ.I  $first+(8*step), $first+((8*step)+gap)
+  JMP    $hits+(2*(8-1)), #0     
+_IF28 
+  SEQ.I  $first+(9*step), $first+((9*step)+gap)
+  JMP    $hits+(2*(9-1)), #0     
+_IF31 
+  SEQ.I  $first+(10*step), $first+((10*step)+gap)
+  JMP    $hits+(2*(10-1)), #0     
+_IF34 
+  SEQ.I  $first+(11*step), $first+((11*step)+gap)
+  JMP    $hits+(2*(11-1)), #0     
+_IF37 
+  SEQ.I  $first+(12*step), $first+((12*step)+gap)
+  JMP    $hits+(2*(12-1)), #0     
+_IF40 
+  SEQ.I  $first+(13*step), $first+((13*step)+gap)
+  JMP    $hits+(2*(13-1)), #0     
+_IF43 
+  SEQ.I  $first+(14*step), $first+((14*step)+gap)
+  JMP    $hits+(2*(14-1)), #0     
+_IF46 
+  SEQ.I  $first+(15*step), $first+((15*step)+gap)
+  JMP    $hits+(2*(15-1)), #0     
+_IF49 
+  SEQ.I  $first+(16*step), $first+((16*step)+gap)
+  JMP    $hits+(2*(16-1)), #0     
+_IF52 
+  JMP    $clear , #0     
+hits  
+  MOV.AB #(first+(1*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(2*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(3*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(4*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(5*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(6*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(7*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(8*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(9*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(10*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(11*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(12*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(13*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(14*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(15*step))-ptr, $ptr   
+  JMP    $found , #0     
+  MOV.AB #(first+(16*step))-ptr, $ptr   
+  JMP    $found , #0     
+found 
+  MOV.I  $bomb  , @ptr   
+  ADD.AB #gap   , $ptr   
+  MOV.I  $bomb  , @ptr   
+clear 
+_REP167
+  MOV.I  $bomb  , >ptr   
+  JMP    $_REP167, #0     
+ptr   
+  DAT    #0     , #300   
+bomb  
+  DAT    #0     , #0     
+  DAT    $0     , $0     

@@ -1,0 +1,10 @@
+# The quickscan archetype with probes 10 cells apart. They point inside the warrior, so no skip is
+# fused: ptr is cell 86, the bomb 87. Probe 1 compares cell 10 (code: a JMP) with cell 110
+# (empty): they differ, SNE skips its JMP (1), JMP to the first stub (2), which points ptr at cell 10
+# (3: 10 - 86) and jumps to found (4); found bombs cell 10 (5), moves ptr by gap (6) and bombs cell
+# 110 (7).
+golden: bbctests/examples/quickscan_hit.bbc
+hill: 94nop
+cell 3 86 DAT.F #0, #-76
+cell 5 10 DAT.F #0, #0
+cell 7 110 DAT.F #0, #0

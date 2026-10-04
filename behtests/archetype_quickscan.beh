@@ -1,0 +1,9 @@
+# On empty core every probe finds its pair equal: each SEQ skips its jump (one instruction a probe,
+# 16), JMP clear (17), and the clear's first MOV bombs ptr + 300 (ptr is cell 70: cell 370) and
+# makes ptr 301 (18).
+golden: bbctests/archetypes/quickscan.bbc
+hill: 94nop
+cell 16 70 DAT.F #0, #300
+cell 18 70 DAT.F #0, #301
+cell 18 370 DAT.F #0, #0
+alive 1000
