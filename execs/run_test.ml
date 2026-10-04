@@ -711,6 +711,17 @@ let test_phase2_self_loop_terminates () =
 
 
 (* Tests from the phase-2 branch review *)
+let test_review2_while_at_loop_end () =
+  (* the while's exit jump landed on the repeat's JMP, its only way in: threading it left that JMP
+     dead and the repeat's loop closed by the while *)
+  let src = "(let (x 3) (let (y 0) (seq (repeat (seq (expect (cycles <= 10)) (ADD 1 y) (while (JN x) (SUB 1 x)))) (DAT (store x) (store y)))))" in
+  let m = M.measure (layout_of_src src) in
+  check Alcotest.int "nothing dead" 0 m.unreachable ;
+  check Alcotest.bool "the repeat's loop" true
+    (List.exists (fun (l : M.loop_metrics) -> l.construct = Some "repeat") m.loops) ;
+  check Alcotest.(pair string int) "its expectation is checked" ("", 0)
+    (let o = drive [("p.src", src)] ["p.src"] in (o.err, o.code))
+
 let test_review2_gt_explicit_modifier () =
   (* GT is emitted as SLT y, x: an AB reading of x and y is BA on the swapped operands *)
   let gt m = Printf.sprintf "(let (x 0) (let (y 0) (seq (if (GT %s x y) (NOP)) (DAT (store x) 0) (DAT 0 (store y)))))" m in
@@ -719,6 +730,12 @@ let test_review2_gt_explicit_modifier () =
   check rmods "F" [RF] (modifiers ISLT (gt "F")) ;
   check rmods "do-while GT AB" [RBA]
     (modifiers ISLT "(let (x 0) (let (y 0) (seq (do-while (GT AB x y) (NOP)) (DAT (store x) (store y)))))")
+
+let test_review2_user_label_stops_threading () =
+  (* tail labels the repeat's JMP, which the program overwrites: never thread through it *)
+  let is = instrs_of_src
+      "(let (x 1) (seq (repeat (seq (MOV I stop tail) (if (JZ x) (NOP)) (label tail))) (DAT 0 (store x)) (label stop) (DAT 0 0)))" in
+  check strings "JMN" [first_label "_IF" is] (targets IJMN is)
 
 let test_review2_generated_label_is_not_a_name () =
   let m = M.measure (layout_of_src "(seq (repeat (NOP)) (if (JZ 0) (NOP)) (DAT 0 0))") in
@@ -845,7 +862,9 @@ let ocaml_tests = [
     test_case "a labelled DAT never run is data" `Quick test_phase2_labelled_dat_is_data ;
   ] ;
   "review2", [
+    test_case "a while at a loop's end keeps the loop's JMP" `Quick test_review2_while_at_loop_end ;
     test_case "GT with an explicit AB or BA" `Quick test_review2_gt_explicit_modifier ;
+    test_case "a user label stops threading" `Quick test_review2_user_label_stops_threading ;
     test_case "a generated label does not name data" `Quick test_review2_generated_label_is_not_a_name ;
     test_case "a unary cond with too many arguments" `Quick test_review2_unary_arity_message ;
   ] ;

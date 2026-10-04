@@ -221,21 +221,38 @@ let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
 (* A generated jump whose target cell holds a generated JMP goes straight to that JMP's target: the
    same cells, one cycle less each time it is taken (an if at the end of a repeat cost the scanner
    archetype 3 cycles per empty cell, against 2 by hand). Only jumps the compiler generated are
-   rewritten, and only through JMPs it generated: a JMP the user wrote may have its target changed
-   at run time. A chain is followed until it repeats a label. *)
+   rewritten, and only through JMPs it generated: a JMP the user wrote, or one carrying a user's
+   label, may have its target changed at run time. A JMP is passed only when the cell before it
+   falls into it (or the one before that skips into it): the jumps that reach it otherwise all go
+   past it, and it would be left dead, still closing its loop. A chain is followed until it repeats
+   a label. *)
 let thread_jumps (body : emitted list) : emitted list =
-  let next_instr = Hashtbl.create 16 in
-  let rec index pending (es : emitted list) = match es with
-    | [] -> ()
-    | { instr = ILAB l; _ } :: rest -> index (l :: pending) rest
-    | { instr = ICOM _; _ } :: rest -> index pending rest
-    | ({ instr = INSTR _; _ } as e) :: rest ->
-      List.iter (fun l -> Hashtbl.replace next_instr l e) pending ;
-      index [] rest in
-  index [] body ;
-  let generated_jmp l = match Hashtbl.find_opt next_instr l with
-    | Some { instr = INSTR (IJMP, _, RLab (RDir, l'), _); construct = Some _; _ } -> Some l'
-    | Some { instr = INSTR _ | ILAB _ | ICOM _; _ } | None -> None in
+  (* Each instruction with the labels on its cell, in order. *)
+  let cells = Array.of_list (List.rev (snd (List.fold_left (fun (pending, acc) (e : emitted) ->
+      match e.instr with
+      | ILAB l -> (l :: pending, acc)
+      | ICOM _ -> (pending, acc)
+      | INSTR _ -> ([], (e, pending) :: acc)) ([], []) body))) in
+  let at = Hashtbl.create 16 in
+  Array.iteri (fun i (_, labels) -> List.iter (fun l -> Hashtbl.replace at l i) labels) cells ;
+  let op i = match (fst cells.(i)).instr with INSTR (o, _, _, _) -> Some o | ILAB _ | ICOM _ -> None in
+  let continues i = match op i with
+    | Some (IJMP | IDAT) | None -> false
+    | Some (ISPL | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN | ISEQ | ISNE
+           | ISLT | ICMP | ILDP | ISTP) -> true in
+  let skips i = match op i with
+    | Some (ISEQ | ISNE | ISLT | ICMP) -> true
+    | Some (IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
+           | ILDP | ISTP) | None -> false in
+  let falls_into i = i = 0 || continues (i - 1) || (i >= 2 && skips (i - 2)) in
+  let user_label l = not (String.starts_with ~prefix:"_" l) in
+  let generated_jmp l = match Hashtbl.find_opt at l with
+    | Some i ->
+      (match cells.(i) with
+      | ({ instr = INSTR (IJMP, _, RLab (RDir, l'), _); construct = Some _; _ }, labels)
+        when falls_into i && not (List.exists user_label labels) -> Some l'
+      | ({ instr = INSTR _ | ILAB _ | ICOM _; _ }, _) -> None)
+    | None -> None in
   let rec final seen l = match generated_jmp l with
     | Some l' when not (List.mem l' seen) -> final (l' :: seen) l'
     | Some _ | None -> l in
