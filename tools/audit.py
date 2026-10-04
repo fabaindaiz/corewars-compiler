@@ -38,7 +38,7 @@ INSTRUCTION_DOCS = [
 # Generated output: named on purpose, absent from a fresh clone (dune, tools/pmars-host.sh, tools/behave.py).
 GENERATED_ROOT = "_build/"
 # Top-level names that make a backticked token a repository path.
-PATH_ROOTS = ("src/", "execs/", "bbctests/", "behtests/", "examples/", "pmars/", "tools/", "docs/",
+PATH_ROOTS = ("src/", "execs/", "bbctests/", "behtests/", "examples/", "archetypes/", "pmars/", "tools/", "docs/",
               ".claude/", ".agents/", ".github/", GENERATED_ROOT)
 ROOT_FILES = ("AGENTS.md", "CLAUDE.md", "README.md", "REFERENCE.md", "LANGUAGE.md", "TUTORIAL.md",
               "Makefile", "Dockerfile", "commands.md", "dune-project", "dune-workspace")
