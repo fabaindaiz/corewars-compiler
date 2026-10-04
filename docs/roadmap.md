@@ -377,7 +377,10 @@ lived only in `_build/bench/`; its procedure is written out in
 `docs/research/2026-10-04-archetypes.md`, so another machine can repeat it.
 
 ### The execute suite only assembles warriors · i-7d2612-05c64d
-**State.** Half done. The mechanism is `tools/behave.py` (cdb probes); the content is three
+**State.** Done (s-7d2612-9b0d20), as the user chose: behaviour specs for `repeat`, `if-else` (both
+branches), `while` with `NE` and `EQ`, indirection through `@`, `<`, `>`, and `SPL`
+(`behtests/repeat_counts.beh` ... `spl_two_processes.beh`), each with one probe mutated to see it
+fail; the `execute` suite stays an assembly check. Was: The mechanism is `tools/behave.py` (cdb probes); the content is three
 specs for working programs. Missing: specs for `repeat`, `if-else`, `while` with `EQ`/`NE`,
 indirection, `SPL`; and folding them into the OCaml suite if wanted.
 

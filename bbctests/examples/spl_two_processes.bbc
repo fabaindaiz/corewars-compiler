@@ -1,0 +1,14 @@
+NAME: SPL starts a second process
+DESCRIPTION: (SPL (Dir 2)) leaves one process on JMP #0 and starts an imp two cells on; see behtests/spl_two_processes.beh
+SRC:
+(seq
+  (SPL (Dir 2))
+  (JMP 0)
+  (MOV (Dir 0) (Dir 1)))
+EXPECTED:
+;redcode-94b
+
+  SPL    $2     , #0     
+  JMP    #0     , #0     
+  MOV.I  $0     , $1     
+  DAT    $0     , $0     

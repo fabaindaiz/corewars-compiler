@@ -1,0 +1,8 @@
+# p is cell 4, holding 3. @p writes 7 into cell 7's B (1); <p makes p 2 and writes 8 into cell 6 (2);
+# >p writes 9 into cell 6 again and makes p 3 (3).
+golden: bbctests/examples/indirection_modes.bbc
+cell 1 7 DAT.F #0, #7
+cell 2 6 DAT.F #0, #8
+cell 2 4 DAT.F #0, #2
+cell 3 6 DAT.F #0, #9
+cell 3 4 DAT.F #0, #3

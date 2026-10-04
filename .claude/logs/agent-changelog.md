@@ -19,6 +19,9 @@ length limit and the p-space rule are compile errors; the `compare` suite compil
 `docs/decisions.md`, `docs/architecture.md`, `docs/roadmap.md`.
 **What went wrong.** I wrote a decision id by hand into `tools/bench.py`'s docstring again before
 generating it; replaced before committing.
+Seven behaviour specs for the constructs nothing checked in the core (i-7d2612-05c64d); one hand
+count was wrong first (`while_ne`: the skipped `JMP` costs no instruction, so the third `SUB` is
+the 8th, not the 9th).
 **Left undone.** See below as the session goes.
 
 ## 2026-10-04 · s-7d2612-333abd — Phase 2's operator design and phase 4's warnings

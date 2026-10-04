@@ -1,0 +1,6 @@
+# SEQ skips the exit (1), ADD makes x 1 (2), JMP back (3), SEQ does not skip (4), JMP leaves (5):
+# x = 1 for good.
+golden: bbctests/examples/while_eq.bbc
+cell 2 5 DAT.F #0, #1
+cell 50 5 DAT.F #0, #1
+alive 100

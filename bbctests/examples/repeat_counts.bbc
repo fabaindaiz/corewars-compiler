@@ -1,0 +1,16 @@
+NAME: a repeat around one instruction
+DESCRIPTION: (repeat body) loops forever: one ADD and the JMP back per lap; see behtests/repeat_counts.beh
+SRC:
+(let (n 0)
+  (seq
+    (repeat (ADD 1 n))
+    (DAT 0 (store n))))
+EXPECTED:
+;redcode-94b
+
+_REP4 
+  ADD.AB #1     , $_LET1 
+  JMP    $_REP4 , #0     
+_LET1 
+  DAT    #0     , #0     
+  DAT    $0     , $0     

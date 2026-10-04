@@ -1,0 +1,4 @@
+# _REP: ADD #1 to n (cell 2); JMP back. Six instructions are three laps: n = 3, and it never stops.
+golden: bbctests/examples/repeat_counts.bbc
+cell 6 2 DAT.F #0, #3
+alive 1000

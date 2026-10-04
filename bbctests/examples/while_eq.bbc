@@ -1,0 +1,21 @@
+NAME: a while with EQ
+DESCRIPTION: (while (EQ x 0) (ADD 1 x)) runs once from x = 0 and leaves with x = 1; see behtests/while_eq.beh
+SRC:
+(let (x 0)
+  (seq
+    (while (EQ x 0) (ADD 1 x))
+    (JMP 0)
+    (DAT 0 (store x))))
+EXPECTED:
+;redcode-94b
+
+_WHI4 
+  SEQ.B  $_LET1 , #0     
+  JMP    $_WHF4 , #0     
+  ADD.AB #1     , $_LET1 
+  JMP    $_WHI4 , #0     
+_WHF4 
+  JMP    #0     , #0     
+_LET1 
+  DAT    #0     , #0     
+  DAT    $0     , $0     

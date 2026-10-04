@@ -1,0 +1,23 @@
+NAME: an if-else taking its then branch
+DESCRIPTION: x = 0: (JZ x) holds, the then branch writes 1 into r and jumps over the else branch; see behtests/if_else_then.beh
+SRC:
+(let (x 0)
+  (let (r 0)
+    (seq
+      (if (JZ x) (MOV 1 r) (MOV 2 r))
+      (JMP 0)
+      (DAT (store x) (store r)))))
+EXPECTED:
+;redcode-94b
+
+  JMN.A  $_IFM5 , $_LET1 
+  MOV.AB #1     , $_LET2 
+  JMP    $_IFF5 , #0     
+_IFM5 
+  MOV.AB #2     , $_LET2 
+_IFF5 
+  JMP    #0     , #0     
+_LET1 
+_LET2 
+  DAT    #0     , #0     
+  DAT    $0     , $0     

@@ -1,0 +1,7 @@
+# A lap is SNE (skipping the exit), SUB, JMP back: the SUBs are instructions 2, 5 and 8, so x (B of
+# cell 5) is 1 after 7 and 0 after 8; then SNE does not skip (10) and JMP leaves (11), and the
+# warrior stays on JMP #0.
+golden: bbctests/examples/while_ne.bbc
+cell 7 5 DAT.F #0, #1
+cell 8 5 DAT.F #0, #0
+alive 100

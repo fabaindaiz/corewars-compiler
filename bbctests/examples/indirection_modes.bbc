@@ -1,0 +1,26 @@
+NAME: a pointer read and written through @, < and >
+DESCRIPTION: MOV through @p, <p and >p: each writes the B-field of the cell p names, < and > moving p; see behtests/indirection_modes.beh
+SRC:
+(let (p 3)
+  (seq
+    (MOV 7 (Ind p))
+    (MOV 8 (Dec p))
+    (MOV 9 (Inc p))
+    (JMP 0)
+    (DAT 0 (store p))
+    (DAT 0 0)
+    (DAT 0 0)
+    (DAT 0 0)))
+EXPECTED:
+;redcode-94b
+
+  MOV.AB #7     , @_LET1 
+  MOV.AB #8     , <_LET1 
+  MOV.AB #9     , >_LET1 
+  JMP    #0     , #0     
+_LET1 
+  DAT    #0     , #3     
+  DAT    #0     , #0     
+  DAT    #0     , #0     
+  DAT    #0     , #0     
+  DAT    $0     , $0     
