@@ -56,7 +56,8 @@ generates (`LETn`, `REPn`, `IFn`, …), which makes the output a function of the
   holds `a`.
 - **Store once.** In `(let (x a) e)`, `e` contains **exactly one** `(store x)` that is not under a
   `let` that shadows `x`. *Unchecked today:* zero stores leave `LETn` undefined, two define it twice
-  (i-7d2612-425c66), and a shadowing `let` leaks its store outward (i-7d2612-ce4c3b).
+  (i-7d2612-425c66). Shadowing is resolved before compilation: `Rename.uniquify` gives every binder
+  a unique name, so an initializer means the variable visible where its `let` binds it.
 - **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `LETn`, through the modifier
   that selects `f`. An indirect use (`@`, `<`, `>`) goes through that field (`*`, `{`, `}` when
   `f = A`). `#x` is the offset to `LETn`, not its value.

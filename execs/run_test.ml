@@ -496,6 +496,14 @@ let test_phase1_shadowing_keeps_outer_field () =
   check Alcotest.bool "ADD.A on the outer x" true (add = Some RA)
 
 
+let test_phase1_initializer_resolved_where_bound () =
+  let src = "(let (x 1) (seq (JMP (Dir 4)) (DAT (store x) 0) (let (y x) (let (x 2) (seq (DAT (store x) 0) (DAT 0 (store y)))))))" in
+  let labels = List.filter_map (fun (e : emitted) -> match e.instr with
+    | INSTR (IDAT, _, _, RLab (_, l)) -> Some l | INSTR _ | ICOM _ | ILAB _ -> None)
+    (compile_body (parse_exp (sexp_from_string src))) in
+  check Alcotest.(list string) "y refers to the outer x" ["LET1"] labels
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -579,6 +587,7 @@ let ocaml_tests = [
   "phase1", [
     test_case "a unary condition tests its variable's field" `Quick test_phase1_cond1_tests_the_variable_field ;
     test_case "an inner let does not move an outer variable" `Quick test_phase1_shadowing_keeps_outer_field ;
+    test_case "an initializer is resolved where its let binds it" `Quick test_phase1_initializer_resolved_where_bound ;
   ] ;
   "interp", [
 

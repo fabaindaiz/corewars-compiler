@@ -98,7 +98,8 @@ rest on. URLs were checked on 2026-10-02.
   locations; this repository keeps two AST types and no locations (i-7d2612-1703ff).
 - **[Siek, *Essentials of Compilation*](https://jeapostrophe.github.io/courses/2021/spring/406/notes/book.pdf)**
   — test each pass's output on an interpreter for its language; a *uniquify* pass removes shadowing
-  before analysis. **Not applied:** both (i-7d2612-56302d, i-7d2612-ce4c3b).
+  before analysis. **Applied:** uniquify, as `src/rename.ml` (i-7d2612-ce4c3b). **Not applied:** the
+  interpreters (i-7d2612-56302d).
 - **[Keep & Dybvig, nanopass](https://andykeep.com/pubs/np-preprint.pdf)** — many single-task passes
   over defined intermediate languages, each output checkable for well-formedness. **Confirms** the
   pass structure; **not applied:** a validator over `Red.instruction` (labels unique and defined).
@@ -169,7 +170,7 @@ shaped it:
 | `compile_cond`, `compile_cond2`, any loop layout | ICWS'94 `SLT`/`JMZ`/`DJN`; `docs/semantics.md` *Dynamics* | strict `<`, unsigned values; i-7d2612-fffa6c |
 | `opmod_to_rmod`, modifiers | ICWS'94 A.2.1.1 | the `.I` fallback (i-7d2612-96f7b1); `.I` changes `SLT` to "both fields" |
 | label generation, `tag_expr` | CC5116 notes; `docs/architecture.md` *Generated labels* | every golden contains the numbering; user-label collisions |
-| `analyse.ml`, `lib.ml` environments | Siek (uniquify); `docs/semantics.md` *Statics* | shadowing leak (i-7d2612-ce4c3b) |
+| `analyse.ml`, `lib.ml`, `rename.ml` environments | Siek (uniquify); `docs/semantics.md` *Statics* | names are unique after `Rename.uniquify`; analysis may rely on it |
 | errors | RWO error handling | four `CTError`s (i-7d2612-888db5) |
 | tests or goldens | BBCStepTester README; `docs/architecture.md` | `execute` proves assembly only; d-7d2612-6a1527 |
 | pMARS, its flags, its binary | `doc/pmars.txt` in the zip | the vendored ELF is Linux-only; `-A` runs nothing |

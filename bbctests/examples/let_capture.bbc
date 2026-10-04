@@ -1,0 +1,23 @@
+NAME: an initializer is resolved where its let binds it
+DESCRIPTION: y = x names the outer x even under an inner let of x; fixed in i-7d2612-ce4c3b, see behtests/let_capture.beh
+SRC:
+(let (x 1)
+  (seq
+    (JMP (Dir 4))
+    (DAT (store x) 0)
+    (let (y x)
+      (let (x 2)
+        (seq
+          (DAT (store x) 0)
+          (DAT 0 (store y)) )))))
+EXPECTED:
+;redcode-94b
+
+  JMP    $4     , #0     
+LET1  
+  DAT    #1     , #0     
+LET9  
+  DAT    #2     , #0     
+LET8  
+  DAT    #0     , $LET1  
+  DAT    #0     , #0     

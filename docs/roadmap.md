@@ -33,7 +33,7 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check (four behaviour specs, one audit check); i-7d2612-888db5 is half done.
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next:** phase 1, starting with the two ready fixes (i-7d2612-3744e5, i-7d2612-ce4c3b); their specs already fail.
+**Next:** phase 1 continues with the `do-while` layout (i-7d2612-fffa6c); i-7d2612-3744e5 and i-7d2612-ce4c3b are done.
 
 ## Phase 1 — Correctness, before the output changes
 
@@ -49,11 +49,10 @@ the `.B` default: a variable stored in an A-field is tested on the B-field of it
 **Decide first.** Nothing: the field is known from `penv`.
 
 ### An inner let leaks its store placement into an outer variable of the same name · i-7d2612-ce4c3b
-**State.** Half done (s-7d2612-2c7e4d). The placement leak is fixed (`analyse_store_expr` stops at a
-`let` that rebinds the name; `behtests/let_shadowing.beh` passes, its golden moved to
-`bbctests/examples/`). The initializer capture is **measured** (2026-10-04): in
-`(let (x 1) (let (y x) (let (x 2) ... (store y))))` the cell of `y` holds `$LET9`, the inner `x`, not
-`$LET1`.
+**State.** Done (s-7d2612-2c7e4d). Both halves fixed: the placement leak (`analyse_store_expr` stops
+at a `let` that rebinds the name; `behtests/let_shadowing.beh`) and the initializer capture,
+measured on 2026-10-04 (`y` held `$LET9`, the inner `x`), by `Rename.uniquify` before compilation
+(`behtests/let_capture.beh`). Both goldens are in `bbctests/examples/`; no other golden changed.
 `Analyse.analyse_store_expr` walks into a nested `ELet` that rebinds the same name, so the inner
 `(store x)` sets the outer `x`'s field. Related, not yet measured: `replace_store` resolves an
 initializer in the environment of the store site, so `(let (x 1) (let (y x) (let (x 2) … (store y))))`

@@ -17,7 +17,9 @@ lines, and a fully located AST now.
 **Architecture.** ✅ Complies: one golden changed, the characterization of the bug, with this reason.
 Fixed the placement half of i-7d2612-ce4c3b: an inner `let` of the same name no longer moves an
 outer variable's field (`ADD.A`, was `ADD.AB`); its golden moved to `bbctests/examples/`. Measured
-the other half, the initializer capture, which the roadmap had as unmeasured: it is real.
+the other half, the initializer capture, which the roadmap had as unmeasured: it is real, and fixed
+it with a uniquify pass (`src/rename.ml`) before tagging — no golden changed; new golden and spec
+`let_capture`.
 **Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
 `behtests/let_shadowing.beh`: cell 1 holds `DAT.F #5, #0` after JMP and ADD (was `#1, #4`).
 

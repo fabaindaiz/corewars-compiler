@@ -187,7 +187,7 @@ let rec compile_expr (e : tag eexpr) (env : env) : emitted list =
   | EExpect _ -> []
 
 let compile_body (e : expr) : emitted list =
-  compile_expr (tag_expr e) empty_env
+  compile_expr (tag_expr (Rename.uniquify e)) empty_env
 
 
 let prelude = "
