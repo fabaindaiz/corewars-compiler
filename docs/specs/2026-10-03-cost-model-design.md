@@ -120,8 +120,8 @@ A *cycle* is one instruction executed by one process; with *n* processes each ad
 |---|---|
 | `length` | cells emitted, epilogue included; reported against MAXLENGTH |
 | `code`, `epilogue` | cells by role |
-| `data` | cells never reached from the entry that hold a variable |
-| `unreachable` | cells never reached from the entry that hold no variable (dead code) |
+| `data` | cells never reached from the entry that hold a variable, or that are a labelled `DAT` (a bomber's `(label bomb) (DAT 0 0)`; since 2026-10-04, i-7d2612-cf8fdb) |
+| `unreachable` | cells never reached from the entry that are not data (dead code) |
 | `nonzero` | cells with a non-zero A or B number: what a `JMZ.F` scan sees |
 | `nonblank` | cells different from `DAT.F $0, $0` (empty core): what a `SEQ.I` scan sees |
 | `boot` | cycles from the entry to the first loop header: min and max over the paths |

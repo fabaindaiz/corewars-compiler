@@ -672,6 +672,14 @@ let test_phase2_threaded_loop_is_one_loop () =
   check range "cycles" (r 2 4) (List.hd m.loops).cycles ;
   check Alcotest.(option string) "closed by the repeat" (Some "repeat") (List.hd m.loops).construct
 
+let test_phase2_labelled_dat_is_data () =
+  let counts src = let m = M.measure (layout_of_src src) in (m.data, m.unreachable) in
+  let pair = Alcotest.(pair int int) in
+  (* core-clear: the pointer's cell and the bomb, (label bomb) (DAT 0 0), are both data *)
+  check pair "clear" (2, 0) (counts (golden_src "bbctests/archetypes/clear.bbc")) ;
+  check pair "a dead MOV is unreachable" (0, 1) (counts "(seq (repeat (NOP)) (label x) (MOV 0 1))") ;
+  check pair "an unlabelled dead DAT is unreachable" (0, 1) (counts "(seq (repeat (NOP)) (DAT 0 0))")
+
 let test_phase2_self_loop_terminates () =
   let is = instrs_of_src "(repeat (seq))" in
   check strings "JMP" [first_label "_REP" is] (targets IJMP is)
@@ -788,6 +796,7 @@ let ocaml_tests = [
     test_case "a user's JMP is not threaded through" `Quick test_phase2_user_jmp_not_followed ;
     test_case "a JMP to itself terminates" `Quick test_phase2_self_loop_terminates ;
     test_case "a threaded jump closes the same loop" `Quick test_phase2_threaded_loop_is_one_loop ;
+    test_case "a labelled DAT never run is data" `Quick test_phase2_labelled_dat_is_data ;
   ] ;
   "interp", [
 
