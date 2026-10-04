@@ -1,0 +1,12 @@
+NAME: an imp for the tiny hill
+DESCRIPTION: (hill tiny): the ;redcode-tiny line and an ;assert of tiny's core and length, which 94b's settings reject; see behtests/hill_tiny_imp.beh
+SRC:
+(program
+  (hill tiny)
+  (MOV (Dir 0) (Dir 1)))
+EXPECTED:
+;redcode-tiny
+;assert CORESIZE==800 && MAXLENGTH==20
+
+  MOV.I  $0     , $1     
+  DAT    $0     , $0     

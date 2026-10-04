@@ -13,6 +13,8 @@ A spec (`behtests/<name>.beh`), one directive per line; a line starting with `#`
     redcode: prog8.red                    or a redcode file, relative to the spec's directory
                                           (what `run_compile.exe --emit-beh` writes); one of the two
     known-failing: i-7d2612-fffa6c        optional: a recorded bug, by its roadmap id
+    hill: tiny                            optional: run under pmars/config/<hill>.opt (default 94b),
+                                          for a warrior compiled with (hill ...) or --hill
     alive N                               a process is still running after N executed instructions
     dead N                                no process is left after N executed instructions
     cell N ADDR TEXT                      after N instructions, core cell ADDR disassembles to TEXT
@@ -52,6 +54,7 @@ class Spec:
     golden: Path | None = None
     redcode: Path | None = None
     known_failing: str | None = None
+    config: Path = CONFIG
     probes: list[tuple[str, list[str]]] = field(default_factory=list)
 
 
@@ -67,6 +70,10 @@ def parse_spec(path: Path) -> Spec:
             spec.redcode = path.parent / line.split(":", 1)[1].strip()
         elif line.startswith("known-failing:"):
             spec.known_failing = line.split(":", 1)[1].strip()
+        elif line.startswith("hill:"):
+            spec.config = ROOT / "pmars" / "config" / (line.split(":", 1)[1].strip() + ".opt")
+            if not spec.config.is_file():
+                raise SystemExit(f"{path}:{n}: no settings for that hill: {spec.config.relative_to(ROOT)}")
         else:
             word, *args = line.split(None, 3 if line.startswith("cell") else 1)
             if word not in ("alive", "dead", "cell") or not args or not args[0].isdigit() or int(args[0]) < 1:
@@ -98,8 +105,8 @@ def pmars_binary() -> str:
     return str(built)
 
 
-def cdb(pmars: str, warrior: Path, commands: str) -> list[str]:
-    run = subprocess.run([pmars, "-@", str(CONFIG), "-e", "-b", str(warrior)],
+def cdb(pmars: str, warrior: Path, commands: str, config: Path = CONFIG) -> list[str]:
+    run = subprocess.run([pmars, "-@", str(config), "-e", "-b", str(warrior)],
                          input=commands + "quit\n", capture_output=True, text=True, timeout=60)
     if run.returncode not in (0, 4):  # 4: cdb `quit`; 3 would be an assembly error
         raise RuntimeError(f"pmars exited {run.returncode}: {run.stderr.strip() or run.stdout.strip()}")
@@ -114,11 +121,11 @@ def squash(text: str) -> str:
     return re.sub(r"\s+", "", text)
 
 
-def check_probe(pmars: str, warrior: Path, word: str, args: list[str]) -> str | None:
+def check_probe(pmars: str, warrior: Path, word: str, args: list[str], config: Path = CONFIG) -> str | None:
     """None when the probe holds, else what was seen instead."""
     n = int(args[0])
     if word in ("alive", "dead"):
-        out = cdb(pmars, warrior, f"skip {n - 1}\ncalc CYCLE\n")
+        out = cdb(pmars, warrior, f"skip {n - 1}\ncalc CYCLE\n", config)
         alive = any(CALC_LINE.match(line) for line in out)
         if alive == (word == "alive"):
             return None
@@ -126,7 +133,7 @@ def check_probe(pmars: str, warrior: Path, word: str, args: list[str]) -> str | 
     if len(args) < 3:
         return "cell needs N ADDR TEXT"
     addr, want = int(args[1]), args[2]
-    out = cdb(pmars, warrior, f"skip {n - 1}\ncalc CYCLE\nlist {addr}\n")
+    out = cdb(pmars, warrior, f"skip {n - 1}\ncalc CYCLE\nlist {addr}\n", config)
     # A dead warrior ends cdb before `list` runs, and the only listing left would be the start-up
     # one: the cycle count is printed only while a process is alive.
     calc = next((i for i, line in enumerate(out) if CALC_LINE.match(line)), None)
@@ -151,7 +158,7 @@ def run_spec(pmars: str, spec: Spec) -> list[str]:
     failures = []
     for word, args in spec.probes:
         try:
-            seen = check_probe(pmars, warrior, word, args)
+            seen = check_probe(pmars, warrior, word, args, spec.config)
         except (RuntimeError, subprocess.TimeoutExpired) as err:
             seen = str(err)
         if seen:

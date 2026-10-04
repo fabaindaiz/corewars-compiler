@@ -1,0 +1,7 @@
+# Runs under pmars/config/tiny.opt (core 800): the imp crosses the whole core in 800 instructions
+# and keeps going; under 94b's settings its ;assert fails and nothing runs.
+golden: bbctests/examples/hill_tiny_imp.bbc
+hill: tiny
+cell 3 3 MOV.I $0, $1
+cell 800 799 MOV.I $0, $1
+alive 2000

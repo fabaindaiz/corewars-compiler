@@ -82,9 +82,8 @@ let test_emit_prog1_stores () =
 
 let test_emit_text_unchanged () =
   List.iter (fun path ->
-    (* a golden may carry a header (constants): compiled as the CLI compiles it *)
-    let src = parse_source (sexp_from_string (golden_src path)) in
-    let text = Cored.Optimize.compile_prog ~consts:src.consts Cored.Metrics.default_policy src.body in
+    (* a golden may carry a header (constants, a hill): compiled as the CLI compiles it *)
+    let text = (Cored.Driver.run ~read:(fun _ -> Some (golden_src path)) ["golden.src"]).out in
     check Alcotest.string path (String.trim (golden_expected path)) (String.trim text))
     (golden_files ())
 
