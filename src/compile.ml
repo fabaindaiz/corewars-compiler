@@ -244,10 +244,17 @@ let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted lis
    same cells, one cycle less each time it is taken (an if at the end of a repeat cost the scanner
    archetype 3 cycles per empty cell, against 2 by hand). Only jumps the compiler generated are
    rewritten, and only through JMPs it generated: a JMP the user wrote, or one carrying a user's
-   label, may have its target changed at run time. A JMP is passed only when the cell before it
+   label, may have its target changed at run time, and one whose B operand moves a pointer (a
+   repeat's data) does more than jump. A JMP is passed only when the cell before it
    falls into it (or the one before that skips into it): the jumps that reach it otherwise all go
    past it, and it would be left dead, still closing its loop. A chain is followed until it repeats
    a label. *)
+(* An operand that predecrements or postincrements moves a pointer each time it is evaluated, even as
+   the B operand of a JMP. *)
+let moves_a_pointer (b : rarg) : bool = match b with
+  | RRef ((RADec | RBDec | RAInc | RBInc), _) | RLab ((RADec | RBDec | RAInc | RBInc), _) -> true
+  | RNone | RRef ((RImm | RDir | RAInd | RBInd), _) | RLab ((RImm | RDir | RAInd | RBInd), _) -> false
+
 let thread_jumps (body : emitted list) : emitted list =
   (* Each instruction with the labels on its cell, in order. *)
   let cells = Array.of_list (List.rev (snd (List.fold_left (fun (pending, acc) (e : emitted) ->
@@ -271,8 +278,8 @@ let thread_jumps (body : emitted list) : emitted list =
   let generated_jmp l = match Hashtbl.find_opt at l with
     | Some i ->
       (match cells.(i) with
-      | ({ instr = INSTR (IJMP, _, RLab (RDir, l'), _); construct = Some _; _ }, labels)
-        when falls_into i && not (List.exists user_label labels) -> Some l'
+      | ({ instr = INSTR (IJMP, _, RLab (RDir, l'), b); construct = Some _; _ }, labels)
+        when falls_into i && not (List.exists user_label labels) && not (moves_a_pointer b) -> Some l'
       | ({ instr = INSTR _ | ILAB _ | ICOM _; _ }, _) -> None)
     | None -> None in
   let rec final seen l = match generated_jmp l with
@@ -301,9 +308,6 @@ let rec peephole (body : emitted list) : emitted list =
     | INSTR ((ISEQ | ISNE | ISLT | ICMP), _, _, _) -> true
     | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
              | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> false) in
-  let moves_a_pointer (b : rarg) = match b with
-    | RRef ((RADec | RBDec | RAInc | RBInc), _) | RLab ((RADec | RBDec | RAInc | RBInc), _) -> true
-    | RNone | RRef ((RImm | RDir | RAInd | RBInd), _) | RLab ((RImm | RDir | RAInd | RBInd), _) -> false in
   let user_label l = not (String.starts_with ~prefix:"_" l) in
   let dead i = match cells.(i) with
     | ({ instr = INSTR ((IJMP | IJMZ | IJMN), _, RLab (RDir, l), b); construct = Some _; stores = []; _ }, labels) ->

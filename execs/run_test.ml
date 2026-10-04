@@ -831,6 +831,17 @@ let test_phase3_peephole_keeps_effects () =
   check ops "a store" [IJMZ; IDAT] (opcodes (chosen "(let (y 1) (seq (if (JN (store y)) (seq)) (DAT 0 0)))"))
 
 
+(* Tests from the phase-3 branch review *)
+let pointer_in_jmp =
+  "(let (x 0) (let (p 0) (let (k 3) (seq (repeat (seq (if (JZ k) (JMP 0)) (SUB 1 k) (if (JN x) (NOP))) (Inc p)) (DAT (store x) (store p)) (DAT (store k) 0)))))"
+
+let test_review3_moving_jmp_not_threaded () =
+  (* the repeat's JMP increments p every iteration: a jump threaded past it would skip that *)
+  let is = chosen pointer_in_jmp in
+  check strings "JMZ" [List.hd (List.rev (List.filter (String.starts_with ~prefix:"_IF")
+    (List.filter_map (fun i -> match i with ILAB l -> Some l | INSTR _ | ICOM _ -> None) is)))] (targets IJMZ is)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -952,6 +963,9 @@ let ocaml_tests = [
     test_case "a user label stops threading" `Quick test_review2_user_label_stops_threading ;
     test_case "a generated label does not name data" `Quick test_review2_generated_label_is_not_a_name ;
     test_case "a unary cond with too many arguments" `Quick test_review2_unary_arity_message ;
+  ] ;
+  "review3", [
+    test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
   ] ;
   "phase3", [
     test_case "a unary while is rotated" `Quick test_phase3_unary_while_rotated ;

@@ -1,0 +1,5 @@
+# Three laps (k = 3, 2, 1), each ending on the repeat's JMP $_REP6, >_LET2, which increments p (the
+# B-field of cell 6); then k = 0 and the warrior stays on JMP #0. p must be 3.
+golden: bbctests/examples/repeat_data_moves_pointer.bbc
+cell 100 6 DAT.F #0, #3
+alive 100

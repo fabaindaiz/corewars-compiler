@@ -1,0 +1,30 @@
+NAME: a repeat whose JMP moves a pointer
+DESCRIPTION: (repeat body (Inc p)): the JMP's B operand increments p every iteration, so no jump may be threaded past that JMP; see behtests/repeat_data_moves_pointer.beh
+SRC:
+(let (x 0)
+  (let (p 0)
+    (let (k 3)
+      (seq
+        (repeat
+          (seq (if (JZ k) (JMP 0)) (SUB 1 k) (if (JN x) (NOP)))
+          (Inc p))
+        (DAT (store x) (store p))
+        (DAT (store k) 0)))))
+EXPECTED:
+;redcode-94b
+
+_REP6 
+  JMN.A  $_IF9  , $_LET3 
+  JMP    #0     , #0     
+_IF9  
+  SUB.A  #1     , $_LET3 
+  JMZ.A  $_IF14 , $_LET1 
+  NOP    #0     , #0     
+_IF14 
+  JMP    $_REP6 , >_LET2 
+_LET1 
+_LET2 
+  DAT    #0     , #0     
+_LET3 
+  DAT    #3     , #0     
+  DAT    $0     , $0     
