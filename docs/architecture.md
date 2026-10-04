@@ -34,7 +34,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 |---|---|---|
 | `src/parse.ml` | s-expression → AST; the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
 | `src/ast.ml` | the annotated AST `'a eexpr`, `loc`, `meta = { tag; loc }`, the one user error `Error`; `tag_expr` numbers every node in pre-order from 1 | `meta eexpr` (tags feed label names) |
-| `src/rename.ml` | `uniquify`: every `let`-bound variable gets a name no other binder uses (`x`, `x#1`, …), so initializers resolve where they are bound; the tree keeps its shape, so tags are unchanged | `Ast.expr` |
+| `src/rename.ml` | `uniquify`: every `let`-bound variable gets a name no other binder uses (`x`, then `_x#1`, … in the reserved `_` space, so no user name can equal one; messages show the original), so initializers resolve where they are bound; the tree keeps its shape, so tags are unchanged | `Ast.expr` |
 | `src/analyse.ml` | per `let`: finds the field (`PA`/`PB`) where `(store x)` sits | extends `penv` |
 | `src/lib.ml` | environments `aenv` (name → initializer), `penv` (name → field), `lenv` (name → label); `jump_label` | `env` |
 | `src/util.ml` | operand lowering through three small IRs: `darg` (number or label) → `carg` (constant, label, variable or pointer) → `Red.rarg`; and modifier choice `opmod` → `Red.rmod` | `Red.rarg`, `Red.rmod` |

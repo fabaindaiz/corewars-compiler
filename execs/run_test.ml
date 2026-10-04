@@ -597,6 +597,16 @@ let test_review1_unary_jump_uses_variable_field () =
       ("(let (x 2) (seq (DAT (store x) 0) (JMZ (Dir -1) (# x))))", RB) ] (* #x is the B-number: .B *)
 
 
+let test_review1_user_name_like_a_fresh_one () =
+  let o = drive [("p.src", "(let (x 1) (seq (JMP (Dir 4)) (DAT (store x) 0) (let (x 2) (let (x#1 3) (seq (DAT (store x) 0) (DAT (store x#1) 0))))))")] ["p.src"] in
+  check Alcotest.(pair string int) "compiles" ("", 0) (o.err, o.code)
+
+let test_review1_messages_name_the_user's_variable () =
+  check Alcotest.string "original name"
+    "p.src:1:46: error: variable `x` is used but no (store x) places it\n"
+    (error_of "(let (x 1) (seq (DAT (store x) 0) (let (x 2) (MOV 0 x))))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -695,6 +705,8 @@ let ocaml_tests = [
   ] ;
   "review1", [
     test_case "a user JMZ/JMN/DJN uses its variable's field" `Quick test_review1_unary_jump_uses_variable_field ;
+    test_case "a user name like a fresh one" `Quick test_review1_user_name_like_a_fresh_one ;
+    test_case "messages name the user's variable" `Quick test_review1_messages_name_the_user's_variable ;
   ] ;
   "interp", [
 

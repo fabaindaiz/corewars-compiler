@@ -34,7 +34,7 @@ let compile_label (arg : arg) (env : env) : instruction list =
     let _, _, lenv = env in
     (match List.assoc_opt s lenv with
     | Some l -> [ILAB (l)]
-    | None -> error (sprintf "(store %s): %s is not a variable of an enclosing let" s s) )
+    | None -> let s = Rename.original s in error (sprintf "(store %s): %s is not a variable of an enclosing let" s s) )
   | _ -> []
 
 

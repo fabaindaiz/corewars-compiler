@@ -26,12 +26,12 @@ let extend_lenv (x : string) (label : string) (lenv : lenv) : lenv =
 let translate_aenv (x : string) (aenv : aenv) : arg =
   match List.assoc_opt x aenv with
   | Some arg -> arg
-  | None -> error (sprintf "(store %s): %s is not a variable of an enclosing let" x x)
+  | None -> let x = Rename.original x in error (sprintf "(store %s): %s is not a variable of an enclosing let" x x)
 
 let translate_penv (x : string) (penv : penv) : place =
   match List.assoc_opt x penv with
   | Some place -> place
-  | None -> error (sprintf "variable `%s` is used but no (store %s) places it" x x)
+  | None -> let x = Rename.original x in error (sprintf "variable `%s` is used but no (store %s) places it" x x)
 
 let translate_lenv (x : string) (lenv : lenv) : string =
   match List.assoc_opt x lenv with

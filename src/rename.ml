@@ -9,6 +9,14 @@ open Ast
 
 type renames = (string * string) list
 
+(* The name the user wrote, for messages: _x#1 is x. *)
+let original (s : string) : string =
+  if String.length s > 1 && s.[0] = '_' then
+    match String.rindex_opt s '#' with
+    | Some i -> String.sub s 1 (i - 1)
+    | None -> s
+  else s
+
 let rename_name (env : renames) (s : string) : string =
   match List.assoc_opt s env with Some s' -> s' | None -> s
 
@@ -50,13 +58,14 @@ let check_single_stores (binders : (string * (string * loc)) list) (e : expr) : 
       raise (Error (Some loc, sprintf "variable `%s` is stored twice; a let variable lives in one cell" original)))
     (List.rev binders)
 
-(* The first binder of a name keeps it; later ones become x#1, x#2, ... *)
+(* The first binder of a name keeps it; later ones become _x#1, _x#2, ...: user names may not start
+   with "_", so a fresh name never equals one the user wrote. *)
 let uniquify (e : expr) : expr =
   let used = Hashtbl.create 8 and binders = ref [] in
   let fresh x =
     let n = Option.value (Hashtbl.find_opt used x) ~default:0 in
     Hashtbl.replace used x (n + 1) ;
-    if n = 0 then x else sprintf "%s#%d" x n in
+    if n = 0 then x else sprintf "_%s#%d" x n in
   let rec go env (e : expr) : expr = match e with
     | EComment _ | ELabel _ | EExpect _ -> e
     | EPrim2 (op, m, a1, a2, loc) -> EPrim2 (op, m, rename_arg env a1, rename_arg env a2, loc)
