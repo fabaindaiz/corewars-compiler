@@ -123,12 +123,13 @@ def check_probe(pmars: str, warrior: Path, word: str, args: list[str]) -> str | 
     addr, want = int(args[1]), args[2]
     out = cdb(pmars, warrior, f"skip {n - 1}\nlist {addr}\n")
     cell = re.compile(rf"^(?:\(cdb\) )?0*{addr}\s+(\S.*)$")
-    for line in out:
-        m = cell.match(line)
-        if m and not CALC_LINE.match(line):
-            got = m.group(1).strip()
-            return None if squash(got) == squash(want) else f"cell {addr} is `{got}`"
-    return f"no listing of cell {addr} (the warrior may be dead after {n} instructions)"
+    # The last listing of the cell is `list`'s: cdb also prints the instruction at the start (cell 0,
+    # before anything runs) and after `skip`, which can be the same address.
+    listed = [m.group(1).strip() for line in out if (m := cell.match(line)) and not CALC_LINE.match(line)]
+    if not listed:
+        return f"no listing of cell {addr} (the warrior may be dead after {n} instructions)"
+    got = listed[-1]
+    return None if squash(got) == squash(want) else f"cell {addr} is `{got}`"
 
 
 def run_spec(pmars: str, spec: Spec) -> list[str]:

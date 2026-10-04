@@ -1,0 +1,3 @@
+# prog1 moves its own pointer: after MOV and ADD.AB #4, cell 0's B-number has gone from 3 to 7.
+golden: bbctests/examples/prog1.bbc
+cell 2 0 MOV.I $-1, $7
