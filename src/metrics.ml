@@ -16,6 +16,8 @@ type loop_metrics = {
   construct : string option;
   cycles : range;
   overhead : range;
+  own : range;            (* control instructions of the loop's own construct, per iteration *)
+  test : opcode option;   (* the loop construct's own test, if it has one *)
   exit : int option;
 }
 
@@ -30,6 +32,7 @@ type t = {
   data : int;
   epilogue : int;
   unreachable : int;
+  dead : (int * tag option) list;  (* the unreachable cells, with the node that emitted each *)
   nonzero : int;
   nonblank : int;
   boot : range option;
@@ -115,8 +118,14 @@ let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let exit = Option.map (fun r -> r.min) (range_of exits) in
   let zero = { min = 0; max = 0 } in
   let label = match p.cells.(l.header).labels with x :: _ -> Some x | [] -> None in
+  let own_control = lap (fun i -> if own i && control p.cells.(i).op then 1 else 0) in
+  let test = List.find_map (fun i -> match p.cells.(i).op with
+    | (IJMZ | IJMN | IDJN | ISEQ | ISNE | ISLT | ICMP) as op when own i -> Some op
+    | IJMZ | IJMN | IDJN | ISEQ | ISNE | ISLT | ICMP | IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB
+    | IMUL | IDIV | IMOD | ILDP | ISTP -> None) (List.sort_uniq compare (l.header :: l.body)) in
   { loop = l; label; node = origin; construct;
-    cycles = Option.value cycles ~default:zero; overhead = Option.value overhead ~default:zero; exit }
+    cycles = Option.value cycles ~default:zero; overhead = Option.value overhead ~default:zero;
+    own = Option.value own_control ~default:zero; test; exit }
 
 (* An immediate A operand makes the instruction itself the A-value (ICWS'94), so its own numbers
    are the divisors: .A/.AB divide by its A-number, .B/.BA by its B-number, .F/.X/.I by both. *)
@@ -239,6 +248,8 @@ let measure (p : program) : t =
     epilogue = count (fun c -> c.role = Epilogue);
     data = count (fun c -> c.role = Code && not seen.(c.pos) && is_data c);
     unreachable = count (fun c -> c.role = Code && not seen.(c.pos) && not (is_data c));
+    dead = List.filter_map (fun c ->
+        if c.role = Code && not seen.(c.pos) && not (is_data c) then Some (c.pos, c.origin) else None) cells;
     nonzero = count (fun c -> c.a.value <> 0 || c.b.value <> 0);
     nonblank = count (fun c -> not (blank c));
     boot;

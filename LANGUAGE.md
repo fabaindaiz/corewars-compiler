@@ -218,4 +218,14 @@ Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` w
 - (dead N) no process is left after N executed instructions
 - (cell ADDR "TEXT" N) after N instructions, cell ADDR holds the instruction TEXT
 
+### Warnings
+
+The compiler warns, on standard error as `file:line:column: warning: ...`, where the compiled warrior pays a cost that could be removed, and says what would remove it. Which ones depend on the policy (`(optimize ...)`):
+
+- with `speed` in the policy: a loop that spends more control instructions per iteration than its construct needs, when a faster variant exists and the policy declined it for an objective ranked higher (a `while` kept with its test at the top under `boot speed`);
+- with `size` or `stealth`: cells never executed that hold no data (dead code), unless a jump the compiler cannot follow might reach them;
+- always: a pointer whose step leaves cells unvisited (a step of 4 visits 2000 of 8000), unless its loop states the step with `(expect (step k))` or `(expect (covers-core))`.
+
+`run_compile.exe --warn=all` gives every warning whatever the policy, `--warn=none` none. Warnings never stop the compilation.
+
 `run_compile.exe --report` prints the measured metrics and predictions on standard error, with the optimizations the policy chose (`optimizations: rotate-unary`, or `none`); `--report=json` prints them as JSON instead of the redcode. Any compile error prints `file:line:column: error: ...` on standard error and exits with code 1; an internal compiler error exits with code 2. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).

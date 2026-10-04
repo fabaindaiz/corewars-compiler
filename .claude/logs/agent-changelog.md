@@ -31,7 +31,16 @@ and in RED: equal cycles, 9 cells against 8, Wilkies 76 and 76 against 76 and 77
 probed one instruction too late (I counted an extra step), and a probe moved one step earlier still
 passed: the state it probed persists. The spec now also probes that each next cell is still empty
 one instruction before, which a mutation shows it tells apart.
-**Left undone.** Phase 4's warnings, the smaller pending items.
+Phase 4, warnings driven by the policy (d-7d2612-4d7c73, new module `Warnings`): extra control
+per iteration under `speed`, dead code under `size`/`stealth`, steps that leave cells unvisited
+always, `--warn=all|none`. My first version warned on any loop above its construct's minimum, and a
+test from the phase-2 review caught a false positive: a `while` at the end of a `repeat` is kept
+unrotated *because* rotating it is slower for the whole program. The warning now fires only when a
+measured variant is faster and the policy declined it (`Optimize.measure_all`, `Optimize.pick`).
+Two driver tests changed their expected standard error for a stated reason: prog1's loop moves its
+pointer 4 cells a lap and earns the step warning. My hand-counted column for one warning was wrong
+(45, is 48); computed with a script before running this time, as i-7d2612-340f22 proposes.
+**Left undone.** The smaller pending items.
 
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
 

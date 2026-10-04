@@ -435,7 +435,8 @@ let prog1_red = compile_prog (expr_of (example "prog1")) ^ "\n"
 
 let test_driver_plain () =
   let o = drive [("p.src", prog1_src)] ["p.src"] in
-  check Alcotest.(triple string string int) "out, err, code" (prog1_red, "", 0) (o.out, o.err, o.code)
+  (* prog1's loop moves its pointer 4 cells a lap: the one warning it earns *)
+  check Alcotest.(triple string string int) "out, err, code" (prog1_red, "p.src:5:5: warning: a pointer here advances 4 cells per iteration and visits only 2000 of 8000 cells; write (expect (step 4)) if that is meant\n", 0) (o.out, o.err, o.code)
 
 let test_driver_report_on_stderr () =
   let o = drive [("p.src", prog1_src)] ["--report"; "p.src"] in
@@ -452,7 +453,7 @@ let test_driver_expectation_fails () =
   check Alcotest.(triple string string int) "error" ("", "expect length <= 3: the warrior is 4 cells\n", 1) (o.out, o.err, o.code) ;
   let w = drive [("p.src", src)] ["--expect=warn"; "p.src"] in
   check Alcotest.(triple string string int) "warning"
-    (prog1_red, "warning: expect length <= 3: the warrior is 4 cells\n", 0) (w.out, w.err, w.code)
+    (prog1_red, "p.src:5:5: warning: a pointer here advances 4 cells per iteration and visits only 2000 of 8000 cells; write (expect (step 4)) if that is meant\nwarning: expect length <= 3: the warrior is 4 cells\n", 0) (w.out, w.err, w.code)
 
 let test_driver_compile_error_is_clean () =
   let o = drive [("p.src", "(program (expect (cycles < 3)) (MOV 0 1))")] ["p.src"] in
@@ -922,6 +923,49 @@ let test_consts_errors () =
     (contains (err "(program (const top 1) (seq (label top) (DAT 0 0)))") "`top` is a constant")
 
 
+(* Tests for phase 4: warnings, driven by the policy *)
+let err_of ?(args = []) (src : string) : string = (drive [("p.src", src)] (args @ ["p.src"])).err
+
+let warnings_in (err : string) : string list =
+  List.filter (fun l -> contains l ": warning: ") (String.split_on_char '\n' err)
+
+let test_warnings_kept_rotation () =
+  let boot_first = "(program (optimize boot speed) " ^ countdown ^ ")" in
+  (match warnings_in (err_of boot_first) with
+  | [w] ->
+    check Alcotest.bool "at the while" true (String.starts_with ~prefix:"p.src:1:48: warning:" w) ;
+    check Alcotest.bool "says what would remove it" true (contains w "rotat")
+  | ws -> Alcotest.failf "one warning expected, got %d" (List.length ws)) ;
+  check Alcotest.(list string) "rotated under speed first: none" [] (warnings_in (err_of countdown))
+
+let bomber = "(let (p 0) (seq (repeat (seq (ADD 4 p) (MOV 0 (Ind p)) %s)) (DAT 0 (store p))))"
+
+let test_warnings_step () =
+  let src extra = Printf.sprintf (Scanf.format_from_string bomber "%s") extra in
+  (match warnings_in (err_of ~args:["--optimize"; "size"] (src "")) with
+  | [w] -> check Alcotest.bool "visits 2000 of 8000" true (contains w "2000 of 8000")
+  | ws -> Alcotest.failf "one warning expected, got %d" (List.length ws)) ;
+  check Alcotest.(list string) "stated with (expect (step 4)): none" [] (warnings_in (err_of (src "(expect (step 4))")))
+
+let test_warnings_dead_code () =
+  let dead = "(seq (repeat (NOP)) (MOV 0 1))" in
+  (match warnings_in (err_of dead) with
+  | [w] -> check Alcotest.bool "dead code at the MOV" true (String.starts_with ~prefix:"p.src:1:21: warning:" w && contains w "never executed")
+  | ws -> Alcotest.failf "one warning expected, got %d" (List.length ws)) ;
+  check Alcotest.(list string) "size not in the policy: none" [] (warnings_in (err_of ~args:["--optimize"; "speed"] dead)) ;
+  check Alcotest.(list string) "--warn=none" [] (warnings_in (err_of ~args:["--warn=none"] dead)) ;
+  check Alcotest.int "--warn=all adds it back" 1 (List.length (warnings_in (err_of ~args:["--warn=all"; "--optimize"; "speed"] dead)))
+
+let test_warnings_archetypes_clean () =
+  (* the archetypes are tight: under the default policy only steps that leave cells unvisited,
+     which they do not state, are worth saying: the dwarf's and stone's mod 4, the scanner's 10
+     (800 cells), the paper's copy pointer *)
+  List.iter (fun (name, n) ->
+    let src = read_file ("archetypes/" ^ name ^ ".src") in
+    check Alcotest.int name n (List.length (warnings_in (err_of src))))
+    [("imp", 0); ("dwarf", 1); ("stone", 1); ("clear", 0); ("scanner", 1); ("seqscan", 0); ("paper", 1); ("impring", 0)]
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1048,6 +1092,12 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "warnings", [
+    test_case "a while the policy kept unrotated" `Quick test_warnings_kept_rotation ;
+    test_case "a step that leaves cells unvisited" `Quick test_warnings_step ;
+    test_case "dead code, when size is in the policy" `Quick test_warnings_dead_code ;
+    test_case "the archetypes" `Quick test_warnings_archetypes_clean ;
   ] ;
   "consts", [
     test_case "(const name n) is an EQU before the code" `Quick test_consts_equ ;

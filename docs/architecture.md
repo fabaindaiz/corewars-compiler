@@ -48,11 +48,12 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | `src/optimize.ml` | measure and choose (d-7d2612-6b110b): compiles the program once per combination of `Compile.options`, measures each and keeps the one the policy prefers, ties to the fewest transformations; the driver and the `compare` suite compile through it | `Compile.options`, the chosen `emitted list` and its `Metrics.t` |
 | `src/metrics.ml` | static metrics, step and counter predictions, the optimization policy, text and JSON reports | `Metrics.t` |
 | `src/expect.ml` | collects `(expect ...)` with their enclosing loop, checks the static ones, writes the execution ones as a behaviour spec | `Expect.outcome`, `.beh` text |
+| `src/warnings.ml` | the cost warnings (d-7d2612-4d7c73): from the chosen variant's metrics, whether a faster variant exists, and the expectations, each warning at the location of the node that emitted the cost | `Warnings.warning list` |
 | `src/driver.ml` | the command line as a function: arguments in; standard output, standard error, files to write and exit code out; an `Ast.Error` becomes `file:line:col: error: ...` and exit 1, a `Failure` an internal error and exit 2 | `Driver.output` |
 | `src/red.ml` | the Redcode target: opcodes, modes, modifiers, and the pretty-printer that fixes the column padding | text |
 
 **Dependency direction:** `red` ← `ast` ← `consts` ← `rename` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
-← `optimize` ← `expect` ← `driver`; `parse` depends only on `ast`. `execs/run_compile.ml` only performs what
+← `optimize` ← `expect` ← `warnings` ← `driver`; `parse` depends only on `ast`. `execs/run_compile.ml` only performs what
 `Driver.run` returns. dune rejects cycles, so the direction cannot invert silently; a new module states where it
 sits in this chain.
 

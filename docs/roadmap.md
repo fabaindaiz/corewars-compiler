@@ -305,7 +305,9 @@ threading in the compiler, which scores 54 and 58.
 Once errors have locations and the optimizer knows what it can do, the warnings can say where a cost is and what would remove it.
 
 ### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
-**State.** Planned. Warnings for possible slowdowns and possible optimizations, from the metrics:
+**State.** Done (s-7d2612-333abd): warnings driven by the policy (d-7d2612-4d7c73), `--warn=all|none`.
+Not built: a warning for compiler overhead above a construct's minimum *outside* the loop's own
+construct (an `if` inside a loop costs its test, which the user wrote). Before: Warnings for possible slowdowns and possible optimizations, from the metrics:
 an extra instruction per iteration, compiler overhead above a construct's minimum, a step whose gcd
 with CORESIZE leaves cells unvisited, unreachable cells.
 **What is already in its favour.** i-7d2612-aeab0f gives every number and the construct that
