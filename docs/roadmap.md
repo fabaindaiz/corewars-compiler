@@ -43,6 +43,14 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
+**Phase 3 is built** (s-7d2612-f082c8, branch `feat/phase-3` on `feat/phase-2`, neither merged):
+optional transformations are chosen by measuring each under the policy (d-7d2612-6b110b); a unary
+`while` is rotated (2 cycles per iteration around one instruction, was 3); `(repeat body (store p))`
+keeps a variable in the loop's `JMP` (the scanner archetype is 6 cells, the hand-written count); a
+generated jump to the next cell is removed. **Next:** phase 2's operator design (i-7d2612-7eadd5:
+the indirect-use default, constants and label arithmetic for the imp spiral and quickscan) and
+phase 4's warnings.
+
 **Phase 2 has started** (s-7d2612-14641b): seven archetypes are written in RED and measured against
 hand-written forms, and all seven now match them in cycles per iteration. On the user's decisions,
 jump threading closed the scanner's gap (d-7d2612-3f3f32), conditions accept a modifier so a SEQ
