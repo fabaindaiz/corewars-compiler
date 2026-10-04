@@ -33,8 +33,10 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Phase 1 is complete** (s-7d2612-2c7e4d): every recorded correctness defect is fixed, `bbctests/known-bugs/`
-is empty, errors carry `file:line:col`, and generated labels are reserved. **Next:** phase 2, the
+**Phase 1 is complete** (s-7d2612-2c7e4d): the recorded correctness defects are fixed, errors carry
+`file:line:col`, and generated labels are reserved. Its branch review found one more, recorded with a
+known-failing spec for phase 2's operator design (i-7d2612-9efd00), and five smaller gaps, listed
+under phase 1 below. **Next:** phase 2, the
 classic archetypes written in RED as the acceptance suite (i-7d2612-34b61d).
 
 ## Phase 1 — Correctness, before the output changes
@@ -144,6 +146,19 @@ which the default also gives); any golden with `ADD`/`SLT` on two references.
 **Decided** (2026-10-03, user): adopt the ICWS'94 table, and consider simple and compound
 operators in RED that translate to different modifiers or sequences. Built in subproject C
 (i-7d2612-7eadd5); at least `prog3.bbc` and `prog5.bbc` change (`ADD.I #1, #1`, `SUB.I`).
+
+### Smaller gaps from the phase-1 review · i-7d2612-0568a1
+**State.** Planned. Each fails loudly or only in unusual input; none miscompiles silently.
+- pMARS's predefined symbols (`CORESIZE`, `MAXLENGTH`, `MAXPROCESSES`, `MAXCYCLES`, `MINDISTANCE`,
+  `VERSION`, `WARRIORS`, `ROUNDS`, `PSPACESIZE`, case-sensitive) and `CURLINE` are accepted as labels;
+  pMARS then rejects the warrior.
+- `LANGUAGE.md` documents labels as `[A-Za-z][A-Za-z0-9_]*`, but nothing enforces it (`a-b`, `9`,
+  `x#1` are emitted verbatim).
+- Error positions: an s-expression syntax error prints `parse error at L:C` with a 0-based column and
+  not as `file:line:col:`; "stored twice" points at the `let`, not the second store; a condition and
+  its body are compiled right to left, so an error in both reports the body; the long-line error has
+  no location.
+- `Parse.locations` is never cleared (harmless at today's sizes; clear it per parse).
 
 ## Phase 2 — Expressiveness: the archetypes as the acceptance suite
 

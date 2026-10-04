@@ -40,6 +40,15 @@ every line and so failed on the unchanged `MOV.I`s; narrowed to `ADD`/`SUB`. The
 first comparison failed on every original golden: they end without the last line's padding, the
 newer ones keep it; the comparison now keeps each file's own ending. Two column numbers in the
 located-error tests were miscounted by hand (19 for 18) and corrected before the implementation.
+**Review.** A fresh-context review of the branch (all ten commits gated in a worktree) found one
+critical defect I introduced: with the `.I` fallback gone, a user-written `DJN x` / `JMN x` with `x`
+in an A-field became `.B` and silently stopped touching `x`; fixed (`jump_modifier`, also making
+`#x` use `.B`), with spec `user_djn_afield`. Four more were fixed test-first: fresh names from
+`uniquify` could equal a user's `x#1` (now `_x#1`); `--report` counted the impossible fall-through of
+`SNE #0, #1`; a `cell` probe passed on a dead warrior; a `(store x)` in a condition never defined its
+label (and on the left of `GT` was placed in the wrong field). A variable next to a plain reference
+is recorded as a known bug (i-7d2612-9efd00); five smaller gaps went to the roadmap. Two more column
+counts in new tests were wrong by hand and corrected before the code.
 **Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
 `behtests/let_shadowing.beh`: cell 1 holds `DAT.F #5, #0` after JMP and ADD (was `#1, #4`).
 

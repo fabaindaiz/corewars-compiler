@@ -133,7 +133,8 @@ type meta = { tag : tag; loc : loc }
 type source = { optimize : string list option; expects : expectation list; body : expr }
 
 (* Every node gets a tag in pre-order from 1; labels are named after tags, so this numbering is
-   part of the output and must not change (comments and expectations take none). *)
+   part of the output and must not change. A comment takes none itself, but as an element of a seq
+   it advances the count like any element; an expectation takes none anywhere. *)
 let rec tag_expr_help (e : expr) (cur : tag) : (meta eexpr * tag) =
   match e with
   | EComment (s) ->
