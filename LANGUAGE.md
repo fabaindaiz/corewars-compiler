@@ -195,10 +195,10 @@ A file may wrap its single body expression in an optional header. A file without
   body)
 ```
 
-- (program items) the header: any number of `optimize`, `expect` and `const` items, and exactly one body expression
+- (program items) the header: any number of `optimize`, `expect`, `const` and `strategy` items, at most one `hill`, `name` and `author`, and exactly one body expression
 - (const name value) a constant (see *Constants and expressions*)
 - (hill key) the hill the warrior is written for: `94b` (the default), `94nop`, `94`, `94x`, `tiny`, `nano`. It sets the `;redcode-<key>` line, adds `;assert CORESIZE==… && MAXLENGTH==…`, measures on that core and length, rejects a warrior longer than the hill allows, and rejects `LDP`/`STP` on `94nop` (no p-space). `run_compile.exe --hill KEY` overrides it.
-- (name words ...), (author words ...), (strategy words ...) emitted as `;name`, `;author`, `;strategy` lines, only when written (the compiler never invents an author); `strategy` may repeat
+- (name words ...), (author words ...), (strategy words ...) emitted as `;name`, `;author`, `;strategy` lines, only when written (the compiler never invents an author); `strategy` may repeat. Each is one line of words: an empty one, or one with a line break, is an error
 - (optimize objectives) at least one objective, in the order in which the compiler weighs its metrics: `speed` (cycles per loop iteration), `size` (warrior length), `stealth` (cells a scanner can see), `boot` (cycles before the first loop). The default is `speed size`; `run_compile.exe --optimize size,speed` overrides the header. The compiler compiles each combination of its optional transformations, measures them and keeps the one the policy prefers.
 
 ### Expectations (expect)

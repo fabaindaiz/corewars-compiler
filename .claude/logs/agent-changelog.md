@@ -43,6 +43,12 @@ Koenigstuhl's recursive scores (biased about +30 points, one way); `--hill` hung
 spec 94b's settings reject; two specs passed with their construct broken (a `while` whose exit
 loops back, a missing `SPL`): the `while` programs now mark their exit (goldens changed for that
 reason) and the SPL spec probes instruction 2. My hand counts were wrong twice more on the way.
+Minor review findings fixed: `(expect (step k))` compares modulo the hill's core; header items
+are one line of words each (a line break in `(name ...)` put redcode into the output), at most one
+`hill`, `name` and `author`; `--emit-beh` writes the hill; `tools/bench.py` closes stdin, skips
+self-play, survives timeouts and partial downloads, and records how many opponents it counted. A
+command bundling an edit with `git stash list` was refused whole again (i-7d2612-51fe9d, its fifth
+time).
 **Left undone.** Compile-time repetition (the quickscan, the macro layer); i-7d2612-e98368; i-7d2612-e725ef; a Silk-style
 paper; the four process proposals of s-7d2612-3f3b23 (none scheduled).
 

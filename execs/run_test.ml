@@ -1110,6 +1110,19 @@ let test_review5_step_modulo_core () =
   check Alcotest.int "3044 on tiny" 0 (drive [("p.src", tiny)] ["p.src"]).code
 
 
+let test_review5_header_items () =
+  let err src = error_of src in
+  check Alcotest.bool "a newline cannot reach the output" true
+    (contains (err "(program (name \"x\n  JMP 0\") (MOV 0 1))") "one line") ;
+  check Alcotest.bool "an empty word" true (contains (err "(program (author \"\") (MOV 0 1))") "an (author ...) needs words") ;
+  check Alcotest.bool "no words" true (contains (err "(program (author) (MOV 0 1))") "an (author ...) needs words") ;
+  check Alcotest.bool "a second name" true (contains (err "(program (name a) (name b) (MOV 0 1))") "(name ...) is given twice") ;
+  check Alcotest.bool "a second hill" true (contains (err "(program (hill 94b) (hill tiny) (MOV 0 1))") "(hill ...) is given twice") ;
+  check Alcotest.(list string) "strategy may repeat" [";strategy one"; ";strategy two"]
+    (List.filter (fun l -> String.starts_with ~prefix:";strategy" l)
+       (String.split_on_char '\n' (out_of "(program (strategy one) (strategy two) (MOV 0 1))")))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1240,6 +1253,7 @@ let ocaml_tests = [
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;
+    test_case "what a header item may hold" `Quick test_review5_header_items ;
   ] ;
   "hills", [
     test_case "a hill from the header or the flag" `Quick test_hills_header_and_flag ;

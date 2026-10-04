@@ -261,8 +261,19 @@ let parse_source (sexp : sexp) : source =
           | `Atom s -> s
           | `List _ -> fail o (sprintf "Not an objective: %s" (to_string o))) os)
       | `List [`Atom "expect"; e] -> expects := parse_expectation e :: !expects
-      | `List [`Atom "hill"; `Atom h] -> hill := Some h
-      | `List (`Atom ("name" | "author" | "strategy" as k) :: ws) when ws <> [] -> meta := (k, words item ws) :: !meta
+      | `List [`Atom "hill"; `Atom h] ->
+        if !hill <> None then fail item "(hill ...) is given twice" ;
+        hill := Some h
+      | `List (`Atom ("name" | "author" | "strategy" as k) :: ws) ->
+        let a = if k = "author" then "an" else "a" in
+        let text = words item ws in
+        (* each item is one comment line in the output: an empty one says nothing, and a line break
+           would put its words outside the comment, as redcode *)
+        if String.trim text = "" then fail item (sprintf "%s (%s ...) needs words" a k) ;
+        if String.exists (fun c -> Char.code c < 32) text then
+          fail item (sprintf "%s (%s ...) is one line: no line breaks or control characters" a k) ;
+        if k <> "strategy" && List.mem_assoc k !meta then fail item (sprintf "(%s ...) is given twice" k) ;
+        meta := (k, text) :: !meta
       | `List [`Atom "const"; `Atom n; v] ->
         let n = label_name item n in
         if List.mem_assoc n !consts then fail item (sprintf "constant `%s` is defined twice" n) ;
