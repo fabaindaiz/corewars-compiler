@@ -544,6 +544,21 @@ let test_phase1_tags_unchanged_by_locations () =
   check Alcotest.(option int) "prog8's while" (Some 9) (Option.map (fun (m : meta) -> m.tag) (while_meta (tag_expr (expr_of (example "prog8")))))
 
 
+let error_of (src : string) : string = (drive [("p.src", src)] ["p.src"]).err
+
+let test_phase1_reserved_prefix_rejected () =
+  check Alcotest.string "label" "p.src:1:6: error: `_x`: names starting with `_` are reserved for the compiler\n"
+    (error_of "(seq (label _x) (JMP 0))")
+
+let test_phase1_pmars_keyword_label_rejected () =
+  check Alcotest.string "label END" "p.src:1:6: error: `END` is a pMARS keyword and cannot be a label\n"
+    (error_of "(seq (label END) (JMP 0))")
+
+let test_phase1_double_store_rejected () =
+  check Alcotest.string "two stores" "p.src:1:1: error: variable `x` is stored twice; a let variable lives in one cell\n"
+    (error_of "(let (x 1) (seq (DAT (store x) 0) (DAT 0 (store x))))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -633,6 +648,9 @@ let ocaml_tests = [
     test_case "a parse error says where" `Quick test_phase1_parse_error_located ;
     test_case "a compile error says where" `Quick test_phase1_compile_error_located ;
     test_case "an error on an atom says where" `Quick test_phase1_atom_error_located ;
+    test_case "names starting with _ are reserved" `Quick test_phase1_reserved_prefix_rejected ;
+    test_case "a pMARS keyword is not a label" `Quick test_phase1_pmars_keyword_label_rejected ;
+    test_case "a variable is stored once" `Quick test_phase1_double_store_rejected ;
     test_case "tags are numbered as before" `Quick test_phase1_tags_unchanged_by_locations ;
   ] ;
   "interp", [

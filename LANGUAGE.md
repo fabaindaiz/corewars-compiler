@@ -52,7 +52,7 @@ Addresing modes are used to specify how the argument is used in the instruction.
 - (Inc var) | (> var) indirect addresing to var and increment var
 - (store var) | (! var) store var value in this place (field is automatic)
 
-Every `let` variable needs exactly one `(store x)` in its body: the cell holding it is labelled where the store is. With no store its label is undefined; with two it is defined twice. Neither is reported by the compiler today ([roadmap](docs/roadmap.md), i-7d2612-425c66).
+Every `let` variable needs exactly one `(store x)` in its body: the cell holding it is labelled where the store is. Two stores are a compile error; a variable used with no store is a compile error at the use. Names (variables and labels) may not start with `_`: those are reserved for the labels the compiler generates.
 
 
 ## Conditions (cond)

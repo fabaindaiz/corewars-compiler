@@ -36,6 +36,23 @@ end)
 (* A user error about [sexp], located when the reader knows where it is. *)
 let fail (sexp : sexp) (msg : string) : 'a = raise (Error (loc_of sexp, msg))
 
+(* Names starting with "_" belong to the labels the compiler generates (_LET1, _WHI9, ...), so a
+   user name can never collide with one. *)
+let user_name (sexp : sexp) (s : string) : string =
+  if String.length s > 0 && s.[0] = '_' then
+    fail sexp (sprintf "`%s`: names starting with `_` are reserved for the compiler" s)
+  else s
+
+(* pMARS reads these as opcodes or pseudo-opcodes in any case (asm.c), never as labels. *)
+let pmars_keywords = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
+                      "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"; "ORG"; "END"; "PIN"; "EQU"; "FOR"; "ROF"]
+
+let label_name (sexp : sexp) (s : string) : string =
+  let s = user_name sexp s in
+  if List.mem (String.uppercase_ascii s) pmars_keywords then
+    fail sexp (sprintf "`%s` is a pMARS keyword and cannot be a label" s)
+  else s
+
 
 let parse_mode (sexp : sexp) : mode =
   match sexp with
@@ -49,15 +66,15 @@ let parse_mode (sexp : sexp) : mode =
 let parse_arg (sexp : sexp) : arg =
   match sexp with
   | `Atom "none" -> ANone
-  | `List [`Atom "store"; `Atom s] | `List [`Atom "!"; `Atom s] -> AStore (s)
+  | `List [`Atom "store"; `Atom s] | `List [`Atom "!"; `Atom s] -> AStore (user_name sexp s)
   | `Atom s ->
     (match Int64.of_string_opt s with
     | Some n -> ANum (Int64.to_int n)
-    | None -> AId (s) )
-  | `List [m; `Atom s] ->
+    | None -> AId (user_name sexp s) )
+  | `List [m; (`Atom s as a)] ->
     (match Int64.of_string_opt s with
     | Some n -> ARef ((parse_mode m), (Int64.to_int n))
-    | None -> ALab ((parse_mode m), s) )
+    | None -> ALab ((parse_mode m), user_name a s) )
   | _ -> fail sexp (sprintf "Not a valid arg: %s" (to_string sexp))
 
 
@@ -128,7 +145,7 @@ let rec parse_exp (sexp : sexp) : expr =
   match sexp with
   | `List (`Atom "com" :: exps) -> EComment (List.fold_left (fun res s -> res ^ " " ^ (String.escaped (to_string s))) "" exps)
   | `List (`Atom "seq" :: exps) -> ESeq (List.map parse_exp exps, loc)
-  | `List [`Atom "label"; `Atom s] -> ELabel (s, loc)
+  | `List [`Atom "label"; `Atom s] -> ELabel (label_name sexp s, loc)
   | `List [eop] ->
     (match eop with
     | `Atom "DAT" -> EPrim2 (Dat, MN, ANone, ANone, loc)
@@ -168,7 +185,7 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "do-while" -> EFlow1 (DoWhile, parse_cond e1, parse_exp e2, loc)
     | `Atom "let" ->
       (match e1 with
-      | `List [`Atom id; e] -> ELet (id, parse_arg e, parse_exp e2, loc)
+      | `List [`Atom id; e] -> ELet (user_name e1 id, parse_arg e, parse_exp e2, loc)
       | _ -> fail e1 (sprintf "Not a valid let assignment: %s" (to_string e1)) )
     | _ -> fail sexp (sprintf "Not a valid binary expr: %s" (to_string sexp)) )
   | `List [eop; e1; e2; e3] ->

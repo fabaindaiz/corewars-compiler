@@ -26,7 +26,8 @@ line of 256+ characters is a compile error. Built the located AST the user chose
 annotated type (`loc eexpr`, then `meta eexpr` after tagging), `Ast.Error` replaced the four
 `CTError`s, impossible states are `failwith` (internal error, exit 2), and errors print
 `file:line:col`. Error messages for a missing store and for `DZ` in a `do-while` were rewritten
-(the latter said "DN").
+(the latter said "DN"). The parser now rejects names starting with `_` and labels that are pMARS
+keywords, and two stores of one variable are an error (no golden changed).
 **Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
 `behtests/let_shadowing.beh`: cell 1 holds `DAT.F #5, #0` after JMP and ADD (was `#1, #4`).
 

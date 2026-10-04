@@ -55,8 +55,8 @@ generates (`LETn`, `REPn`, `IFn`, …), which makes the output a function of the
   instruction containing `(store x)` is emitted with `a` in that field, so at load time the place
   holds `a`.
 - **Store once.** In `(let (x a) e)`, `e` contains **exactly one** `(store x)` that is not under a
-  `let` that shadows `x`. *Unchecked today:* zero stores leave `LETn` undefined, two define it twice
-  (i-7d2612-425c66). Shadowing is resolved before compilation: `Rename.uniquify` gives every binder
+  `let` that shadows `x`. Checked: two stores are an error (`Rename.check_single_stores`), and a
+  use with no store is an error at the use (`Lib.translate_penv`). Shadowing is resolved before compilation: `Rename.uniquify` gives every binder
   a unique name, so an initializer means the variable visible where its `let` binds it.
 - **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `LETn`, through the modifier
   that selects `f`. An indirect use (`@`, `<`, `>`) goes through that field (`*`, `{`, `}` when
@@ -64,7 +64,8 @@ generates (`LETn`, `REPn`, `IFn`, …), which makes the output a function of the
 - **Condition placement.** `DZ` is only valid as a pre-condition (`if`, `while`); `DN` only as a
   post-condition (`do-while`). Checked: `compile_cond1` rejects the others.
 - **Labels.** Generated labels and user labels must be distinct, and no label may be a pMARS
-  reserved word. *Unchecked today* (i-7d2612-425c66).
+  keyword. Checked in the parser: user names may not start with `_` (reserved for generated labels)
+  and a label may not be a pMARS keyword (i-7d2612-425c66).
 - **Kinds (proposed, i-7d2612-f2f7c5).** Three sorts of operand — `Num` (a number), `Lab` (a code
   address), `Place = Lab × {A, B}` — with jump targets of sort `Lab`, arithmetic on `Num` or
   `Place`, and `#x` the explicit coercion `Place → Num`. This mirrors Typed Assembly Language's

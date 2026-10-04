@@ -25,9 +25,34 @@ let rename_cond (env : renames) (c : cond) : cond =
   | Cond1 (op, a) -> Cond1 (op, rename_arg env a)
   | Cond2 (op, a1, a2) -> Cond2 (op, rename_arg env a1, rename_arg env a2)
 
+let stores_in_arg (a : arg) : string list = match a with
+  | AStore s -> [s]
+  | ANone | ANum _ | AId _ | ARef _ | ALab _ -> []
+
+let stores_in_cond (c : cond) : string list = match c with
+  | Cond0 -> []
+  | Cond1 (_, a) -> stores_in_arg a
+  | Cond2 (_, a1, a2) -> stores_in_arg a1 @ stores_in_arg a2
+
+(* After renaming every name is bound once, so counting stores per name checks each let: a let
+   variable lives in one cell, so a second (store x) would define its label twice. *)
+let check_single_stores (binders : (string * (string * loc)) list) (e : expr) : unit =
+  let rec stores (e : expr) = match e with
+    | EComment _ | ELabel _ | EExpect _ -> []
+    | EPrim2 (_, _, a1, a2, _) -> stores_in_arg a1 @ stores_in_arg a2
+    | EFlow1 (_, c, b, _) -> stores_in_cond c @ stores b
+    | EFlow2 (_, c, b1, b2, _) -> stores_in_cond c @ stores b1 @ stores b2
+    | ELet (_, a, b, _) -> stores_in_arg a @ stores b
+    | ESeq (es, _) -> List.concat_map stores es in
+  let all = stores e in
+  List.iter (fun (unique, (original, loc)) ->
+    if List.length (List.filter (( = ) unique) all) > 1 then
+      raise (Error (Some loc, sprintf "variable `%s` is stored twice; a let variable lives in one cell" original)))
+    (List.rev binders)
+
 (* The first binder of a name keeps it; later ones become x#1, x#2, ... *)
 let uniquify (e : expr) : expr =
-  let used = Hashtbl.create 8 in
+  let used = Hashtbl.create 8 and binders = ref [] in
   let fresh x =
     let n = Option.value (Hashtbl.find_opt used x) ~default:0 in
     Hashtbl.replace used x (n + 1) ;
@@ -40,6 +65,9 @@ let uniquify (e : expr) : expr =
     | ELet (x, a, body, loc) ->
       let a' = rename_arg env a in
       let x' = fresh x in
+      binders := (x', (x, loc)) :: !binders ;
       ELet (x', a', go ((x, x') :: env) body, loc)
     | ESeq (es, loc) -> ESeq (List.map (go env) es, loc) in
-  go [] e
+  let renamed = go [] e in
+  check_single_stores !binders renamed ;
+  renamed

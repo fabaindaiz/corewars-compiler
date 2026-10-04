@@ -95,14 +95,16 @@ Measured on pMARS 0.9.4: a 245-character label hung, 200 worked. RED passes user
 **Decided** (2026-10-04, user): a check on emitted line length.
 
 ### User labels can collide with generated labels, and store-once is unchecked · i-7d2612-425c66
-**State.** Planned. Known-failing: `behtests/label_collision.beh`.
+**State.** Half done (s-7d2612-2c7e4d): the parser rejects user names starting with `_` and labels
+that are pMARS keywords, and two stores of one variable are an error; the prefix migration is next.
+Known-failing: `behtests/label_collision.beh`.
 A user `(label LET1)` shares the namespace of generated labels; pMARS keeps the first definition
 and only warns. Unchecked as well: a `let` whose variable has no `(store x)` (its `LET` label is
 never defined) or two (defined twice), a user label that is a pMARS reserved word (`END`, `MOV`).
 **Collides with.** d-7d2612-123e41 (label names are part of every golden).
 **Decided** (2026-10-03, user): generated labels take a reserved prefix that the parser forbids in
 user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every golden changes once.
-Built in subproject C (i-7d2612-7eadd5).
+The user chose `_` (2026-10-04). Built in phase 1.
 
 ### Fallback modifier .I differs from the ICWS'94 defaults · i-7d2612-96f7b1
 **State.** Planned. No spec yet.
