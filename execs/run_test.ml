@@ -1025,6 +1025,16 @@ let test_json_names_optimizations () =
   check Alcotest.bool "none" true (contains (json "(MOV 0 1)") "\"optimizations\":[]")
 
 
+(* Tests from the phase-4 branch review *)
+let test_review4_referenced_cells_are_data () =
+  let dead src = (M.measure (layout_of_src src)).unreachable in
+  check Alcotest.int "an SPL bomb the MOV copies" 0
+    (dead "(let (p 100) (seq (repeat (seq (MOV I bomb (Ind p)) (ADD 4 p))) (DAT 0 (store p)) (label bomb) (SPL 0 0)))") ;
+  check Alcotest.int "prog3's cells read through labels" 0 (dead (golden_src (example "prog3"))) ;
+  check Alcotest.int "a cell written through a numeric offset" 0 (dead (golden_src (example "mixed_operand_field"))) ;
+  check Alcotest.int "a dead MOV nobody references" 1 (dead "(seq (repeat (NOP)) (MOV 0 1))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1151,6 +1161,9 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "review4", [
+    test_case "a cell the program references is data" `Quick test_review4_referenced_cells_are_data ;
   ] ;
   "netstep", [
     test_case "a pointer's step is its net change per lap" `Quick test_net_step ;

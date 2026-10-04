@@ -59,6 +59,10 @@ results move in both directions. It is the layout, not the compilation.
 was emitted without parentheses (`a EQU 1+2`), and pMARS, which substitutes an EQU's text before
 evaluating, computed `a*3` as 7; now `a EQU (1+2)`, with golden and spec `const_expressions` (its
 probes first assumed cdb shows negatives as 7997; it shows -3).
+Important: the dead-code warning fired by default on cells used as data (an `SPL` bomb, prog3's
+cells read through labels, a cell `(MOV x (Dir -1))` writes). A never-executed cell an executed
+instruction reads or writes is now data; my first version also counted indirect *jump*
+destinations (prog4) as data, which a test on prog4's report caught.
 **Left undone.** Summing through inner loops with known trip counts (i-7d2612-fbe7c8); the
 quickscan (waits for the macro layer, by decision); a spiral with several processes per point.
 

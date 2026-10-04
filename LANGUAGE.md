@@ -223,7 +223,7 @@ Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` w
 The compiler warns, on standard error as `file:line:column: warning: ...`, where the compiled warrior pays a cost that could be removed, and says what would remove it. Which ones depend on the policy (`(optimize ...)`):
 
 - with `speed` in the policy: a loop that spends more control instructions per iteration than its construct needs, when a faster variant exists and the policy declined it for an objective ranked higher (a `while` kept with its test at the top under `boot speed`);
-- with `size` or `stealth`: cells never executed that hold no data (dead code), unless a jump the compiler cannot follow might reach them;
+- with `size` or `stealth`: cells never executed that hold no data (dead code): no variable, no label on a `DAT`, and no executed instruction reads or writes them; not said when a jump the compiler cannot follow might reach them;
 - always: a pointer whose step leaves cells unvisited (a step of 4 visits 2000 of 8000), unless its loop states the step with `(expect (step k))` or `(expect (covers-core))`.
 
 `run_compile.exe --warn=all` gives every warning whatever the policy, `--warn=none` none. Warnings never stop the compilation.

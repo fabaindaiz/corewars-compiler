@@ -333,6 +333,8 @@ produced each cell.
 ### Unreachable counts a labelled data DAT as dead code · i-7d2612-cf8fdb
 **State.** Done (s-7d2612-14641b), the user choosing the first option: a never-executed `DAT` with a
 user's label counts as data (`test_phase2_labelled_dat_is_data`); an unlabelled one is still dead code.
+Widened by the phase-4 review (s-7d2612-333abd): any never-executed cell an executed instruction
+reads or writes is data (an `SPL` bomb, a cell written through `(Dir -1)` or a pointer).
 Before: A bomb written `(label bomb) (DAT 0 0)` is never executed,
 by design, and `--report` counts it as unreachable code: only a `let` variable's cell counts as
 data. An unreachable-cell warning would fire on every bomber (core-clear and scanner archetypes).

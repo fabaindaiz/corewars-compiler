@@ -241,11 +241,30 @@ let counter (p : program) (entry : range option) (lm : loop_metrics) : predictio
 let measure (p : program) : t =
   let cells = Array.to_list p.cells in
   let seen = reachable p in
-  (* A cell never executed is data when it holds a variable, or when it is a DAT the program names,
-     as a bomber's (label bomb) (DAT 0 0) (a generated label names no data); anything else never
-     executed is dead code. *)
+  (* A cell never executed is data when it holds a variable, when it is a DAT the program names (a
+     bomber's (label bomb) (DAT 0 0); a generated label names no data), or when an executed
+     instruction reads or writes it, through a label or a number (a bomb that is an SPL, a cell
+     (MOV x (Dir -1)) writes); anything else never executed is dead code. *)
   let named (c : cell) = List.exists (fun l -> not (String.starts_with ~prefix:"_" l)) c.labels in
-  let is_data (c : cell) = c.vars <> [] || (c.op = IDAT && named c) in
+  let n = Array.length p.cells in
+  let referenced = Array.make n false in
+  (* An indirect operand also reaches the cell its pointer names, by the pointer's field as loaded
+     (self-modification is not followed). *)
+  let mark t = if t < n then referenced.(t) <- true in
+  (* A jump's A operand is where control goes, not data it reads. *)
+  let data_operands (c : cell) = match c.op with
+    | IJMP | IJMZ | IJMN | IDJN | ISPL -> [c.b]
+    | IDAT | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | ICMP | ISEQ | ISNE | ISLT | ILDP | ISTP -> [c.a; c.b] in
+  Array.iter (fun (c : cell) -> if seen.(c.pos) then
+    List.iter (fun (o : operand) -> if o.mode <> RImm then begin
+      let base = norm p.coresize (c.pos + o.value) in
+      mark base ;
+      if base < n then match base_field o.mode with
+        | Some FA -> mark (norm p.coresize (base + p.cells.(base).a.value))
+        | Some FB -> mark (norm p.coresize (base + p.cells.(base).b.value))
+        | None -> ()
+    end) (data_operands c)) p.cells ;
+  let is_data (c : cell) = c.vars <> [] || (c.op = IDAT && named c) || referenced.(c.pos) in
   let count f = List.length (List.filter f cells) in
   let headers = List.sort_uniq compare (List.map (fun (l : Layout.loop) -> l.header) p.loops) in
   let is_header i = List.mem i headers in
