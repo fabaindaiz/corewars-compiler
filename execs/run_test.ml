@@ -418,6 +418,64 @@ let test_minor_json_policy_coresize () =
   check Alcotest.bool "policy" true (contains j "\"policy\":[\"speed\",\"size\"]")
 
 
+(* Tests for the command line, through the driver *)
+module D = Cored.Driver
+
+let drive (files : (string * string) list) (args : string list) : D.output =
+  D.run ~read:(fun f -> List.assoc_opt f files) args
+
+let prog1_src = golden_src (example "prog1")
+let prog1_red = compile_prog (expr_of (example "prog1")) ^ "\n"
+
+let test_driver_plain () =
+  let o = drive [("p.src", prog1_src)] ["p.src"] in
+  check Alcotest.(triple string string int) "out, err, code" (prog1_red, "", 0) (o.out, o.err, o.code)
+
+let test_driver_report_on_stderr () =
+  let o = drive [("p.src", prog1_src)] ["--report"; "p.src"] in
+  check Alcotest.string "redcode unchanged" prog1_red o.out ;
+  check Alcotest.bool "report" true (contains o.err "policy: speed > size")
+
+let test_driver_unknown_objective () =
+  let o = drive [("p.src", prog1_src)] ["--optimize"; "fast"; "p.src"] in
+  check Alcotest.(pair string int) "err, code" ("unknown objective `fast`: one of speed, size, stealth, boot\n", 1) (o.err, o.code)
+
+let test_driver_expectation_fails () =
+  let src = "(program (expect (length <= 3)) " ^ prog1_src ^ ")" in
+  let o = drive [("p.src", src)] ["p.src"] in
+  check Alcotest.(triple string string int) "error" ("", "expect length <= 3: the warrior is 4 cells\n", 1) (o.out, o.err, o.code) ;
+  let w = drive [("p.src", src)] ["--expect=warn"; "p.src"] in
+  check Alcotest.(triple string string int) "warning"
+    (prog1_red, "warning: expect length <= 3: the warrior is 4 cells\n", 0) (w.out, w.err, w.code)
+
+let test_driver_compile_error_is_clean () =
+  let o = drive [("p.src", "(program (expect (cycles < 3)) (MOV 0 1))")] ["p.src"] in
+  check Alcotest.(pair string int) "err, code" ("error: Not a valid expectation: (cycles < 3)\n", 1) (o.err, o.code)
+
+let test_driver_missing_file () =
+  let o = drive [] ["nope.src"] in
+  check Alcotest.(pair string int) "err, code" ("error: no such file: nope.src\n", 1) (o.err, o.code)
+
+let prog7_expect = read_file "examples/prog7_expect.src"
+
+let test_driver_emit_beh () =
+  let o = drive [("p.src", prog7_expect)] ["--emit-beh"; "out.beh"; "p.src"] in
+  check Alcotest.int "code" 0 o.code ;
+  check Alcotest.(list string) "files" ["out.red"; "out.beh"] (List.map fst o.files) ;
+  check Alcotest.string "spec" "# written by run_compile.exe --emit-beh\nredcode: out.red\nalive 201\ndead 202\n"
+    (List.assoc "out.beh" o.files)
+
+let test_driver_emit_beh_suffix () =
+  let o = drive [("p.src", prog7_expect)] ["--emit-beh"; "out.red"; "p.src"] in
+  check Alcotest.(triple string int int) "refused" ("--emit-beh FILE must end in .beh\n", 1, 0)
+    (o.err, o.code, List.length o.files)
+
+let test_driver_emit_beh_nothing () =
+  let o = drive [("p.src", prog1_src)] ["--emit-beh"; "out.beh"; "p.src"] in
+  check Alcotest.(pair string int) "refused"
+    ("--emit-beh: the program has no (alive N), (dead N) or (cell ...) expectation to export\n", 1) (o.err, o.code)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -486,6 +544,17 @@ let ocaml_tests = [
     test_case "unreachable says it ignores dynamic jumps" `Quick test_minor_unreachable_qualified ;
     test_case "JSON string escaping" `Quick test_minor_json_string ;
     test_case "JSON carries policy and coresize" `Quick test_minor_json_policy_coresize ;
+  ] ;
+  "driver", [
+    test_case "plain compile" `Quick test_driver_plain ;
+    test_case "--report on stderr" `Quick test_driver_report_on_stderr ;
+    test_case "unknown objective" `Quick test_driver_unknown_objective ;
+    test_case "failed expectation: error, or warning" `Quick test_driver_expectation_fails ;
+    test_case "compile error exits cleanly" `Quick test_driver_compile_error_is_clean ;
+    test_case "missing file" `Quick test_driver_missing_file ;
+    test_case "--emit-beh" `Quick test_driver_emit_beh ;
+    test_case "--emit-beh needs .beh" `Quick test_driver_emit_beh_suffix ;
+    test_case "--emit-beh with nothing to export" `Quick test_driver_emit_beh_nothing ;
   ] ;
   "interp", [
 
