@@ -15,7 +15,11 @@ the tested variable's field (`JMN.A` for an A-field variable); its golden moved 
 **Why.** Phase 1 of the roadmap; the user decided the label prefix (`_`), an emission error for long
 lines, and a fully located AST now.
 **Architecture.** ✅ Complies: one golden changed, the characterization of the bug, with this reason.
+Fixed the placement half of i-7d2612-ce4c3b: an inner `let` of the same name no longer moves an
+outer variable's field (`ADD.A`, was `ADD.AB`); its golden moved to `bbctests/examples/`. Measured
+the other half, the initializer capture, which the roadmap had as unmeasured: it is real.
 **Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
+`behtests/let_shadowing.beh`: cell 1 holds `DAT.F #5, #0` after JMP and ADD (was `#1, #4`).
 
 ## 2026-10-04 · s-7d2612-0cb4a2 — Reorganise the roadmap into phases and guard line endings
 

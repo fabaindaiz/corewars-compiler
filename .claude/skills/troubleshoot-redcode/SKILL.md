@@ -17,7 +17,6 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 | `SLT`/`ADD` on two plain references acts on both fields | fallback modifier `.I` instead of the ICWS'94 default | i-7d2612-96f7b1 |
 | a jump to a user label lands on a data cell; pMARS warns "redefinition of label" | user label named like a generated one (`LET1`, `IF3`, …); pMARS keeps the first | i-7d2612-425c66 |
 | pMARS "Undefined label 'LETn'" | the `let` variable has no `(store x)` | i-7d2612-425c66 |
-| an outer variable is written in the wrong field | an inner `let` of the same name leaked its `store` placement | i-7d2612-ce4c3b |
 | `error: ...` from `run_compile.exe`, exit 1 | a compile error in the RED program (the message says which form); the compiler still has four `CTError` types, caught by `Cored.Driver` | i-7d2612-888db5, d-7d2612-8bba52 |
 | pMARS hangs while assembling | a line of 256+ characters (a long label) | i-7d2612-174acf |
 | `(LT -1 3)` is false | not a bug: values are unsigned mod CORESIZE (`-1` = 7999) | d-7d2612-2a4435 |

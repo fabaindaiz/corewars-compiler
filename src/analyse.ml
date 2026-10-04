@@ -32,6 +32,8 @@ let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
     let penv' = (analyse_store_cond cond id penv) in
     let penv'' = (analyse_store_expr exp1 id penv') in
     (analyse_store_expr exp2 id penv'')
+  (* An inner let of the same name shadows id: its (store id) places the inner variable. *)
+  | ELet (x, _, _, _) when (equal x id) -> penv
   | ELet (_, _, exp, _) -> (analyse_store_expr exp id penv)
   | ESeq (exps, _) -> List.fold_left (fun penv' exp -> (analyse_store_expr exp id penv')) penv exps
   | _ -> penv

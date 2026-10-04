@@ -1,5 +1,5 @@
-NAME: known bug: inner let shadows an outer store placement
-DESCRIPTION: characterization of current output (i-7d2612-ce4c3b); ADD 4 x targets the B-field, see behtests/let_shadowing.beh
+NAME: inner let shadows an outer variable
+DESCRIPTION: the inner (store x) places only the inner x; ADD 4 x writes the outer x's A-field (.A); fixed in i-7d2612-ce4c3b, see behtests/let_shadowing.beh
 SRC:
 (let (x 1)
   (seq
@@ -16,5 +16,5 @@ LET1
   DAT    #1     , #0     
 LET8  
   DAT    #0     , #2     
-  ADD.AB #4     , $LET1  
+  ADD.A  #4     , $LET1  
   DAT    #0     , #0     

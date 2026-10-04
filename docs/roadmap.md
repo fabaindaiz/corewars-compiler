@@ -49,7 +49,11 @@ the `.B` default: a variable stored in an A-field is tested on the B-field of it
 **Decide first.** Nothing: the field is known from `penv`.
 
 ### An inner let leaks its store placement into an outer variable of the same name · i-7d2612-ce4c3b
-**State.** Planned. Known-failing: `behtests/let_shadowing.beh`.
+**State.** Half done (s-7d2612-2c7e4d). The placement leak is fixed (`analyse_store_expr` stops at a
+`let` that rebinds the name; `behtests/let_shadowing.beh` passes, its golden moved to
+`bbctests/examples/`). The initializer capture is **measured** (2026-10-04): in
+`(let (x 1) (let (y x) (let (x 2) ... (store y))))` the cell of `y` holds `$LET9`, the inner `x`, not
+`$LET1`.
 `Analyse.analyse_store_expr` walks into a nested `ELet` that rebinds the same name, so the inner
 `(store x)` sets the outer `x`'s field. Related, not yet measured: `replace_store` resolves an
 initializer in the environment of the store site, so `(let (x 1) (let (y x) (let (x 2) … (store y))))`

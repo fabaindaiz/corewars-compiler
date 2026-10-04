@@ -489,6 +489,13 @@ let test_phase1_cond1_tests_the_variable_field () =
   check Alcotest.bool "JMN.A on an A-field variable" true (jmn = Some RA)
 
 
+let test_phase1_shadowing_keeps_outer_field () =
+  let add = List.find_map (fun i -> match i with
+    | INSTR (IADD, md, _, _) -> Some md | INSTR _ | ICOM _ | ILAB _ -> None)
+    (instrs_of "bbctests/examples/let_shadowing.bbc") in
+  check Alcotest.bool "ADD.A on the outer x" true (add = Some RA)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -571,6 +578,7 @@ let ocaml_tests = [
   ] ;
   "phase1", [
     test_case "a unary condition tests its variable's field" `Quick test_phase1_cond1_tests_the_variable_field ;
+    test_case "an inner let does not move an outer variable" `Quick test_phase1_shadowing_keeps_outer_field ;
   ] ;
   "interp", [
 
