@@ -24,8 +24,8 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   `do-while` with `GT`/`LT` (i-7d2612-fffa6c, known-failing spec).
 - **A variable is read and written through the modifier that selects its field** (A or B, decided
   by where its `(store x)` sits). The wrong modifier reads the other field of the same cell.
-  Enforced: `behtests/`. **Violated today:** unary conditions always use `.B` (i-7d2612-3744e5);
-  an inner `let` leaks its placement outward (i-7d2612-ce4c3b).
+  Enforced: `behtests/` (`cond1_afield.beh`). **Violated today:** an inner `let` leaks its
+  placement outward (i-7d2612-ce4c3b).
 - **With no modifier given, emit the ICWS'94 default, or document the deviation.** Enforced: —.
   **Undecided today:** the `.I` fallback (i-7d2612-96f7b1).
 - **Generated labels never collide with user labels or pMARS reserved words.** pMARS only warns on

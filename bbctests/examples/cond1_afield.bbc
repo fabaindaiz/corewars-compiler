@@ -1,5 +1,5 @@
-NAME: known bug: unary condition on an A-field variable
-DESCRIPTION: characterization of current output (i-7d2612-3744e5); JZ x tests the B-field, see behtests/cond1_afield.beh
+NAME: unary condition on an A-field variable
+DESCRIPTION: JZ x with x stored in an A-field tests that field (.A); fixed in i-7d2612-3744e5, see behtests/cond1_afield.beh
 SRC:
 (let (x 0)
   (seq
@@ -13,7 +13,7 @@ EXPECTED:
   JMP    $2     , #0     
 LET1  
   DAT    #0     , #5     
-  JMN.B  $IF8   , $LET1  
+  JMN.A  $IF8   , $LET1  
   JMP    $0     , #0     
 IF8   
   DAT    #0     , #0     

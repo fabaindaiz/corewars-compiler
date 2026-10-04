@@ -68,7 +68,7 @@ Unary conditions are used to specify when the control flow is executed based on 
 - (DZ x) decrement x and x is zero (only in `if`, `if` with else, and `while`)
 - (DN x) decrement x and x is not zero (only in `do-while`)
 
-Known defect: a unary condition always tests the B-field, even when `x` is stored in an A-field (i-7d2612-3744e5).
+A unary condition tests the field its variable is stored in (`.A` or `.B`); a plain number or label is tested on its B-field.
 
 ### Binary conditions (cond2)
 

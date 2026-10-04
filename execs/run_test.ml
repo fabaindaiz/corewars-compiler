@@ -478,6 +478,17 @@ let test_driver_emit_beh_nothing () =
     ("--emit-beh: the program has no (alive N), (dead N) or (cell ...) expectation to export\n", 1) (o.err, o.code)
 
 
+(* Tests for phase 1: correctness before the output changes *)
+let instrs_of (path : string) : instruction list =
+  List.map (fun (x : emitted) -> x.instr) (compile_body (expr_of path))
+
+let test_phase1_cond1_tests_the_variable_field () =
+  let jmn = List.find_map (fun i -> match i with
+    | INSTR (IJMN, md, _, _) -> Some md | INSTR _ | ICOM _ | ILAB _ -> None)
+    (instrs_of "bbctests/examples/cond1_afield.bbc") in
+  check Alcotest.bool "JMN.A on an A-field variable" true (jmn = Some RA)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -557,6 +568,9 @@ let ocaml_tests = [
     test_case "--emit-beh" `Quick test_driver_emit_beh ;
     test_case "--emit-beh needs .beh" `Quick test_driver_emit_beh_suffix ;
     test_case "--emit-beh with nothing to export" `Quick test_driver_emit_beh_nothing ;
+  ] ;
+  "phase1", [
+    test_case "a unary condition tests its variable's field" `Quick test_phase1_cond1_tests_the_variable_field ;
   ] ;
   "interp", [
 

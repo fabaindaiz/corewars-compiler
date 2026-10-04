@@ -14,7 +14,6 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 | Symptom | Known cause | Record |
 |---|---|---|
 | a `do-while` with `GT`/`LT` never exits when both sides are equal | post-condition `SLT` is not strict at equality | i-7d2612-fffa6c |
-| `(if (JZ x) …)` takes the wrong branch | unary conditions test the `.B` field even when `x` is stored in the A-field | i-7d2612-3744e5 |
 | `SLT`/`ADD` on two plain references acts on both fields | fallback modifier `.I` instead of the ICWS'94 default | i-7d2612-96f7b1 |
 | a jump to a user label lands on a data cell; pMARS warns "redefinition of label" | user label named like a generated one (`LET1`, `IF3`, …); pMARS keeps the first | i-7d2612-425c66 |
 | pMARS "Undefined label 'LETn'" | the `let` variable has no `(store x)` | i-7d2612-425c66 |

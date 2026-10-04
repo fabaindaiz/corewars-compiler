@@ -1,5 +1,4 @@
 # x is stored in the A-field (0) of a cell whose B-field is 5. (if (JZ x) loop) must take the
-# loop forever. Today the JMN tests the B-field (.B), sees 5 and skips into the epilogue DAT.
-golden: bbctests/known-bugs/cond1_afield.bbc
-known-failing: i-7d2612-3744e5
+# loop forever: the JMN tests the A-field (.A), sees 0 and falls into the loop.
+golden: bbctests/examples/cond1_afield.bbc
 alive 50

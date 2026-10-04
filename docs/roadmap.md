@@ -40,7 +40,9 @@ with a failing check (four behaviour specs, one audit check); i-7d2612-888db5 is
 Everything later changes emitted code, so first the code must mean what RED says. Ready items first; the two golden migrations (prefix, defaults) last, one commit each, with their behavioural reason.
 
 ### Unary conditions always use the .B modifier · i-7d2612-3744e5
-**State.** Planned. Known-failing: `behtests/cond1_afield.beh`.
+**State.** Done (s-7d2612-2c7e4d). `compile_cond` takes the modifier from the tested operand's
+field (`.A` or `.B`, `.B` for a plain number or label); `behtests/cond1_afield.beh` passes and its
+golden moved to `bbctests/examples/`. No other golden changed.
 In `compile_cond` the label operand of `Cond1` is a reference, so `opmod_to_rmod` falls through to
 the `.B` default: a variable stored in an A-field is tested on the B-field of its cell.
 **Collides with.** Goldens whose unary condition reads a B-field variable must not change.

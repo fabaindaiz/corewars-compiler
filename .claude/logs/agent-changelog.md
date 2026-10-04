@@ -5,6 +5,18 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-2c7e4d — Phase 1: correctness before the output changes
+
+**What.** On branch `fix/phase-1`. Fixed i-7d2612-3744e5: a unary condition takes its modifier from
+the tested variable's field (`JMN.A` for an A-field variable); its golden moved from
+`bbctests/known-bugs/` to `bbctests/examples/` and its spec lost the known-failing mark.
+**Areas.** `src/compile.ml`, `execs/run_test.ml`, `bbctests/`, `behtests/`, `LANGUAGE.md`,
+`AGENTS.md`, `docs/roadmap.md`, `.claude/skills/troubleshoot-redcode/`.
+**Why.** Phase 1 of the roadmap; the user decided the label prefix (`_`), an emission error for long
+lines, and a fully located AST now.
+**Architecture.** ✅ Complies: one golden changed, the characterization of the bug, with this reason.
+**Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
+
 ## 2026-10-04 · s-7d2612-0cb4a2 — Reorganise the roadmap into phases and guard line endings
 
 **What.** Added the audit check `eol-preserved` (a tracked file may not change its line-ending style

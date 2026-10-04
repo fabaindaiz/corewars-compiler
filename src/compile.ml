@@ -108,7 +108,13 @@ let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag
   | Cond1 (op, a2) ->
     let a1 = ALab (MDir, label) in
     let opcode = (compile_cond1 op mode) in
-    let rmod, rarg1, rarg2 = (compile_args a1 a2 MDef RB env) in
+    let _, rarg1 = (compile_arg a1 env) in
+    let carg2, rarg2 = (compile_arg a2 env) in
+    (* JMZ/JMN/DJN test or decrement one field of their B-target: the field the tested variable
+       is stored in, .B otherwise (the ICWS'94 default). *)
+    let rmod = (match carg_to_opmod carg2 env with
+      | TA -> RA
+      | TB | TNum | TRef -> RB) in
     [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))]
   | Cond2 (op, a1, a2) ->
     let opcode, a1, a2 = (compile_cond2 op mode a1 a2) in
