@@ -711,6 +711,15 @@ let test_phase2_self_loop_terminates () =
 
 
 (* Tests from the phase-2 branch review *)
+let test_review2_gt_explicit_modifier () =
+  (* GT is emitted as SLT y, x: an AB reading of x and y is BA on the swapped operands *)
+  let gt m = Printf.sprintf "(let (x 0) (let (y 0) (seq (if (GT %s x y) (NOP)) (DAT (store x) 0) (DAT 0 (store y)))))" m in
+  check rmods "AB" [RBA] (modifiers ISLT (gt "AB")) ;
+  check rmods "BA" [RAB] (modifiers ISLT (gt "BA")) ;
+  check rmods "F" [RF] (modifiers ISLT (gt "F")) ;
+  check rmods "do-while GT AB" [RBA]
+    (modifiers ISLT "(let (x 0) (let (y 0) (seq (do-while (GT AB x y) (NOP)) (DAT (store x) (store y)))))")
+
 let test_review2_generated_label_is_not_a_name () =
   let m = M.measure (layout_of_src "(seq (repeat (NOP)) (if (JZ 0) (NOP)) (DAT 0 0))") in
   check Alcotest.(pair int int) "data, unreachable" (0, 3) (m.data, m.unreachable)
@@ -836,6 +845,7 @@ let ocaml_tests = [
     test_case "a labelled DAT never run is data" `Quick test_phase2_labelled_dat_is_data ;
   ] ;
   "review2", [
+    test_case "GT with an explicit AB or BA" `Quick test_review2_gt_explicit_modifier ;
     test_case "a generated label does not name data" `Quick test_review2_generated_label_is_not_a_name ;
     test_case "a unary cond with too many arguments" `Quick test_review2_unary_arity_message ;
   ] ;

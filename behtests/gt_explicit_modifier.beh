@@ -1,0 +1,5 @@
+# (GT AB xc yc): xc's A-field (5) > yc's B-field (1) holds, so the MOV writes 7 into flag (cell 6):
+# SLT skips the jump past the body (1), MOV (2).
+golden: bbctests/examples/gt_explicit_modifier.bbc
+cell 2 6 DAT.F #0, #7
+alive 100

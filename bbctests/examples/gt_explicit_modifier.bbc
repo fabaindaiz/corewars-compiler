@@ -1,0 +1,24 @@
+NAME: GT with an explicit AB modifier
+DESCRIPTION: (GT AB x y) compares x's A-field with y's B-field; GT is emitted as SLT y, x, so the modifier swaps to BA; see behtests/gt_explicit_modifier.beh
+SRC:
+(seq
+  (if (GT AB xc yc) (MOV 7 flag))
+  (JMP 0)
+  (label xc) (DAT 5 0)
+  (label yc) (DAT 9 1)
+  (label flag) (DAT 0 0))
+EXPECTED:
+;redcode-94b
+
+  SLT.BA $yc    , $xc    
+  JMP    $_IF3  , #0     
+  MOV.AB #7     , $flag  
+_IF3  
+  JMP    #0     , #0     
+xc    
+  DAT    #5     , #0     
+yc    
+  DAT    #9     , #1     
+flag  
+  DAT    #0     , #0     
+  DAT    $0     , $0     

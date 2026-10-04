@@ -135,6 +135,11 @@ let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag
     @ [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))]
   | Cond2 (op, imod, a1, a2) ->
     let opcode, a1, a2, always_skip = (compile_cond2 op mode a1 a2) in
+    (* GT is emitted as SLT y, x: a modifier the user wrote for x and y reads the swapped operands. *)
+    let imod = match op, imod with
+      | Cgt, MAB -> MBA
+      | Cgt, MBA -> MAB
+      | (Ceq | Cne | Cgt | Clt), m -> m in
     let rmod, rarg1, rarg2 = (compile_args a1 a2 imod opcode env) in
     let skip = if always_skip then [emit (INSTR (ISNE, RAB, RRef (RImm, 0), RRef (RImm, 1)))] else [] in
     List.map emit (compile_label a1 env @ compile_label a2 env)
