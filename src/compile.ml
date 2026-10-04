@@ -6,7 +6,6 @@ open Lib
 open Util
 open Analyse
 
-exception CTError of string
 
 
 (* An instruction with what produced it: the AST node (its tag), the control construct that
@@ -35,7 +34,7 @@ let compile_label (arg : arg) (env : env) : instruction list =
     let _, _, lenv = env in
     (match List.assoc_opt s lenv with
     | Some l -> [ILAB (l)]
-    | None -> raise (CTError (sprintf "unbound variable %s in lenv" s)) )
+    | None -> error (sprintf "(store %s): %s is not a variable of an enclosing let" s s) )
   | _ -> []
 
 
@@ -78,12 +77,12 @@ let compile_cond1 (cond : cond1) (mode : mcond) : opcode =
     | Cjz -> IJMN
     | Cjn -> IJMZ
     | Cdz -> IDJN
-    | Cdn -> raise (CTError (sprintf "DN cond is not available on precondition")) )
+    | Cdn -> error "(DN x) is only available in do-while" )
   | Cpos ->
     (match cond with
     | Cjz -> IJMZ
     | Cjn -> IJMN
-    | Cdz -> raise (CTError (sprintf "DN cond is not available on postcondition"))
+    | Cdz -> error "(DZ x) is not available in do-while"
     | Cdn -> IDJN )
 
 (* The test, its operands, and whether an always-skipping SNE must follow it. A pre-condition jumps
@@ -148,16 +147,22 @@ let compile_prim2 (op : prim2) : opcode =
   | Stp -> ISTP
   | Ldp -> ILDP
 
-let rec compile_expr (e : tag eexpr) (env : env) : emitted list =
+(* An error raised without a location takes the location of the innermost node being compiled. *)
+let at (m : meta) (f : unit -> 'a) : 'a =
+  try f () with Error (None, msg) -> raise (Error (Some m.loc, msg))
+
+let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
   match e with
   | EComment (s) -> [emit (ICOM (s))]
-  | ELabel (l, tag) -> [emit ~origin:tag (ILAB (l))]
-  | EPrim2 (op, imod, arg1, arg2, tag) ->
+  | ELabel (l, m) -> [emit ~origin:m.tag (ILAB (l))]
+  | EPrim2 (op, imod, arg1, arg2, m) -> at m @@ fun () ->
+    let tag = m.tag in
     let opcode = (compile_prim2 op) in
     let rmod, rarg1, rarg2 = (compile_args arg1 arg2 imod RI env) in
     let labels = List.map (emit ~origin:tag) ((compile_label arg1 env) @ (compile_label arg2 env)) in
     labels @ [emit ~origin:tag ~stores:(stores_of arg1 arg2) (INSTR (opcode, rmod, rarg1, rarg2))]
-  | EFlow1 (op, cond, exp, tag) ->
+  | EFlow1 (op, cond, exp, m) -> at m @@ fun () ->
+    let tag = m.tag in
     (match op with
     | Repeat ->
       let gen = emit ~origin:tag ~construct:"repeat" in
@@ -176,14 +181,16 @@ let rec compile_expr (e : tag eexpr) (env : env) : emitted list =
       let gen = emit ~origin:tag ~construct:"do-while" in
       let ini = (sprintf "DWH%d" tag) in
       [gen (ILAB (ini))] @ (compile_expr exp env) @ (compile_cond cond Cpos ini env tag "do-while") )
-  | EFlow2 (op, cond, exp1, exp2, tag) ->
+  | EFlow2 (op, cond, exp1, exp2, m) -> at m @@ fun () ->
+    let tag = m.tag in
     (match op with
     | IfElse ->
       let gen = emit ~origin:tag ~construct:"if-else" in
       let mid = (sprintf "IFM%d" tag) in
       let fin = (sprintf "IFF%d" tag) in
       (compile_cond cond Cpre mid env tag "if-else") @ (compile_expr exp1 env) @ [gen (jump_label fin) ; gen (ILAB (mid))] @ (compile_expr exp2 env) @ [gen (ILAB (fin))] )
-  | ELet (id, arg, body, tag) ->
+  | ELet (id, arg, body, m) -> at m @@ fun () ->
+    let tag = m.tag in
     let label = (sprintf "LET%d" tag) in
     let env' = (analyse_let id arg body label env) in
     (compile_expr body env')
@@ -211,6 +218,6 @@ let compile_prog (e : expr) : string =
   List.iteri (fun i line ->
     let n = String.length line in
     if n >= max_line then
-      raise (CTError (sprintf "redcode line %d has %d characters; pMARS hangs on lines of %d or more" (i + 1) n max_line)))
+      error (sprintf "redcode line %d has %d characters; pMARS hangs on lines of %d or more" (i + 1) n max_line))
     (String.split_on_char '\n' text) ;
   text

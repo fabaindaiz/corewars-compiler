@@ -3,7 +3,6 @@ open Printf
 open Red
 open Ast
 
-exception CTError of string
 
 
 type aenv = (string * arg) list
@@ -27,17 +26,17 @@ let extend_lenv (x : string) (label : string) (lenv : lenv) : lenv =
 let translate_aenv (x : string) (aenv : aenv) : arg =
   match List.assoc_opt x aenv with
   | Some arg -> arg
-  | None -> raise (CTError (sprintf "unbound variable %s in aenv" x))
+  | None -> error (sprintf "(store %s): %s is not a variable of an enclosing let" x x)
 
 let translate_penv (x : string) (penv : penv) : place =
   match List.assoc_opt x penv with
   | Some place -> place
-  | None -> raise (CTError (sprintf "unbound variable %s in penv" x))
+  | None -> error (sprintf "variable `%s` is used but no (store %s) places it" x x)
 
 let translate_lenv (x : string) (lenv : lenv) : string =
   match List.assoc_opt x lenv with
   | Some label -> label
-  | None -> raise (CTError (sprintf "unbound variable %s in lenv" x))
+  | None -> failwith (sprintf "no label for variable %s" x)
 
 
 let replace_store (arg : arg) (env : env) : arg =

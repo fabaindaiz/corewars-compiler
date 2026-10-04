@@ -6,10 +6,10 @@ open Metrics
 type outcome = Pass | Fail of string
 
 (* Each expectation with the tag of its innermost enclosing loop construct; None outside any. *)
-let collect (e : tag eexpr) : (expectation * tag option) list =
+let collect (e : meta eexpr) : (expectation * tag option) list =
   let rec go loop e = match e with
     | EExpect (x, _) -> [(x, loop)]
-    | EFlow1 ((Repeat | While | DoWhile), _, body, t) -> go (Some t) body
+    | EFlow1 ((Repeat | While | DoWhile), _, body, m) -> go (Some m.tag) body
     | EFlow1 (If, _, body, _) | ELet (_, _, body, _) -> go loop body
     | EFlow2 (IfElse, _, b1, b2, _) -> go loop b1 @ go loop b2
     | ESeq (es, _) -> List.concat_map (go loop) es

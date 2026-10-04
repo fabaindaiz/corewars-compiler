@@ -4,7 +4,6 @@ open Red
 open Ast
 open Lib
 
-exception CTError of string
 
 
 let imode_to_rmode (imode : imode) (place : place) : rmode =
@@ -34,7 +33,7 @@ let arg_to_darg (arg : arg) : darg =
   | AId (s) -> ADLab (MDir, s)
   | ARef (m, n) -> ADRef (m, n)
   | ALab (m, s) -> ADLab (m, s)
-  | AStore (s) -> raise (CTError (sprintf "Not a valid place to store: %s" s))
+  | AStore (s) -> error (sprintf "Not a valid place to store: %s" s)
 
 
 type carg =
@@ -92,7 +91,7 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
     | MImm | MDir ->
       let p = (translate_penv s penv) in
       (place_to_opmod p)
-    | MInd (_) -> raise (CTError ("please report this bug, this error should not happen")) )
+    | MInd (_) -> failwith "a direct variable reference with an indirect mode" )
   | ACPnt (m, s) ->
     (match m with
     | MInd (_) ->
@@ -107,7 +106,7 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
         (match List.assoc_opt s penv with
         | Some p -> (place_to_opmod p)
         | None -> TB ))
-    | MImm | MDir -> raise (CTError ("please report this bug, this error should not happen")) )
+    | MImm | MDir -> failwith "a pointer reference with a direct mode" )
 
 let opmod_to_rmod (mod1 : opmod) (mod2 : opmod) (rmod : rmod) : rmod =
   match mod1, mod2 with

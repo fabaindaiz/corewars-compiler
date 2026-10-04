@@ -44,13 +44,19 @@ let execution (x : Ast.expectation) : bool =
   | XAlive _ | XDead _ | XCell _ -> true
   | XLength _ | XCycles _ | XOverhead _ | XBoot _ | XStep _ | XCoversCore -> false
 
-let compile ~(read : string -> string option) (args : string list) : output =
+let rec compile ~(read : string -> string option) (args : string list) : output =
   let report, optimize, file, warn, emit_beh = parse_args args in
   let f = match file with Some f -> f | None -> raise (Stop { out = usage ^ "\n"; err = ""; code = 0; files = [] }) in
+  (* A user's error says where (file:line:column when the node is known); an impossible state
+     inside the compiler is an internal error, exit 2, so it is not mistaken for the user's. *)
+  try compile_file ~read f report optimize warn emit_beh with
+  | Ast.Error (Some l, msg) -> stop (sprintf "%s:%d:%d: error: %s" f l.line l.col msg)
+  | Ast.Error (None, msg) -> stop (sprintf "%s: error: %s" f msg)
+  | Failure msg -> stop ~code:2 (sprintf "%s: internal error: %s" f msg)
+
+and compile_file ~read f report optimize warn emit_beh : output =
   let text = match read f with Some t -> t | None -> stop (sprintf "error: no such file: %s" f) in
-  let sexp = match CCSexp.parse_string text with
-    | Ok s -> s
-    | Error msg -> stop (sprintf "error: unable to parse %s: %s" f msg) in
+  let sexp = Parse.sexp_from_string text in
   let src = Parse.parse_source sexp in
   let names = match optimize with
     | Some names -> names
@@ -84,10 +90,5 @@ let compile ~(read : string -> string option) (args : string list) : output =
     { out = redcode; err = warnings ^ r; code = 0; files }
   | No_report -> { out = redcode; err = warnings; code = 0; files }
 
-(* Every compile error ends as a message and exit code 1. The compiler still declares one CTError
-   per module (i-7d2612-888db5), so each is caught here by name. *)
 let run ~(read : string -> string option) (args : string list) : output =
-  let error msg = { out = ""; err = sprintf "error: %s\n" msg; code = 1; files = [] } in
-  try compile ~read args with
-  | Stop o -> o
-  | Parse.CTError msg | Compile.CTError msg | Lib.CTError msg | Util.CTError msg -> error msg
+  try compile ~read args with Stop o -> o

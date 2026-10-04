@@ -20,7 +20,7 @@ let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
     let penv' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB penv')
 
-let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
+let rec analyse_store_expr (e : meta eexpr) (id : string) (penv : penv) : penv =
   match e with
   | EPrim2 (_, _, a1, a2, _) ->
     let env' = (analyse_store_arg a1 id PA penv) in
@@ -39,7 +39,7 @@ let rec analyse_store_expr (e : tag eexpr) (id : string) (penv : penv) : penv =
   | _ -> penv
 
 
-let analyse_let (id : string) (arg : arg) (body : tag eexpr) (label : string) (env : env) : env =
+let analyse_let (id : string) (arg : arg) (body : meta eexpr) (label : string) (env : env) : env =
   let aenv, penv, lenv = env in
   let aenv' = (extend_aenv id arg aenv) in
   let penv' = (analyse_store_expr body id penv) in

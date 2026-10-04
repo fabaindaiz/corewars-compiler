@@ -32,14 +32,14 @@ let uniquify (e : expr) : expr =
     let n = Option.value (Hashtbl.find_opt used x) ~default:0 in
     Hashtbl.replace used x (n + 1) ;
     if n = 0 then x else sprintf "%s#%d" x n in
-  let rec go env e = match e with
-    | Comment _ | Label _ | Expect _ -> e
-    | Prim2 (op, m, a1, a2) -> Prim2 (op, m, rename_arg env a1, rename_arg env a2)
-    | Flow1 (op, c, body) -> Flow1 (op, rename_cond env c, go env body)
-    | Flow2 (op, c, b1, b2) -> Flow2 (op, rename_cond env c, go env b1, go env b2)
-    | Let (x, a, body) ->
+  let rec go env (e : expr) : expr = match e with
+    | EComment _ | ELabel _ | EExpect _ -> e
+    | EPrim2 (op, m, a1, a2, loc) -> EPrim2 (op, m, rename_arg env a1, rename_arg env a2, loc)
+    | EFlow1 (op, c, body, loc) -> EFlow1 (op, rename_cond env c, go env body, loc)
+    | EFlow2 (op, c, b1, b2, loc) -> EFlow2 (op, rename_cond env c, go env b1, go env b2, loc)
+    | ELet (x, a, body, loc) ->
       let a' = rename_arg env a in
       let x' = fresh x in
-      Let (x', a', go ((x, x') :: env) body)
-    | Seq es -> Seq (List.map (go env) es) in
+      ELet (x', a', go ((x, x') :: env) body, loc)
+    | ESeq (es, loc) -> ESeq (List.map (go env) es, loc) in
   go [] e

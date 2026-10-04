@@ -30,10 +30,10 @@ metrics and predictions, `(expect ...)` checks them or exports them to pMARS, an
 is `Cored.Driver`, tested in-process. The gate runs locally with an opam switch in `_opam/`:
 `dune build`, 74 alcotest cases besides `execute` (Linux x86-64 only), an `--emit-beh` spec run end
 to end in pMARS, the audit and seven behaviour specs. **Seven defects are recorded** below, five
-with a failing check (four behaviour specs, one audit check); i-7d2612-888db5 is half done.
+with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next:** phase 1 continues with long lines (i-7d2612-174acf) and the located AST (i-7d2612-888db5, i-7d2612-1703ff); three fixes are done.
+**Next:** phase 1 ends with the two golden migrations: the reserved label prefix `_` (i-7d2612-425c66), then the ICWS'94 default modifiers (i-7d2612-96f7b1).
 
 ## Phase 1 — Correctness, before the output changes
 
@@ -73,17 +73,19 @@ with `GT`/`LT`, the same cycles per iteration — plus a performance warning fro
 a construct costs extra. Built in phase 1; the warning waits for phase 4 (i-7d2612-90d6e1).
 
 ### Four distinct CTError exceptions, none caught · i-7d2612-888db5
-**State.** Half done. Known-failing check: `tools/audit.py` `single-error-type`.
-`lib`, `util`, `parse` and `compile` each declare `exception CTError of string`; they are four
-exceptions. **Done:** `Cored.Driver` catches all four by name, so the CLI prints `error: ...` and
-exits 1 (d-7d2612-8bba52). **Still missing:** one exception type, locations, and keeping internal
-errors ("please report this bug" in `util.ml`) apart from user errors.
-**Decide first.** One user-error exception (with a location, i-7d2612-1703ff) plus `failwith`-style
-internal errors, converted to a message and exit code in the driver.
+**State.** Done (s-7d2612-2c7e4d). One user error, `Ast.Error of loc option * string`, replaced the
+four `CTError`s; the "please report this bug" states are `failwith`, which the driver reports as an
+internal error with exit 2. `tools/audit.py` (`single-error-type`) now checks that no other
+`*Error` exception appears; its known-failing mark is gone.
 
 ### Source locations in compile errors · i-7d2612-1703ff
-**State.** Planned. Needs a position-aware s-expression reader and one annotated AST type.
-**Why it is in phase 1.** Every warning of phase 4 must say where in the source it applies.
+**State.** Done (s-7d2612-2c7e4d). The user chose a fully located AST: the parser reads
+s-expressions with positions (`CCSexp.Make` with `make_loc`) and builds `loc eexpr` directly (the
+separate `expr` type is gone), tagging produces `meta eexpr` with `{ tag; loc }`, and
+`compile_expr` gives an error raised without a location the innermost node's. Tags are numbered as
+before, so no golden changed. Messages of `expect` and `--report` still name nodes by tag: moving
+them to line and column is part of the warnings (i-7d2612-90d6e1).
+**Why it was in phase 1.** Every warning of phase 4 must say where in the source it applies.
 
 ### Lines of 256 characters or more hang pMARS · i-7d2612-174acf
 **State.** Done (s-7d2612-2c7e4d). `compile_prog` raises a compile error naming the line and its

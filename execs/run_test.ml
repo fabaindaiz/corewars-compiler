@@ -48,13 +48,15 @@ let golden_files () : string list =
 
 
 (* Tests for annotated emission *)
-let rec while_tag (e : tag eexpr) : tag option =
+let rec while_meta (e : meta eexpr) : meta option =
   match e with
-  | EFlow1 (While, _, _, t) -> Some t
-  | EFlow1 (_, _, b, _) | ELet (_, _, b, _) -> while_tag b
-  | EFlow2 (_, _, b1, b2, _) -> (match while_tag b1 with Some t -> Some t | None -> while_tag b2)
-  | ESeq (es, _) -> List.find_map while_tag es
+  | EFlow1 (While, _, _, m) -> Some m
+  | EFlow1 (_, _, b, _) | ELet (_, _, b, _) -> while_meta b
+  | EFlow2 (_, _, b1, b2, _) -> (match while_meta b1 with Some m -> Some m | None -> while_meta b2)
+  | ESeq (es, _) -> List.find_map while_meta es
   | EComment _ | ELabel _ | EPrim2 _ | EExpect _ -> None
+
+let while_tag (e : meta eexpr) : tag option = Option.map (fun (m : meta) -> m.tag) (while_meta e)
 
 let is_mov (e : emitted) : bool =
   match e.instr with INSTR (IMOV, _, _, _) -> true | INSTR _ | ICOM _ | ILAB _ -> false
@@ -398,11 +400,11 @@ let test_minor_div_by_zero_b () =
 
 
 let test_minor_probe_count_positive () =
-  check_raises "dead 0" (Cored.Parse.CTError "Not a valid expectation: (dead 0) (N must be at least 1)")
+  check_raises "dead 0" (Cored.Ast.Error (Some { line = 1; col = 1 }, "Not a valid expectation: (dead 0) (N must be at least 1)"))
     (fun () -> ignore (parse_expectation (sexp_from_string "(dead 0)")))
 
 let test_minor_optimize_needs_objective () =
-  check_raises "(optimize)" (Cored.Parse.CTError "an (optimize ...) needs at least one objective")
+  check_raises "(optimize)" (Cored.Ast.Error (Some { line = 1; col = 10 }, "an (optimize ...) needs at least one objective"))
     (fun () -> ignore (parse_source (sexp_from_string "(program (optimize) (MOV 0 1))")))
 
 
@@ -452,7 +454,7 @@ let test_driver_expectation_fails () =
 
 let test_driver_compile_error_is_clean () =
   let o = drive [("p.src", "(program (expect (cycles < 3)) (MOV 0 1))")] ["p.src"] in
-  check Alcotest.(pair string int) "err, code" ("error: Not a valid expectation: (cycles < 3)\n", 1) (o.err, o.code)
+  check Alcotest.(pair string int) "err, code" ("p.src:1:18: error: Not a valid expectation: (cycles < 3)\n", 1) (o.err, o.code)
 
 let test_driver_missing_file () =
   let o = drive [] ["nope.src"] in
@@ -521,7 +523,25 @@ let test_phase1_long_line_is_an_error () =
   let l = String.make 250 'a' in
   let o = drive [("p.src", Printf.sprintf "(seq (label %s) (JMP %s))" l l)] ["p.src"] in
   check Alcotest.(pair string int) "err, code"
-    ("error: redcode line 5 has 269 characters; pMARS hangs on lines of 256 or more\n", 1) (o.err, o.code)
+    ("p.src: error: redcode line 5 has 269 characters; pMARS hangs on lines of 256 or more\n", 1) (o.err, o.code)
+
+
+let test_phase1_parse_error_located () =
+  let o = drive [("p.src", "(seq (MOV 0 1)\n  (FOO 1))")] ["p.src"] in
+  check Alcotest.(pair string int) "err, code" ("p.src:2:3: error: Not a valid unary expr: (FOO 1)\n", 1) (o.err, o.code)
+
+let test_phase1_atom_error_located () =
+  let o = drive [("p.src", "(MOV (foo 1) 0)")] ["p.src"] in
+  check Alcotest.(pair string int) "err, code" ("p.src:1:7: error: Not a valid mode: foo\n", 1) (o.err, o.code)
+
+let test_phase1_compile_error_located () =
+  let o = drive [("p.src", "(let (x 1)\n  (MOV x 0))")] ["p.src"] in
+  check Alcotest.(pair string int) "err, code"
+    ("p.src:2:3: error: variable `x` is used but no (store x) places it\n", 1) (o.err, o.code)
+
+let test_phase1_tags_unchanged_by_locations () =
+  (* tag numbering decides every generated label: a located AST must number nodes as before *)
+  check Alcotest.(option int) "prog8's while" (Some 9) (Option.map (fun (m : meta) -> m.tag) (while_meta (tag_expr (expr_of (example "prog8")))))
 
 
 (* OCaml tests: extend with your own tests *)
@@ -610,6 +630,10 @@ let ocaml_tests = [
     test_case "an initializer is resolved where its let binds it" `Quick test_phase1_initializer_resolved_where_bound ;
     test_case "do-while GT: strict, one extra cell" `Quick test_phase1_dowhile_gt_layout ;
     test_case "a line of 256+ characters is an error" `Quick test_phase1_long_line_is_an_error ;
+    test_case "a parse error says where" `Quick test_phase1_parse_error_located ;
+    test_case "a compile error says where" `Quick test_phase1_compile_error_located ;
+    test_case "an error on an atom says where" `Quick test_phase1_atom_error_located ;
+    test_case "tags are numbered as before" `Quick test_phase1_tags_unchanged_by_locations ;
   ] ;
   "interp", [
 

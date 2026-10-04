@@ -200,4 +200,4 @@ Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` w
 - (dead N) no process is left after N executed instructions
 - (cell ADDR "TEXT" N) after N instructions, cell ADDR holds the instruction TEXT
 
-`run_compile.exe --report` prints the measured metrics and predictions on standard error; `--report=json` prints them as JSON instead of the redcode. Any compile error prints `error: ...` on standard error and exits with code 1. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).
+`run_compile.exe --report` prints the measured metrics and predictions on standard error; `--report=json` prints them as JSON instead of the redcode. Any compile error prints `file:line:column: error: ...` on standard error and exits with code 1; an internal compiler error exits with code 2. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).

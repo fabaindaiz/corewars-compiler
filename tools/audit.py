@@ -21,9 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # check name -> the roadmap item that records the bug it detects.
-KNOWN_FAILING = {
-    "single-error-type": "i-7d2612-888db5",
-}
+KNOWN_FAILING: dict[str, str] = {}
 
 # Documents whose repository paths must exist (the map and everything it sends a reader to).
 INSTRUCTION_DOCS = [
@@ -110,11 +108,12 @@ def _():
     return problems
 
 
-@check("single-error-type")  # i-7d2612-888db5: one user-error exception, not four
+@check("single-error-type")  # d-7d2612-8bba52: one user-error exception, Ast.Error
 def _():
-    found = [str(p.relative_to(ROOT)) for p in sorted((ROOT / "src").glob("*.ml"))
-             if re.search(r"^\s*exception\s+CTError\b", p.read_text(), re.M)]
-    return [] if len(found) <= 1 else [f"`exception CTError` is declared in {len(found)} modules: {', '.join(found)}"]
+    found = [f"{p.relative_to(ROOT)}: exception {m.group(1)}" for p in sorted((ROOT / "src").glob("*.ml"))
+             for m in re.finditer(r"^\s*exception\s+(\w*Error)\b", p.read_text(), re.M)
+             if not (p.name == "ast.ml" and m.group(1) == "Error")]
+    return [f"{f}: user errors are Ast.Error (with a location); internal ones are Failure" for f in found]
 
 
 @check("no-global-counter")  # d-7d2612-123e41: labels come from tags, not from a counter

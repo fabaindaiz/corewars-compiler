@@ -103,16 +103,18 @@ type expectation =
 | XCell of int * string * int  (* address, text, after N instructions *)
 
 
-type expr =
-| Comment of string
-| Label of string
-| Prim2 of prim2 * imod * arg * arg
-| Flow1 of flow1 * cond * expr
-| Flow2 of flow2 * cond * expr * expr
-| Let of string * arg * expr
-| Seq of expr list
-| Expect of expectation
+(* Where a node starts in the source: line and column, both from 1. *)
+type loc = { line : int; col : int }
 
+(* The one compile error: what the user wrote wrong, and where when known. An impossible state
+   inside the compiler is not this: it is [Failure] (failwith), reported as an internal error. *)
+exception Error of loc option * string
+
+let error (msg : string) : 'a = raise (Error (None, msg))
+
+type tag = int
+
+(* The AST, annotated: the parser builds [loc eexpr] and tagging turns it into [meta eexpr]. *)
 type 'a eexpr =
 | EComment of string
 | ELabel of string * 'a
@@ -123,51 +125,52 @@ type 'a eexpr =
 | ESeq of 'a eexpr list * 'a
 | EExpect of expectation * 'a
 
+type expr = loc eexpr
+
+type meta = { tag : tag; loc : loc }
+
 (* A source file: an optional (program ...) header around one body expression. *)
 type source = { optimize : string list option; expects : expectation list; body : expr }
 
-
-type tag = int
-
-let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
+(* Every node gets a tag in pre-order from 1; labels are named after tags, so this numbering is
+   part of the output and must not change (comments and expectations take none). *)
+let rec tag_expr_help (e : expr) (cur : tag) : (meta eexpr * tag) =
   match e with
-  | Comment (s) ->
+  | EComment (s) ->
     EComment (s), cur
-  | Label (s) ->
-    let (next_tag) = (cur + 1) in
-    (ELabel (s, cur), next_tag)
-  | Prim2 (op, m, a1, a2) ->
-    let (next_tag) = (cur + 1) in
-    (EPrim2 (op, m, a1, a2, cur), next_tag)
-  | Flow1 (op, cond, expr) ->
+  | ELabel (s, loc) ->
+    (ELabel (s, { tag = cur; loc }), cur + 1)
+  | EPrim2 (op, m, a1, a2, loc) ->
+    (EPrim2 (op, m, a1, a2, { tag = cur; loc }), cur + 1)
+  | EFlow1 (op, cond, expr, loc) ->
     let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
-    (EFlow1 (op, cond, tag_expr, cur), next_tag)
-  | Flow2 (op, cond, expr1, expr2) ->
+    (EFlow1 (op, cond, tag_expr, { tag = cur; loc }), next_tag)
+  | EFlow2 (op, cond, expr1, expr2, loc) ->
     let (tag_expr1, next_tag1) = tag_expr_help expr1 (cur + 1) in
     let (tag_expr2, next_tag2) = tag_expr_help expr2 next_tag1 in
-    (EFlow2 (op, cond, tag_expr1, tag_expr2, cur), next_tag2)
-  | Let (x, a, expr) ->
+    (EFlow2 (op, cond, tag_expr1, tag_expr2, { tag = cur; loc }), next_tag2)
+  | ELet (x, a, expr, loc) ->
     let (tag_expr, next_tag) = tag_expr_help expr (cur + 1) in
-    (ELet (x, a, tag_expr, cur), next_tag)
-  | Seq (exprs) ->
-    let rec tag_seq (exprs : expr list) (cur : tag) : tag eexpr list * tag =
+    (ELet (x, a, tag_expr, { tag = cur; loc }), next_tag)
+  | ESeq (exprs, loc) ->
+    let rec tag_seq (exprs : expr list) (cur : tag) : meta eexpr list * tag =
       (match exprs with
-      | Expect (x) :: tail ->
+      | EExpect (x, loc) :: tail ->
         (* An expectation emits nothing and takes no tag of its own, so adding one never
            renumbers the labels generated after it. *)
         let (tag_tail, next_tag) = tag_seq tail cur in
-        EExpect (x, cur) :: tag_tail, next_tag
+        EExpect (x, { tag = cur; loc }) :: tag_tail, next_tag
       | head :: tail ->
         let (tag_head, next_tag1) = tag_expr_help head (cur + 1) in
         let (tag_tail, next_tag2) = tag_seq tail next_tag1 in
         [tag_head] @ tag_tail, next_tag2
       | [] -> [], cur ) in
     let (tag_e, next_tag) = tag_seq exprs (cur + 1) in
-    (ESeq (tag_e, cur), next_tag)
-  | Expect (x) ->
-    (EExpect (x, cur), cur)
+    (ESeq (tag_e, { tag = cur; loc }), next_tag)
+  | EExpect (x, loc) ->
+    (EExpect (x, { tag = cur; loc }), cur)
 
-let tag_expr (e : expr) : tag eexpr =
+let tag_expr (e : expr) : meta eexpr =
   let (tagged, _) = tag_expr_help e 1 in tagged
 
 

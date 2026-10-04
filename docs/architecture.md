@@ -32,8 +32,8 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 
 | Module | Role | Representation it produces |
 |---|---|---|
-| `src/parse.ml` | s-expression → AST; the optional `(program ...)` header; rejects unknown forms with `CTError` | `Ast.source`, `Ast.expr` |
-| `src/ast.ml` | AST types; `tag_expr` numbers every node in pre-order from 1 | `tag eexpr` (tags feed label names) |
+| `src/parse.ml` | s-expression → AST; the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
+| `src/ast.ml` | the annotated AST `'a eexpr`, `loc`, `meta = { tag; loc }`, the one user error `Error`; `tag_expr` numbers every node in pre-order from 1 | `meta eexpr` (tags feed label names) |
 | `src/rename.ml` | `uniquify`: every `let`-bound variable gets a name no other binder uses (`x`, `x#1`, …), so initializers resolve where they are bound; the tree keeps its shape, so tags are unchanged | `Ast.expr` |
 | `src/analyse.ml` | per `let`: finds the field (`PA`/`PB`) where `(store x)` sits | extends `penv` |
 | `src/lib.ml` | environments `aenv` (name → initializer), `penv` (name → field), `lenv` (name → label); `jump_label` | `env` |
@@ -42,7 +42,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | `src/layout.ml` | positions: labels resolved to offsets, cells with roles and variables, successors, loops, label and line-length diagnostics | `Layout.program` |
 | `src/metrics.ml` | static metrics, step and counter predictions, the optimization policy, text and JSON reports | `Metrics.t` |
 | `src/expect.ml` | collects `(expect ...)` with their enclosing loop, checks the static ones, writes the execution ones as a behaviour spec | `Expect.outcome`, `.beh` text |
-| `src/driver.ml` | the command line as a function: arguments in; standard output, standard error, files to write and exit code out; every `CTError` becomes `error: ...` and exit 1 | `Driver.output` |
+| `src/driver.ml` | the command line as a function: arguments in; standard output, standard error, files to write and exit code out; an `Ast.Error` becomes `file:line:col: error: ...` and exit 1, a `Failure` an internal error and exit 2 | `Driver.output` |
 | `src/red.ml` | the Redcode target: opcodes, modes, modifiers, and the pretty-printer that fixes the column padding | text |
 
 **Dependency direction:** `red` ← `ast` ← `rename` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
@@ -85,13 +85,11 @@ EXPECTED line. bbctester finds `*.bbc` recursively under `bbctests/`, so every g
 
 ## Exemplary files
 
-- A pass: `src/compile.ml` — one function per construct, exhaustive `match`, errors via `CTError`.
+- A pass: `src/compile.ml` — one function per construct, exhaustive `match`, errors via `Ast.error`.
 - A golden: `bbctests/examples/prog2.bbc`.
 - A behaviour spec: `behtests/prog8_while_lt.beh`.
 
 ## Deliberate deviations from the OCaml and compiler-course defaults
 
-- Two parallel AST types (`expr` and `'a eexpr`) instead of one annotated `'a expr`: inherited; no
-  source locations exist yet (i-7d2612-1703ff).
 - No `.mli` files: every module's whole surface is visible to the others. Not decided; recorded so
   that adding them is seen as a structural change.

@@ -95,7 +95,8 @@ rest on. URLs were checked on 2026-10-02.
   — the course this repository started from. **Confirms** labels from AST tags, "completely
   determined by its input… easier to work with in the context of testing" (d-7d2612-123e41).
   **Differs, not on purpose:** the course uses one annotated `'a expr` that also carries source
-  locations; this repository keeps two AST types and no locations (i-7d2612-1703ff).
+  locations. **Applied** (i-7d2612-1703ff): the parser builds `loc eexpr`, tagging turns it into
+  `meta eexpr` (`{ tag; loc }`).
 - **[Siek, *Essentials of Compilation*](https://jeapostrophe.github.io/courses/2021/spring/406/notes/book.pdf)**
   — test each pass's output on an interpreter for its language; a *uniquify* pass removes shadowing
   before analysis. **Applied:** uniquify, as `src/rename.ml` (i-7d2612-ce4c3b). **Not applied:** the
@@ -110,7 +111,8 @@ rest on. URLs were checked on 2026-10-02.
 - **[Real World OCaml: compiler frontend](https://dev.realworldocaml.org/compiler-frontend.html),
   [error handling](https://dev.realworldocaml.org/error-handling.html)** and the OCaml compiler's own
   `Location` / `Misc.fatal_error` — locations on the AST, one user-error type, internal errors kept
-  apart, an `.mli` per module. **Not applied:** all four (i-7d2612-888db5, i-7d2612-1703ff).
+  apart, an `.mli` per module. **Applied:** locations on the AST, one user-error type (`Ast.Error`),
+  internal errors as `Failure` (i-7d2612-888db5, i-7d2612-1703ff). **Not applied:** `.mli` files.
 - **[Csmith](https://users.cs.utah.edu/~regehr/papers/pldi11-preprint.pdf), [QCheck](https://github.com/c-cube/qcheck)**
   — random programs plus differential comparison and shrinking. Later, after a reference
   interpreter exists.
@@ -171,7 +173,7 @@ shaped it:
 | `opmod_to_rmod`, modifiers | ICWS'94 A.2.1.1 | the `.I` fallback (i-7d2612-96f7b1); `.I` changes `SLT` to "both fields" |
 | label generation, `tag_expr` | CC5116 notes; `docs/architecture.md` *Generated labels* | every golden contains the numbering; user-label collisions |
 | `analyse.ml`, `lib.ml`, `rename.ml` environments | Siek (uniquify); `docs/semantics.md` *Statics* | names are unique after `Rename.uniquify`; analysis may rely on it |
-| errors | RWO error handling | four `CTError`s (i-7d2612-888db5) |
+| errors | RWO error handling | raise `Ast.error`, never a new exception; internal states are `failwith` |
 | tests or goldens | BBCStepTester README; `docs/architecture.md` | `execute` proves assembly only; d-7d2612-6a1527 |
 | pMARS, its flags, its binary | `doc/pmars.txt` in the zip | the vendored ELF is Linux-only; `-A` runs nothing |
 | hill targets | koth.org, SAL | p-space absent on 94nop; header selects the hill |

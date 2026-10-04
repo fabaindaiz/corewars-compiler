@@ -109,9 +109,10 @@ history: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
   i-7d2612-ceee87). Never silence a warning or add a `| _ ->` to make a build pass: a wildcard
   hides every constructor added later, as the `| _, _ -> rmod` fallback in `opmod_to_rmod` shows
   (i-7d2612-96f7b1).
-- **Errors.** A user's mistake is reported as a compile error with what was wrong; an impossible
-  state is an internal error. Today both are `CTError` (i-7d2612-888db5): do not add a fifth;
-  `Cored.Driver` catches each by name and exits 1 with `error: ...` (d-7d2612-8bba52).
+- **Errors.** A user's mistake is `Ast.Error` (raise it with `Ast.error msg`; `compile_expr` adds the
+  node's location), printed `file:line:col: error: ...` with exit 1; an impossible state is
+  `failwith`, printed as an internal error with exit 2 (d-7d2612-8bba52). No other `*Error`
+  exception: `tools/audit.py` (`single-error-type`).
 - **Comments say why**, in the density of the file you are in; a number carries the measurement
   that produced it. No ticket ids or "previously" in code comments: that belongs in the changelog.
 - **Domain non-negotiables:** every emitted instruction costs a cycle and one of MAXLENGTH cells; a
