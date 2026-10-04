@@ -58,6 +58,8 @@ generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of 
   `let` that shadows `x`. Checked: two stores are an error (`Rename.check_single_stores`), and a
   use with no store is an error at the use (`Lib.translate_penv`). Shadowing is resolved before compilation: `Rename.uniquify` gives every binder
   a unique name, so an initializer means the variable visible where its `let` binds it.
+- **Stores in conditions.** A `(store x)` inside a condition makes the condition's instruction x's
+  place; in `GT`, emitted as `SLT b, a`, the left operand lands in the B-field.
 - **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `_LETn`, through the modifier
   that selects `f`. An indirect use (`@`, `<`, `>`) goes through that field (`*`, `{`, `}` when
   `f = A`). `#x` is the offset to `_LETn`, not its value.

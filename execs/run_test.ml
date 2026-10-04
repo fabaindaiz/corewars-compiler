@@ -613,6 +613,21 @@ let test_review1_constant_skip_known () =
   check range "overhead" (r 2 2) l.overhead
 
 
+let test_review1_store_in_condition_is_labelled () =
+  let labels = List.filter_map (fun i -> match i with ILAB l -> Some l | ICOM _ | INSTR _ -> None)
+      (List.map (fun (e : emitted) -> e.instr)
+         (compile_body (parse_exp (sexp_from_string "(let (x 4) (seq (if (EQ (store x) 4) (NOP)) (ADD 1 x)))")))) in
+  check Alcotest.bool "_LET1 is defined" true (List.mem "_LET1" labels)
+
+
+let test_review1_store_in_gt_condition_field () =
+  (* GT is emitted as SLT b, a: a (store x) on the left lands in the B-field *)
+  let add = List.find_map (fun i -> match i with INSTR (IADD, md, _, _) -> Some md | INSTR _ | ICOM _ | ILAB _ -> None)
+      (List.map (fun (e : emitted) -> e.instr)
+         (compile_body (parse_exp (sexp_from_string "(let (x 4) (seq (if (GT (store x) 3) (NOP)) (ADD 1 x)))")))) in
+  check (Alcotest.option rmod_t) "ADD.AB on x in the B-field" (Some RAB) add
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -714,6 +729,8 @@ let ocaml_tests = [
     test_case "a user name like a fresh one" `Quick test_review1_user_name_like_a_fresh_one ;
     test_case "messages name the user's variable" `Quick test_review1_messages_name_the_user's_variable ;
     test_case "SNE #0, #1 always skips (metrics)" `Quick test_review1_constant_skip_known ;
+    test_case "a store inside a condition defines its label" `Quick test_review1_store_in_condition_is_labelled ;
+    test_case "a store on the left of GT is in the B-field" `Quick test_review1_store_in_gt_condition_field ;
   ] ;
   "interp", [
 

@@ -1,0 +1,18 @@
+NAME: a store inside a condition
+DESCRIPTION: (store x) in an EQ makes the SEQ's A-field x's place, labelled _LET1; found by the phase-1 review, see behtests/store_in_condition.beh
+SRC:
+(let (x 4)
+  (seq
+    (if (EQ (store x) 4)
+      (NOP))
+    (ADD 1 x) ))
+EXPECTED:
+;redcode-94b
+
+_LET1 
+  SEQ.AB #4     , #4     
+  JMP    $_IF4  , #0     
+  NOP    #0     , #0     
+_IF4  
+  ADD.A  #1     , $_LET1 
+  DAT    #0     , #0     

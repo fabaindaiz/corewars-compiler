@@ -124,6 +124,12 @@ fixed in the same review (`jump_modifier`, `behtests/user_djn_afield.beh`).
 `SLT.AB`, `MOV.BA` …), its whole cell, or a compile error asking for an explicit modifier — part of
 the operator design of phase 2 (i-7d2612-7eadd5).
 
+### A store inside a condition never emitted its label · i-7d2612-4622d8
+**State.** Done (s-7d2612-2c7e4d). Found by the phase-1 branch review: `compile_label` ran only for
+primitives, so `(if (EQ (store x) 3) ...)` referenced `_LET1` without defining it (pMARS rejects the
+warrior). Conditions now label their stores, and a store on the left of `GT` is placed in the
+B-field, since `GT` is emitted as `SLT b, a`. Golden and spec `store_in_condition`.
+
 ### Fallback modifier .I differs from the ICWS'94 defaults · i-7d2612-96f7b1
 **State.** Done (s-7d2612-2c7e4d). `compile_mod` falls back to `Red.default_modifier` (the A.2.1.1
 table) instead of `.I`. Two goldens changed, checked line by line (`prog3`, `prog5`: `ADD`/`SUB .I` →
