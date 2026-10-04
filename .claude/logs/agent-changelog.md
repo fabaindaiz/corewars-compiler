@@ -31,7 +31,14 @@ do, and the package versions.
 exactly alike for imp, dwarf, stone, paper and the imp ring.
 An imp spiral archetype (two processes per point, own design), traced in cdb before its spec was
 written; RED and hand-written score alike under the fixed seed.
-**Left undone.** See below as the session goes.
+The measurement the user asked for (`docs/research/2026-10-04-benchmark.md`): RED and hand-written
+archetypes score alike under a fixed seed; the best RED warrior (a stone and imp ring composed with
+the compiler) places #797 of 1107 on Koenigstuhl's 94nop hill, where the top scores twice as much;
+the gap is strategy, and the two things RED lacks for the top strategies became i-7d2612-e98368 and i-7d2612-e725ef.
+`tools/bench.py` first crashed on an opponent that prints its own listing (fixed: it reads the
+first line of two numbers). The net step through counted inner loops was closed as not pursued.
+**Left undone.** Compile-time repetition (the quickscan, the macro layer); i-7d2612-e98368; i-7d2612-e725ef; a Silk-style
+paper; the four process proposals of s-7d2612-3f3b23 (none scheduled).
 
 ## 2026-10-04 · s-7d2612-333abd — Phase 2's operator design and phase 4's warnings
 

@@ -36,6 +36,15 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 
 ## Where we are
 
+**Phase 5 is built** (s-7d2612-9b0d20, branch `feat/phase-5` on `feat/phase-4`, not merged):
+hills by header or flag, metadata as written, `make bench` against Wilkies and Koenigstuhl's top
+20, behaviour specs for every construct, the Core War documentation checked against its sources.
+Measured: RED costs nothing against hand-written archetypes; its best warrior places #797 of 1107
+on Koenigstuhl's 94nop hill, the gap being strategy
+(`docs/research/2026-10-04-benchmark.md`). **Next:** the macro layer (i-7d2612-ec4d2d), which the
+quickscan and the snippets wait for; A-field modes on numbers (i-7d2612-e98368); an entry point
+(i-7d2612-e725ef).
+
 **Phase 4 and the rest of phase 2 are built** (s-7d2612-333abd, branch `feat/phase-4` from `main`,
 not merged): a cell beside a value is its B-field (i-7d2612-9efd00 fixed), constants as `EQU` with
 label arithmetic (the imp ring is the eighth archetype), warnings driven by the policy, the phase-1
@@ -206,9 +215,10 @@ Write the classic warriors in RED and measure each against its hand-written form
 **State.** Half done (s-7d2612-14641b). Seven archetypes — imp, dwarf, stone, core-clear, a `JMZ`
 scanner, a SEQ scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
 (`bbctests/archetypes/`), behaviour specs (`behtests/archetype_*.beh`) and the measurements in
-`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd); an imp spiral with two processes per point (s-7d2612-9b0d20). **Still missing:** and a quickscan (label arithmetic and repetition), Mice's
-copy-by-index (its pointer precedes its code; RED has no `ORG`), Silk-style paper; and the
-benchmark comparison as a check rather than a script in `_build/` (i-7d2612-f27a91).
+`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd); an imp spiral with two processes per point (s-7d2612-9b0d20). **Still missing:** a quickscan (it waits for compile-time repetition), Mice's
+copy-by-index (its pointer precedes its code; RED has no `ORG`), Silk-style paper (its copy runs through an A-field postincrement, `}`, which RED writes only
+through a variable stored in an A-field: expressible, not attempted). The benchmark is `make bench`
+(i-7d2612-f27a91).
 Originally planned: Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
 a Silk-style paper: each exercises a different construct (`docs/references.md`, *Corpora*).
 **Collides with.** i-7d2612-96f7b1 and i-7d2612-3744e5 for any warrior that needs them.
@@ -248,6 +258,20 @@ lines 165–166) and the epilogue is `DAT.F #0, #0`. A `JMZ`/`JMN` scanner sees 
 `SEQ.I`/`SNE.I` scanner comparing against an empty cell sees the epilogue.
 **Collides with.** Every golden: each ends in the epilogue (d-7d2612-6a1527 needs the reason).
 **Decide first.** Whether to emit `DAT $0, $0` (the user's question, 2026-10-04).
+
+### A number cannot take an A-field mode · i-7d2612-e98368
+**State.** Planned (s-7d2612-9b0d20, from `docs/research/2026-10-04-benchmark.md`). RED's modes pick
+the A-field variant (`*`, `{`, `}`) only through a variable stored in an A-field; a number or label
+always gets the B variant (`@`, `<`, `>`). The fast Silk-style paper copies through `}`.
+**Decide first.** A spelling for the A-field modes (`(AInd x)`, `(ADec x)`, `(AInc x)`), or a mode
+written on the variable.
+
+### An entry point other than the first cell · i-7d2612-e725ef
+**State.** Planned (s-7d2612-9b0d20). Execution starts at the first emitted instruction (no `ORG`);
+a warrior that keeps a pointer before its code (the hand-written core-clear, Mice's copy-by-index)
+is rearranged in RED, which costs the core-clear 4 points against Wilkies.
+**Decide first.** A header item `(start label)` emitting `ORG label`, and what Layout and the
+metrics take as the entry.
 
 ### Constants as named EQU · i-7d2612-a3f2b6
 **State.** Done (s-7d2612-333abd): `(const name value)` in the header is an `EQU` line, and operand
@@ -345,8 +369,10 @@ declare data that is not a variable.
 ### A loop's pointer step is predicted per instruction, not per iteration · i-7d2612-fbe7c8
 **State.** Half done (s-7d2612-333abd): a pointer's step is now the sum of its changes over one lap
 (`test_net_step`), and nothing is predicted when a change is on some laps only or inside an inner
-loop; the paper's outer loop predicts nothing for `d` instead of two wrong steps. Still missing:
-summing inside inner loops whose trip count is known (a `DJN` counter). Was: The paper archetype's outer loop moves `d` by `ADD #2365` and
+loop; the paper's outer loop predicts nothing for `d` instead of two wrong steps. Not pursued
+(s-7d2612-9b0d20): summing through an inner loop whose trip count is known. The count is known
+statically only when nothing resets the counter each lap, which no archetype does (the paper resets
+its own); summing through a reset would need data flow (what a `MOV #k, c` leaves each lap). Was: The paper archetype's outer loop moves `d` by `ADD #2365` and
 by `<d` seven times in its inner loop: 2358 cells per lap. `--report` predicts two steps for the
 outer loop, 2365 and −1, neither of which is what `d` does. The prediction should sum a pointer's
 changes over one iteration, inner loops included when their trip count is known.
