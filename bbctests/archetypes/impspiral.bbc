@@ -1,0 +1,39 @@
+NAME: a three-point imp spiral in RED
+DESCRIPTION: two processes per point (two waves on one ring, step 2667): six processes take six trampolines through JMP <vec; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_impspiral.beh
+SRC:
+(program
+  (const step 2667)
+  (seq
+    (SPL (Dir 2))
+    (SPL (Dir 1))
+    (SPL (Dir 1))
+    (JMP (Dec vec))
+    (JMP (+ imp (* 2 step)))
+    (JMP (+ imp step))
+    (JMP imp)
+    (JMP (+ imp (* 2 step)))
+    (JMP (+ imp step))
+    (JMP imp)
+    (label vec)
+    (DAT 0 0)
+    (label imp)
+    (MOV I (# 0) (Dir step))))
+EXPECTED:
+;redcode-94b
+step EQU 2667
+
+  SPL    $2     , #0     
+  SPL    $1     , #0     
+  SPL    $1     , #0     
+  JMP    <vec   , #0     
+  JMP    $imp+(2*step), #0     
+  JMP    $imp+step, #0     
+  JMP    $imp   , #0     
+  JMP    $imp+(2*step), #0     
+  JMP    $imp+step, #0     
+  JMP    $imp   , #0     
+vec   
+  DAT    #0     , #0     
+imp   
+  MOV.I  #0     , $step  
+  DAT    $0     , $0     

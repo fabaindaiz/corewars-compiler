@@ -1,0 +1,17 @@
+(program
+  (const step 2667)
+  (seq
+    (SPL (Dir 2))
+    (SPL (Dir 1))
+    (SPL (Dir 1))
+    (JMP (Dec vec))
+    (JMP (+ imp (* 2 step)))
+    (JMP (+ imp step))
+    (JMP imp)
+    (JMP (+ imp (* 2 step)))
+    (JMP (+ imp step))
+    (JMP imp)
+    (label vec)
+    (DAT 0 0)
+    (label imp)
+    (MOV I (# 0) (Dir step))))

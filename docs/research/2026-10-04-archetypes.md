@@ -43,6 +43,7 @@ code), and `archetypes/NAME.src`, the same warrior in RED. The RED versions are 
 | paper | `repeat` (reset, `do-while (JN n)` copy, `SPL @d`, `ADD`) | 6 + 2 per cell | 6 + 2 per cell | 7 | 8 | 78, 80 | 80, 79 |
 | SEQ scanner | `repeat` (`ADD F` to two pointers, `if (NE I @a @b)` bomb) | 3 (pair of empty cells) | not expressible; 3 with `(NE I ...)` | 7 | 9 | 36, 37 | 37, 37 |
 | imp ring (3 points) | `SPL`, `JMP <vec` onto three `JMP`s to `imp`, `(+ imp step)`, `(+ imp (* 2 step))`, `(const step 2667)` | 1 per process | 1 per process | 8 | 9 | 76, 77 | 76, 76 |
+| imp spiral (3 points, 2 waves) | three `SPL`s, `JMP <vec` onto six `JMP`s, `(const step 2667)` | 1 per process | 1 per process | 12 | 13 | 70.5 | 70.5 (fixed seed, `make bench`) |
 
 The scanner's last figures are from phase 3 (the same day): `(repeat body (store p))` keeps its
 pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3), 6 cells like the hand-written one; it then scored

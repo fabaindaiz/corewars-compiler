@@ -1,0 +1,11 @@
+# Three SPLs leave six processes on JMP <vec (imp is cell 11, step 2667). The first wave writes the
+# ring's points at instructions 18, 19, 20 (2678, 5345, then 12 = 11 + 3*2667 - 8000); the second wave
+# runs the same three cells again (21-23); the first wave's next lap writes 13 at 26.
+golden: bbctests/archetypes/impspiral.bbc
+cell 17 2678 DAT.F $0, $0
+cell 18 2678 MOV.I #0, $2667
+cell 19 5345 MOV.I #0, $2667
+cell 20 12 MOV.I #0, $2667
+cell 25 13 DAT.F $0, $0
+cell 26 13 MOV.I #0, $2667
+alive 10000
