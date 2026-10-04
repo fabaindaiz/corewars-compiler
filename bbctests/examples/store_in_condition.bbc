@@ -10,8 +10,7 @@ EXPECTED:
 ;redcode-94b
 
 _LET1 
-  SEQ.AB #4     , #4     
-  JMP    $_IF4  , #0     
+  SNE.AB #4     , #4     
   NOP    #0     , #0     
 _IF4  
   ADD.A  #1     , $_LET1 

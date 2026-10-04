@@ -15,7 +15,7 @@ let candidates : options list =
    nothing next to one pMARS run. *)
 let measure_all ?(consts = []) ?coresize ?start (e : Ast.expr) : (options * emitted list * Metrics.t) list =
   List.map (fun o ->
-    let body = compile_body ~opts:o ~consts:(List.map fst consts) e in
+    let body = compile_body ~opts:o ~consts ?coresize e in
     (o, body, Metrics.measure (Layout.build ?coresize ~consts ?start body))) candidates
 
 let pick (policy : Metrics.policy) (variants : (options * emitted list * Metrics.t) list) : options * emitted list * Metrics.t =

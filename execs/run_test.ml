@@ -863,7 +863,10 @@ let test_review3_rotated_while_is_the_while () =
 let test_review3_peephole_keeps_numeric_spans () =
   (* JMP $2 and ADD $-2 count cells across the empty if: removing its jump would move their targets *)
   check ops "kept" [IJMP; IDAT; IJMZ; IADD; IJMP; IDAT; IDAT]
-    (opcodes (chosen "(let (x 1) (seq (JMP (Dir 2)) (DAT 7 7) (if (JN x) (seq)) (ADD (Dir -2) c) (JMP 0) (DAT (store x) 0) (label c) (DAT 0 0)))"))
+    (opcodes (chosen "(let (x 1) (seq (JMP (Dir 2)) (DAT 7 7) (if (JN x) (seq)) (ADD (Dir -2) c) (JMP 0) (DAT (store x) 0) (label c) (DAT 0 0)))")) ;
+  (* $7998 is $-2 modulo the core *)
+  check ops "kept, counted modulo the core" [IJMZ; INOP; IJMP; IADD; IJMP; IDAT; IDAT]
+    (opcodes (chosen "(let (x 1) (seq (if (JN x) (NOP) (seq)) (ADD (Dir 7998) c) (JMP 0) (DAT (store x) 0) (label c) (DAT 0 0)))"))
 
 
 (* Tests for the cell default: a plain reference or a pointer target names a cell, read at its
@@ -912,7 +915,7 @@ let test_consts_expressions () =
 let test_consts_layout_evaluates () =
   (* imp is cell 2: from the JMP at 0, imp+2*step is 2 + 5334 cells ahead; from the ADD at 1,
      imp+1 is 2 cells ahead *)
-  let p = L.build ~consts:[("step", XNum 2667)] (compile_body ~consts:["step"] (body_of
+  let p = L.build ~consts:[("step", XNum 2667)] (compile_body ~consts:[("step", XNum 2667)] (body_of
       "(seq (JMP (+ imp (* 2 step))) (ADD (* 2 step) (Dir (+ imp 1))) (label imp) (MOV I (# 0) (Dir step)))")) in
   check Alcotest.int "JMP target" 5336 p.cells.(0).a.value ;
   check Alcotest.(pair int int) "ADD operands" (5334, 2) (p.cells.(1).a.value, p.cells.(1).b.value) ;
@@ -1186,6 +1189,30 @@ let test_macros_errors () =
     (String.starts_with ~prefix:"p.src:1:43: error:" (err "(program (define (bad) (MOV 0 (store z))) (bad))"))
 
 
+let test_fused_skip () =
+  let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
+  let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
+  check ops "NE around one instruction" [ISEQ; IMOV; IJMP; IDAT] (ops_of "(if (NE a b) (MOV 1 a))") ;
+  check ops "EQ around one instruction" [ISNE; IJMP; IJMP; IDAT] (ops_of "(if (EQ a b) (JMP 0))") ;
+  check ops "two instructions: kept" [ISNE; IJMP; IMOV; IMOV; IJMP; IDAT] (ops_of "(if (NE a b) (seq (MOV 1 a) (MOV 2 b)))") ;
+  check ops "GT: SLT has no inverse" [ISLT; IJMP; IMOV; IJMP; IDAT] (ops_of "(if (GT a b) (MOV 1 a))") ;
+  check ops "after a skip: kept" [ISEQ; ISNE; IJMP; IMOV; IJMP; IDAT] (ops_of "(seq (SEQ a b) (if (NE a b) (MOV 1 a)))")
+
+
+let test_fused_skip_with_expressions () =
+  let src body = Printf.sprintf "(program (const s 400) (let (a 0) (let (b 1) (seq (label f) %s (JMP 0) (DAT (store a) (store b))))))" body in
+  let tests body = List.filter_map (fun l ->
+      if contains l "  SEQ" then Some "SEQ" else if contains l "  SNE" then Some "SNE" else None)
+      (String.split_on_char '\n' (out_of (src body))) in
+  (* the compared cells are 400 past f, outside the warrior: removing a cell moves nothing they name *)
+  check Alcotest.(list string) "anchored outside: fused" ["SEQ"] (tests "(if (NE I (Dir (+ f s)) (Dir (+ f (+ s 1)))) (MOV 1 a))") ;
+  (* f+3 is a cell of the warrior past the jump that would go, and f+5 the epilogue: they stay *)
+  check Alcotest.(list string) "anchored inside, across the jump: kept" ["SNE"] (tests "(if (NE I (Dir (+ f 3)) (Dir (+ f s))) (MOV 1 a))") ;
+  check Alcotest.(list string) "anchored on the epilogue: kept" ["SNE"] (tests "(if (NE I (Dir (+ f 5)) (Dir (+ f s))) (MOV 1 a))") ;
+  (* an address is taken modulo the core: f+8003 is f+3 on 94b *)
+  check Alcotest.(list string) "anchored past the core, wrapping inside: kept" ["SNE"] (tests "(if (NE I (Dir (+ f 8003)) (Dir (+ f s))) (MOV 1 a))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1321,6 +1348,8 @@ let ocaml_tests = [
     test_case "templates: Lab, Var, Code" `Quick test_macros_lab_var_code ;
     test_case "templates: fresh labels and lets" `Quick test_macros_hygiene ;
     test_case "templates: what they reject" `Quick test_macros_errors ;
+    test_case "an EQ/NE if around one instruction is a skip" `Quick test_fused_skip ;
+    test_case "fusion with label-anchored expressions" `Quick test_fused_skip_with_expressions ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

@@ -174,6 +174,17 @@ offset that points *into* the cells a construct emits depends on that construct'
 policy now chooses (rotation reorders a `while`): such a program means only its compiled redcode
 (§4, outside the structured fragment).
 
+**Skip fusion** (d-7d2612-6222c1). Under the same option, an `EQ` or `NE` `if` around exactly one
+instruction, `SEQ a, b; JMP fin; X; fin:`, becomes the inverted skip `SNE a, b; X` (and `SNE` becomes
+`SEQ`): a skip passes over exactly one instruction, so `X` runs on the same outcome, one cell and,
+when the test skips, one cycle sooner. `SLT` has no inverse and stays. The guards are the peephole's:
+the cell before may not skip, the jump carries no label and moves no pointer, and no operand counts
+cells across it. An operand counts across a cell when the cell lies between where it is counted from
+and what it reaches: its own cell for a number, its label for a label plus a number (`first+400`);
+the address is taken modulo the core (`$7998` is `$-2` on 8000 cells), a label plus a number that
+reaches outside the warrior counts nothing (the warrior moves as a whole), and an expression of
+another form counts every cell.
+
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the
 jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-fffa6c).

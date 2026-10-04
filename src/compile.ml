@@ -309,7 +309,7 @@ let thread_jumps (body : emitted list) : emitted list =
    across it (JMP $2 over it would land one cell further). Its labels move to the next cell,
    where it went anyway. Removing one can make another jump aim at its next cell: repeated until
    nothing changes. *)
-let rec peephole (body : emitted list) : emitted list =
+let rec peephole ?(consts = []) ?(coresize = Hill.default.coresize) (body : emitted list) : emitted list =
   let cells = Array.of_list (List.rev (snd (List.fold_left (fun (pending, acc) (e : emitted) ->
       match e.instr with
       | ILAB l -> (l :: pending, acc)
@@ -322,13 +322,39 @@ let rec peephole (body : emitted list) : emitted list =
     | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
              | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> false) in
   let user_label l = not (String.starts_with ~prefix:"_" l) in
-  (* Cells between an operand written as a number and the cell it counts to, both ends included; an
-     expression's span is not known here, so it counts every cell. *)
+  let n = Array.length cells in
+  (* An expression as a label plus a number (the label's cell, the offset), or a number alone; None
+     when it is neither (two labels, a label multiplied, a value only pMARS knows). *)
+  let rec linear (x : rexpr) : (string option * int) option =
+    match x with
+    | XNum k -> Some (None, k)
+    | XName s when List.mem_assoc s consts -> Option.map (fun v -> (None, v)) (Consts.value consts x)
+    | XName s -> if Hashtbl.mem at s then Some (Some s, 0) else None
+    | XBin (op, a, b) ->
+      (match op, linear a, linear b with
+      | '+', Some (la, x), Some (lb, y) when la = None || lb = None -> Some ((if la = None then lb else la), x + y)
+      | '-', Some (la, x), Some (None, y) -> Some (la, x - y)
+      | ('*' | '/' | '%'), Some (None, _), Some (None, _) -> Option.map (fun v -> (None, v)) (Consts.value consts x)
+      | _, (Some _ | None), (Some _ | None) -> None) in
+  (* Cells between an operand that counts cells and the cell it reaches, both ends included: from the
+     operand's own cell for a number, from its label for a label plus a number. A label plus a number
+     reaching outside the warrior names no cell of it, and the warrior moves as a whole. An
+     expression neither form covers counts every cell. Addresses are modulo the core: $7998 is $-2
+     on a core of 8000, and a label plus 8003 its cell plus 3. *)
+  let near d = let m = ((d mod coresize) + coresize) mod coresize in if 2 * m > coresize then m - coresize else m in
   let spans = List.concat (List.mapi (fun j ((e : emitted), _) -> match e.instr with
     | INSTR (_, _, a, b) ->
       List.filter_map (fun r -> match r with
-        | RRef ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), n) -> Some (j, min j (j + n), max j (j + n))
-        | RExp ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), _) -> Some (j, min_int, max_int)
+        | RRef ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), d) -> let d = near d in Some (j, min j (j + d), max j (j + d))
+        | RExp ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), x) ->
+          (match linear x with
+          | Some (None, d) -> let d = near d in Some (j, min j (j + d), max j (j + d))
+          | Some (Some l, d) ->
+            let base = Hashtbl.find at l in
+            let t = base + near d in
+            (* cell n is the epilogue, which follows the body and belongs to the warrior *)
+            if t < 0 || t > n then None else Some (j, min base t, max base t)
+          | None -> Some (j, min_int, max_int))
         | RRef (RImm, _) | RExp (RImm, _) | RLab _ | RNone -> None) [a; b]
     | ILAB _ | ICOM _ -> []) (Array.to_list cells)) in
   let counted i = List.exists (fun (j, lo, hi) -> j <> i && lo <= i && i <= hi) spans in
@@ -337,13 +363,36 @@ let rec peephole (body : emitted list) : emitted list =
       Hashtbl.find_opt at l = Some (i + 1) && not (skips (i - 1)) && not (moves_a_pointer b)
       && not (List.exists user_label labels) && not (counted i)
     | ({ instr = INSTR _ | ILAB _ | ICOM _; _ }, _) -> false in
+  (* An EQ or NE if around one instruction, SEQ/SNE a, b; JMP fin; X; fin:, is the inverted skip
+     SNE/SEQ a, b; X: a skip passes over exactly one instruction, so X runs on the same outcome, one
+     cell and (on the skipping side) one cycle sooner. SLT has no inverse. The JMP must carry no
+     label, the cell before may not skip (it would land elsewhere), and no number may count across. *)
+  let inverse i = match (fst cells.(i)).instr with
+    | INSTR (ISEQ, m, a, b) | INSTR (ICMP, m, a, b) -> Some (INSTR (ISNE, m, a, b))
+    | INSTR (ISNE, m, a, b) -> Some (INSTR (ISEQ, m, a, b))
+    | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
+             | ISLT | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> None in
+  let fusable i =
+    i + 3 <= Array.length cells && (fst cells.(i)).construct <> None && inverse i <> None
+    && not (skips (i - 1)) && not (counted (i + 1))
+    && (match cells.(i + 1) with
+        | ({ instr = INSTR (IJMP, _, RLab (RDir, l), b); construct = Some _; stores = []; _ }, []) ->
+          Hashtbl.find_opt at l = Some (i + 3) && not (moves_a_pointer b)
+        | ({ instr = INSTR _ | ILAB _ | ICOM _; _ }, _) -> false) in
   match List.find_opt dead (List.init (Array.length cells) Fun.id) with
-  | None -> body
-  | Some i -> let gone = fst cells.(i) in peephole (List.filter (fun e -> e != gone) body)
+  | Some i -> let gone = fst cells.(i) in peephole ~consts ~coresize (List.filter (fun e -> e != gone) body)
+  | None ->
+    match List.find_opt fusable (List.init (Array.length cells) Fun.id) with
+    | None -> body
+    | Some i ->
+      let test = fst cells.(i) and gone = fst cells.(i + 1) in
+      let inverted = Option.get (inverse i) in
+      peephole ~consts ~coresize (List.filter_map (fun e ->
+        if e == gone then None else if e == test then Some { e with instr = inverted } else Some e) body)
 
-let compile_body ?(opts = no_opts) ?(consts = []) (e : expr) : emitted list =
-  let body = thread_jumps (compile_expr opts (tag_expr (Rename.uniquify (Consts.resolve consts e))) empty_env) in
-  if opts.peephole then peephole body else body
+let compile_body ?(opts = no_opts) ?(consts = []) ?coresize (e : expr) : emitted list =
+  let body = thread_jumps (compile_expr opts (tag_expr (Rename.uniquify (Consts.resolve (List.map fst consts) e))) empty_env) in
+  if opts.peephole then peephole ~consts ?coresize body else body
 
 
 let prelude = "
@@ -385,7 +434,7 @@ let compile_prog ?opts ?(consts = []) ?hill ?(meta = []) ?start (e : expr) : str
   let target = Option.value hill ~default:Hill.default in
   Consts.check_divisions consts e ;
   check_pspace target e ;
-  let body = compile_body ?opts ~consts:names e in
+  let body = compile_body ?opts ~consts ~coresize:target.coresize e in
   let instrs = List.map (fun (x : emitted) -> x.instr) body in
   let cells = List.length (List.filter (fun i -> match i with INSTR _ -> true | ILAB _ | ICOM _ -> false) (instrs @ epilogue)) in
   if cells > target.length then

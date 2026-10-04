@@ -1,6 +1,7 @@
-# x = 4 lives in the SEQ's A-field. SEQ #4, #4 skips the jump past the body, NOP runs, then
-# ADD.A #1 writes x's place (the SEQ itself) and the epilogue DAT ends the warrior.
+# x = 4 lives in the test's A-field. The if around one instruction is the inverted skip: SNE #4, #4
+# does not skip, NOP runs, then ADD.A #1 writes x's place (the SNE itself) and the epilogue DAT ends
+# the warrior.
 golden: bbctests/examples/store_in_condition.bbc
 alive 3
-cell 3 0 SEQ.AB #5, #4
+cell 3 0 SNE.AB #5, #4
 dead 4

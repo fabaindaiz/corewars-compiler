@@ -5,7 +5,7 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
-## 2026-10-04 · s-7d2612-140ece — Phase 6: A-field modes, the entry point and the macro layer
+## 2026-10-04 · s-7d2612-140ece — Phase 6: A-field modes, the entry point, the macro layer and skip fusion
 
 **What.** On branch `feat/phase-6`, from `feat/phase-5` (none merged). The user's decisions: typed
 templates plus `for` for the macro layer, labels fresh per expansion, A-field modes on numbers and
@@ -19,10 +19,17 @@ The macro layer (d-7d2612-c4e274, `docs/specs/2026-10-04-macros-design.md`): typ
 `for`, expanded at the s-expression level in the parser; a template's labels and let binders renamed
 `_X<n>_` per expansion; generated names admitted only on the atoms the expander made (by physical
 identity); a template calls only earlier ones. No golden changed.
+Skip fusion (d-7d2612-6222c1): under the peephole, an `EQ`/`NE` `if` around one instruction becomes
+the inverted skip. `store_in_condition`'s golden and spec changed for that reason (`SNE.AB #4, #4;
+NOP`, the `if` around one `NOP`).
 **What went wrong.** A phase-2 test parsed the core-clear golden's body without its new header and
 failed the gate (it now writes its program inline). In the expander, rebuilding a `let` made a new
 binder atom and lost the mark of a generated name; the label check also rejected generated names.
-Both caught by the hygiene tests before committing.
+Both caught by the hygiene tests before committing. Fusion first never applied to the quickscan: any
+expression operand counted every cell; counting a label plus a number from its label fixed that, but
+the first version left out the epilogue cell (off by one) and did not take addresses modulo the core
+(`first+8003`, and since the phase-3 peephole `$7998`, counted nothing across); both found by
+reasoning about the quickscan's hit variant, each pinned by a test watched failing.
 **Left undone.** The quickscan archetype and the new measurement, as the session goes.
 
 ## 2026-10-04 · s-7d2612-9b0d20 — Phase 5: hills, metadata, benchmark, behaviour specs and the documentation review
