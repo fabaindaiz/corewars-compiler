@@ -29,7 +29,7 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 |---|---|---|---|---|
 | imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT`, kept by decision (d-7d2612-1c1c67) |
 | scanner | 2 / 2 per empty cell (was 3) | 7 / 6 | 54, 58 / 56, 57 (was 42) | closed by jump threading (d-7d2612-3f3f32) |
-| SEQ scanner | — | — | — | not expressible (i-7d2612-2581ff) |
+| SEQ scanner | 3 / 3 per pair of empty cells | 9 / 7 | 37, 37 / 36, 37 | expressible with `(NE I ...)` (d-7d2612-8f9340); +1 cell for the pointers, +1 epilogue |
 | imp spiral, quickscan | — | — | — | need label arithmetic or constants (i-7d2612-a3f2b6) and compile-time repetition (i-7d2612-8e9549) |
 
 ## Where we are
@@ -43,10 +43,13 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Phase 2 has started** (s-7d2612-14641b): six archetypes are written in RED and measured against
-hand-written forms; five match it in cycles, the scanner loses one cycle per probe to a jump to a
-jump, and every one pays one cell for the epilogue. The decisions they raise are in phase 2 below. **Next:** the user's
-decisions on those, then the operator design (i-7d2612-7eadd5).
+**Phase 2 has started** (s-7d2612-14641b): seven archetypes are written in RED and measured against
+hand-written forms, and all seven now match them in cycles per iteration. On the user's decisions,
+jump threading closed the scanner's gap (d-7d2612-3f3f32), conditions accept a modifier so a SEQ
+scanner can be written (d-7d2612-8f9340), a labelled bomb `DAT` counts as data, and the epilogue
+`DAT` stays (d-7d2612-1c1c67). **Next:** whether the epilogue becomes `DAT $0, $0`
+(i-7d2612-ed9f79), then the operator design (i-7d2612-7eadd5): the indirect-use default, constants
+and label arithmetic for the imp spiral and quickscan.
 
 **Phase 1 is complete** (s-7d2612-2c7e4d): the recorded correctness defects are fixed, errors carry
 `file:line:col`, and generated labels are reserved. Its branch review found one more, recorded with a
@@ -179,11 +182,10 @@ operators in RED that translate to different modifiers or sequences. Built in su
 Write the classic warriors in RED and measure each against its hand-written form. What they cannot express decides the compound operators and the constants; the ones that work become the snippet catalogue.
 
 ### Classic warriors re-expressed in RED as end-to-end tests · i-7d2612-34b61d
-**State.** Half done (s-7d2612-14641b). Six archetypes — imp, dwarf, stone, core-clear, a `JMZ`
-scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
+**State.** Half done (s-7d2612-14641b). Seven archetypes — imp, dwarf, stone, core-clear, a `JMZ`
+scanner, a SEQ scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
 (`bbctests/archetypes/`), behaviour specs (`behtests/archetype_*.beh`) and the measurements in
-`docs/research/2026-10-04-archetypes.md`. **Still missing:** a SEQ scanner (not expressible,
-i-7d2612-2581ff), an imp spiral and a quickscan (label arithmetic and repetition), Mice's
+`docs/research/2026-10-04-archetypes.md`. **Still missing:** an imp spiral and a quickscan (label arithmetic and repetition), Mice's
 copy-by-index (its pointer precedes its code; RED has no `ORG`), Silk-style paper; and the
 benchmark comparison as a check rather than a script in `_build/` (i-7d2612-f27a91).
 Originally planned: Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
@@ -199,7 +201,9 @@ its behavioural reason (d-7d2612-6a1527), measured with the cost model.
 **Decide first.** The reserved prefix; which compound operators exist and what each emits.
 
 ### The modifier an indirect use reads in its target · i-7d2612-2581ff
-**State.** Planned (s-7d2612-14641b). `docs/semantics.md` §3 says which field of a variable an
+**State.** Half done (s-7d2612-14641b): conditions accept a modifier (d-7d2612-8f9340), so a SEQ
+scanner can be written (`archetypes/seqscan.src`, `(NE I (Ind a) (Ind b))`). Still open: the
+default. `docs/semantics.md` §3 says which field of a variable an
 indirect use goes *through* (`@` or `*`), not which field of the target cell it reads. Today the
 modifier follows the pointers' fields: `(NE (Ind a) (Ind b))` with `a`, `b` in one `DAT` compiles
 to `SNE.AB *a, @b` (A-field of one target against the B-field of the other), and
@@ -287,7 +291,9 @@ produced each cell.
 **Decide first.** Which warnings are on by default, and whether a policy changes them.
 
 ### Unreachable counts a labelled data DAT as dead code · i-7d2612-cf8fdb
-**State.** Planned (s-7d2612-14641b). A bomb written `(label bomb) (DAT 0 0)` is never executed,
+**State.** Done (s-7d2612-14641b), the user choosing the first option: a never-executed `DAT` with a
+label counts as data (`test_phase2_labelled_dat_is_data`); an unlabelled one is still dead code.
+Before: A bomb written `(label bomb) (DAT 0 0)` is never executed,
 by design, and `--report` counts it as unreachable code: only a `let` variable's cell counts as
 data. An unreachable-cell warning would fire on every bomber (core-clear and scanner archetypes).
 **Decide first.** Whether a labelled `DAT` the program never reaches is data, or RED gets a way to

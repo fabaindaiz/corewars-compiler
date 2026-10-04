@@ -41,6 +41,18 @@ The epilogue `DAT` stays (the user's decision, d-7d2612-1c1c67): pMARS discards 
 instruction after it, measured. It is meant to be indistinguishable from empty core, but pMARS's
 empty core is `DAT.F $0, $0` (read in the vendored source) and the epilogue is `DAT.F #0, #0`:
 recorded as i-7d2612-ed9f79 and put to the user.
+Threading also made `--report` name the scanner's loop after the `if` whose threaded jump is its
+first back edge; a loop is now described by its last back edge, the construct's own jump. A
+labelled `DAT` that never runs counts as data (i-7d2612-cf8fdb, done). Conditions accept an
+optional modifier after the operator (d-7d2612-8f9340): additive, no golden changed; with it the
+SEQ scanner is the seventh archetype (`(NE I (Ind a) (Ind b))`), 3 cycles per pair of empty cells
+like the hand-written one, Wilkies 37 and 37 against 36 and 37.
+**What went wrong (continued).** Two of my hand counts were wrong before running: an error column
+(23, is 25) and nothing else; the first mutation of the condition modifier left `imod` unused and
+the build refused it (warning 27), so the mutation had to keep it used. A command that bundled a
+mutation with `git stash list` was refused whole by a permission rule; nothing ran. The split into
+one-concern commits needed intermediate file versions staged with `git hash-object` and
+`git update-index`, because several files carried two concerns.
 **Left undone.** Imp spiral and quickscan (need label arithmetic or constants and compile-time
 repetition), Mice's copy-by-index and a Silk-style paper; the benchmark is a script described in the
 research note, not a check (i-7d2612-f27a91). The decisions the gaps raise are put to the user, not

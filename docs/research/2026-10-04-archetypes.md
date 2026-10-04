@@ -41,7 +41,11 @@ code), and `archetypes/NAME.src`, the same warrior in RED. The RED versions are 
 | core-clear | `repeat` (`MOV I` through `>`) | 2 | 2 | 4 | 5 | 45, 46 | 42, 42 |
 | scanner | `repeat` (`ADD`, `if (JN @p)` bomb) | 2 (empty cell) | **3** (empty cell); 2 threaded | 6 | 7 | 56, 57 | **42, 42**; 54, 58 compiled with threading |
 | paper | `repeat` (reset, `do-while (JN n)` copy, `SPL @d`, `ADD`) | 6 + 2 per cell | 6 + 2 per cell | 7 | 8 | 78, 80 | 80, 79 |
-| SEQ scanner | — | — | not expressible | — | — | — | — |
+| SEQ scanner | `repeat` (`ADD F` to two pointers, `if (NE I @a @b)` bomb) | 3 (pair of empty cells) | not expressible; 3 with `(NE I ...)` | 7 | 9 | 36, 37 | 37, 37 |
+
+The SEQ scanner row was measured after conditions gained a modifier the same day (gap 5); its two
+extra cells are the pointer cell (the hand-written one keeps its pointers in the `SNE.I` itself)
+and the epilogue.
 
 Five of six archetypes compile with **zero cycle overhead**; the sixth, the scanner, loses 14
 points to one extra cycle on its hot path (closed the same day by jump threading, gap 1). Every
@@ -71,7 +75,8 @@ RED warrior is one cell longer than its hand-written form.
    `(label bomb) (DAT 0 0)`; `--report` counts it as unreachable code, because only a `let`
    variable's cell counts as data. A phase-4 warning on unreachable cells (i-7d2612-90d6e1) would
    fire on every bomber. Either the metric counts a labelled, never-executed `DAT` as data, or RED
-   gets a way to declare data that is not a variable (i-7d2612-cf8fdb).
+   gets a way to declare data that is not a variable (i-7d2612-cf8fdb). **Closed** the same day,
+   the first way: a labelled `DAT` that is never executed counts as data.
 4. **A loop's net step is reported per instruction, not per iteration.** In the paper, the outer
    loop moves `d` by `ADD #2365` once and by `<d` seven times (in the inner loop): 2358 cells per
    lap. `--report` predicts two separate steps for the outer loop, 2365 and −1, neither of which is
@@ -82,8 +87,11 @@ RED warrior is one cell longer than its hand-written form.
    fields of one `DAT`, compiles to `SNE.AB *a, @b`: the A-field of one target against the B-field
    of the other, because the modifier is chosen from the fields the *pointers* live in.
    `docs/semantics.md` §3 says which field an indirect use goes *through*, not which field of the
-   target it reads; conditions take no modifier, so the user cannot ask for `.I` (i-7d2612-2581ff). Related to
-   i-7d2612-9efd00 (mixed operands) and the operator design (i-7d2612-7eadd5).
+   target it reads; conditions take no modifier, so the user cannot ask for `.I`
+   (i-7d2612-2581ff). Related to i-7d2612-9efd00 (mixed operands) and the operator design
+   (i-7d2612-7eadd5). **Half closed** the same day: conditions accept a modifier
+   (`(NE I (Ind a) (Ind b))`, d-7d2612-8f9340), and the SEQ scanner is now
+   `archetypes/seqscan.src`, as fast as the hand-written one. The default is still open.
 6. **A copy through a pointer copies one field by default.** `(MOV b (Ind b))` compiles to
    `MOV.B`: it writes the B-field of the target. Every bomber here needs `(MOV I b (Ind b))`. A
    bomb is a whole instruction, so the default is wrong for the commonest use of `MOV` through a
