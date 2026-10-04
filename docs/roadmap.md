@@ -63,7 +63,8 @@ captures the inner `x`.
 
 ### do-while with GT or LT loops at equality · i-7d2612-fffa6c
 **State.** Done (s-7d2612-2c7e4d). Post-condition `GT`/`LT` emit `SLT; SNE #0, #1; JMP head`: strict,
-one more cell, the same two cycles per iteration. `behtests/dowhile_gt_equal.beh` passes; new specs
+one more cell, the same two control instructions per iteration (`--report` counts them since the
+branch review: a comparison of two immediates has one known successor). `behtests/dowhile_gt_equal.beh` passes; new specs
 `dowhile_gt_count.beh` and `dowhile_lt_count.beh` pin the exact instruction count (8) and the final
 value; the golden moved to `bbctests/examples/dowhile_gt_equal.bbc`.
 Before the fix, `compile_cond2` in post-condition mode emitted `SLT a1, a2; JMP head` for `GT`, which repeats while

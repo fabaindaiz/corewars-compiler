@@ -607,6 +607,12 @@ let test_review1_messages_name_the_user's_variable () =
     (error_of "(let (x 1) (seq (DAT (store x) 0) (let (x 2) (MOV 0 x))))")
 
 
+let test_review1_constant_skip_known () =
+  let l = List.hd (metrics_of (example "dowhile_gt_count")).loops in
+  check range "cycles" (r 3 3) l.cycles ;
+  check range "overhead" (r 2 2) l.overhead
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -707,6 +713,7 @@ let ocaml_tests = [
     test_case "a user JMZ/JMN/DJN uses its variable's field" `Quick test_review1_unary_jump_uses_variable_field ;
     test_case "a user name like a fresh one" `Quick test_review1_user_name_like_a_fresh_one ;
     test_case "messages name the user's variable" `Quick test_review1_messages_name_the_user's_variable ;
+    test_case "SNE #0, #1 always skips (metrics)" `Quick test_review1_constant_skip_known ;
   ] ;
   "interp", [
 

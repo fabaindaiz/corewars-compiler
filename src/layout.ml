@@ -120,6 +120,16 @@ let build ?(coresize = default_coresize) (body : Compile.emitted list) : program
     | IJMP -> [target ()]
     | ISPL -> next @ [target ()]
     | IJMZ | IJMN | IDJN -> target () :: next
+    | ISEQ | ISNE | ISLT | ICMP when c.a.mode = RImm && c.b.mode = RImm && (c.md = RAB || c.md = RN) ->
+      (* Both operands immediate: the instruction compares its own A-number with its own B-number,
+         a constant, so only one successor is possible (SNE #0, #1 always skips). *)
+      let skips = match c.op with
+        | ISEQ | ICMP -> c.a.value = c.b.value
+        | ISNE -> c.a.value <> c.b.value
+        | ISLT -> c.a.value < c.b.value
+        | IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
+        | ILDP | ISTP -> false in
+      if skips then skip else next
     | ISEQ | ISNE | ISLT | ICMP -> next @ skip
     | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | INOP | ILDP | ISTP -> next) cells in
   let index e = match e with Next i | Jump i | Skip i -> Some i | Dynamic -> None in
