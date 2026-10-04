@@ -1,5 +1,5 @@
-# x = 7 in the A-field. (MOV x (Dir -1)) should move x's value into the B-field of the cell before
-# the MOV (cell 2), as a variable is read through its field: DAT #0, #7. Today the default .I copies
-# the whole cell (DAT #7, #0).
+# x = 7 in the A-field. (MOV x (Dir -1)) moves x's value into the B-field of the cell before the
+# MOV (cell 2): beside a value, a cell is its B-field (MOV.AB), DAT #0, #7. Before the cell rule the
+# ICWS'94 default .I copied the whole cell (DAT #7, #0).
 golden: bbctests/examples/mixed_operand_field.bbc
 cell 2 2 DAT.F #0, #7

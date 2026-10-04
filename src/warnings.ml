@@ -44,7 +44,8 @@ let check ~(mode : mode) ~(policy : Metrics.policy) ~(expects : (expectation * t
         Some { loc = at l.node; message }
       | (Some _ | None), (Some _ | None) -> None) m.loops in
   (* A loop that states its step, or that it covers the core, has said what it means. *)
-  let stated node = List.exists (fun (x, t) -> t = node && match x with
+  (* A header expectation (no loop) speaks for every loop, as Expect.scope reads it. *)
+  let stated node = List.exists (fun (x, t) -> (t = node || t = None) && match x with
     | XStep _ | XCoversCore -> true
     | XLength _ | XCycles _ | XOverhead _ | XBoot _ | XAlive _ | XDead _ | XCell _ -> false) expects in
   let steps = if mode = Nothing then [] else

@@ -107,7 +107,12 @@ let build ?(coresize = default_coresize) ?(consts = []) (body : Compile.emitted 
       (match List.assoc_opt s consts, Hashtbl.find_opt table s with
       | Some v, _ -> eval pos v
       | None, Some t -> t - pos
-      | None, None -> add (Undefined_label s) ; 0)
+      | None, None ->
+        (* pMARS's predefined symbols: CORESIZE is known here; the others depend on the hill's
+           settings and count as 0, unreported. *)
+        if s = "CORESIZE" then coresize
+        else if List.mem s pmars_predefined then 0
+        else (add (Undefined_label s) ; 0))
     | XBin (op, a, b) ->
       let a = eval pos a and b = eval pos b in
       (match op with

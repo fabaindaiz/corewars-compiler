@@ -27,7 +27,7 @@ let resolve (consts : string list) (e : expr) : expr =
       | None ->
         let m = match m with
           | Some m -> m
-          | None -> if List.for_all is_const (names x) then MImm else MDir in
+          | None -> if List.for_all (fun s -> is_const s || List.mem s pmars_predefined) (names x) then MImm else MDir in
         AExp (Some m, x))
     | ANone | ANum _ | AId _ | ARef _ | ALab _ | AStore _ -> a in
   let cond vars loc (c : cond) : cond =
@@ -49,3 +49,46 @@ let resolve (consts : string list) (e : expr) : expr =
       ELet (x, arg vars loc a, go (x :: vars) b, loc)
     | ESeq (es, loc) -> ESeq (List.map (go vars) es, loc) in
   go [] e
+
+(* The value of an expression of numbers and constants; None when it names a label or a symbol whose
+   value only pMARS knows. *)
+let rec value (consts : (string * Red.rexpr) list) (x : Red.rexpr) : int option =
+  match x with
+  | Red.XNum n -> Some n
+  | Red.XName s -> Option.bind (List.assoc_opt s consts) (value consts)
+  | Red.XBin (op, a, b) ->
+    (match value consts a, value consts b with
+    | Some a, Some b ->
+      (match op with
+      | '+' -> Some (a + b) | '-' -> Some (a - b) | '*' -> Some (a * b)
+      | '/' -> if b = 0 then None else Some (a / b)
+      | '%' -> if b = 0 then None else Some (a mod b)
+      | _ -> None)
+    | (Some _ | None), (Some _ | None) -> None)
+
+(* pMARS rejects a warrior that divides by zero; a divisor known here to be 0 is a compile error at
+   the node that holds it. A divisor naming a label is evaluated only by Layout. *)
+let rec divides_by_zero (consts : (string * Red.rexpr) list) (x : Red.rexpr) : bool =
+  match x with
+  | Red.XNum _ | Red.XName _ -> false
+  | Red.XBin (op, a, b) ->
+    ((op = '/' || op = '%') && value consts b = Some 0) || divides_by_zero consts a || divides_by_zero consts b
+
+let check_divisions (consts : (string * Red.rexpr) list) (e : expr) : unit =
+  let zero = divides_by_zero consts in
+  let arg loc (a : arg) = match a with
+    | AExp (_, x) when zero x -> raise (Error (Some loc, "a division by zero in an expression: pMARS rejects the warrior"))
+    | AExp _ | ANone | ANum _ | AId _ | ARef _ | ALab _ | AStore _ -> () in
+  let cond loc (c : cond) = match c with
+    | Cond0 -> ()
+    | Cond1 (_, _, a) -> arg loc a
+    | Cond2 (_, _, a1, a2) -> arg loc a1 ; arg loc a2 in
+  let rec go (e : expr) = match e with
+    | EComment _ | EExpect _ | ELabel _ -> ()
+    | EPrim2 (_, _, a1, a2, loc) -> arg loc a1 ; arg loc a2
+    | EFlow1 (op, c, b, loc) ->
+      cond loc c ; go b ; (match op with Repeat a -> arg loc a | If | While | DoWhile -> ())
+    | EFlow2 (_, c, b1, b2, loc) -> cond loc c ; go b1 ; go b2
+    | ELet (_, a, b, loc) -> arg loc a ; go b
+    | ESeq (es, _) -> List.iter go es in
+  go e

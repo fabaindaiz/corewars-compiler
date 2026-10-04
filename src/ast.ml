@@ -117,6 +117,11 @@ let error (msg : string) : 'a = raise (Error (None, msg))
 
 (* A label, as LANGUAGE.md states it: a letter, then letters, digits and _. pMARS reads anything
    else as an expression or rejects it. *)
+(* pMARS predefines these names, case-sensitively (redcode.ref): numbers in an expression, never a
+   label. *)
+let pmars_predefined = ["CORESIZE"; "MAXLENGTH"; "MAXPROCESSES"; "MAXCYCLES"; "MINDISTANCE"; "VERSION";
+                        "WARRIORS"; "ROUNDS"; "PSPACESIZE"; "CURLINE"; "READLIMIT"; "WRITELIMIT"]
+
 let valid_label (s : string) : bool =
   let letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
   let rest c = letter c || (c >= '0' && c <= '9') || c = '_' in

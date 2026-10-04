@@ -363,6 +363,7 @@ let max_line = 256
    (a EQU 1+2 used as a*3 would be 1+2*3). *)
 let compile_prog ?opts ?(consts = []) (e : expr) : string =
   let names = List.map fst consts in
+  Consts.check_divisions consts e ;
   let body = compile_body ?opts ~consts:names e in
   let instrs = List.map (fun (x : emitted) -> x.instr) body in
   let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr_operand v)) consts) in

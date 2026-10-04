@@ -1048,6 +1048,26 @@ let test_review4_every_change_counts () =
     (steps "(let (p 10) (seq (repeat (seq (ADD 3 p) (MOV 7 p) (MOV 0 (Ind p)))) (DAT 0 (store p))))")
 
 
+let test_review4_expression_checks () =
+  check Alcotest.string "a division by zero" "p.src:1:6: error: a division by zero in an expression: pMARS rejects the warrior\n"
+    (error_of "(seq (DAT (/ 7 0) 1) (DAT 0 0))") ;
+  check Alcotest.string "through a constant" "p.src:1:27: error: a division by zero in an expression: pMARS rejects the warrior\n"
+    (error_of "(program (const z 0) (seq (DAT (% 7 z) 1) (DAT 0 0)))") ;
+  check Alcotest.bool "in a constant" true
+    (contains (error_of "(program (const z 0) (const w (/ 1 z)) (DAT w 0))") "a division by zero") ;
+  check Alcotest.bool "a name pMARS cannot read" true
+    (contains (error_of "(seq (MOV 0 (+ 1abc 1)) (DAT 0 0))") "`1abc` is not a valid label") ;
+  (* CORESIZE is a number pMARS knows: immediate, 8000 + 1, no undefined label *)
+  let src = "(seq (DAT (+ CORESIZE 1) 0) (DAT 0 0))" in
+  check Alcotest.bool "a predefined symbol is a number" true (contains (out_of src) "DAT    #CORESIZE+1") ;
+  let p = layout_of_src src in
+  check Alcotest.(pair int int) "8001 mod 8000, and no diagnostic" (1, 0) (p.cells.(0).a.value, List.length p.diagnostics)
+
+let test_review4_header_step_is_stated () =
+  check Alcotest.(list string) "(expect (step 4)) in the header" []
+    (warnings_in (err_of ("(program (expect (step 4)) " ^ Printf.sprintf (Scanf.format_from_string bomber "%s") "" ^ ")")))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1178,6 +1198,8 @@ let ocaml_tests = [
   "review4", [
     test_case "a cell the program references is data" `Quick test_review4_referenced_cells_are_data ;
     test_case "every change to a pointer counts in its step" `Quick test_review4_every_change_counts ;
+    test_case "what an expression may hold" `Quick test_review4_expression_checks ;
+    test_case "a header (expect (step k)) states the step" `Quick test_review4_header_step_is_stated ;
   ] ;
   "netstep", [
     test_case "a pointer's step is its net change per lap" `Quick test_net_step ;

@@ -47,10 +47,6 @@ let user_name (sexp : sexp) (s : string) : string =
 let pmars_keywords = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
                       "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"; "ORG"; "END"; "PIN"; "EQU"; "FOR"; "ROF"]
 
-(* pMARS predefines these names, case-sensitively (redcode.ref); a label of the same name is rejected. *)
-let pmars_predefined = ["CORESIZE"; "MAXLENGTH"; "MAXPROCESSES"; "MAXCYCLES"; "MINDISTANCE"; "VERSION";
-                        "WARRIORS"; "ROUNDS"; "PSPACESIZE"; "CURLINE"; "READLIMIT"; "WRITELIMIT"]
-
 let label_name (sexp : sexp) (s : string) : string =
   let s = user_name sexp s in
   if List.mem s pmars_predefined then
@@ -76,7 +72,10 @@ let rec parse_rexpr (sexp : sexp) : Red.rexpr =
   | `Atom s ->
     (match Int64.of_string_opt s with
     | Some n -> Red.XNum (Int64.to_int n)
-    | None -> Red.XName (user_name sexp s))
+    | None ->
+      let s = user_name sexp s in
+      (* a name pMARS reads: a label, a constant, or one of its predefined symbols *)
+      if valid_label s || List.mem s pmars_predefined then Red.XName s else fail sexp (invalid_label s))
   | `List [`Atom ("+" | "-" | "*" | "/" | "%" as op); a; b] -> Red.XBin (op.[0], parse_rexpr a, parse_rexpr b)
   | `List _ -> fail sexp (sprintf "Not a valid expression: %s" (to_string sexp))
 
@@ -262,6 +261,8 @@ let parse_source (sexp : sexp) : source =
         let n = label_name item n in
         if List.mem_assoc n !consts then fail item (sprintf "constant `%s` is defined twice" n) ;
         let v = parse_rexpr v in
+        if Consts.divides_by_zero (List.rev !consts) v then
+          fail item "a division by zero in an expression: pMARS rejects the warrior" ;
         (* EQU substitutes text: a value naming a label would mean a different cell at every use. *)
         let rec names (x : Red.rexpr) = match x with
           | Red.XNum _ -> [] | Red.XName s -> [s] | Red.XBin (_, a, b) -> names a @ names b in

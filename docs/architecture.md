@@ -54,7 +54,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | `src/red.ml` | the Redcode target: opcodes, modes, modifiers, and the pretty-printer that fixes the column padding | text |
 
 **Dependency direction:** `red` ← `ast` ← `consts` ← `rename` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
-← `optimize` ← `expect` ← `warnings` ← `driver`; `parse` depends only on `ast`. `execs/run_compile.ml` only performs what
+← `optimize` ← `expect` ← `warnings` ← `driver`; `parse` depends on `ast`, `red` (expressions) and `consts` (a constant's value is checked). `execs/run_compile.ml` only performs what
 `Driver.run` returns. dune rejects cycles, so the direction cannot invert silently; a new module states where it
 sits in this chain.
 
