@@ -40,6 +40,7 @@ e ::= (label l) | (com …) | (OP [mod] a a)                          primitives
 c ::= (JZ [mod] a) | (JN [mod] a) | (DZ [mod] a) | (DN [mod] a)       unary conditions
     | (EQ [mod] a a) | (NE [mod] a a) | (GT [mod] a a) | (LT [mod] a a)   binary conditions
 a ::= n | id | (mode n) | (mode id) | (store x) | none                operands
+    | (name a …) | (for k n n e)    template calls and repetition, expanded away before the rules below
     | (op x x) | (mode (op x x))      op ∈ + - * / %, x ::= n | id | (op x x)   expressions
 ```
 
@@ -73,6 +74,10 @@ generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of 
 - **A-field modes** (d-7d2612-0e831c). `*`, `{`, `}` (`AInd`, `ADec`, `AInc`) on a number, label or expression
   go through the A-field of the cell they name; on a let variable they are an error, its `(store x)`
   deciding the field.
+- **Templates** (d-7d2612-c4e274). Expansion is a source-to-source step before every rule here: a call is
+  its body with each parameter replaced (after renaming the body's own labels and let binders), a
+  `for` its body once per value. A call reaches only earlier templates and a `for` runs a known
+  number of times, so expansion terminates; argument kinds are checked at each call.
 - **Cells** (d-7d2612-891901). A plain reference (`(Dir -1)`, a label) and the target of an indirect
   use name a cell. With no modifier written, a cell beside a number or a variable is read and
   written at its B-field, the ICWS'94 convention: `(MOV x (Dir -1))` with `x` in A is `MOV.AB`,

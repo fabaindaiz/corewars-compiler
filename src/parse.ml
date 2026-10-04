@@ -36,10 +36,15 @@ end)
 (* A user error about [sexp], located when the reader knows where it is. *)
 let fail (sexp : sexp) (msg : string) : 'a = raise (Error (loc_of sexp, msg))
 
+(* The atoms the macro expander invents (a template's labels and let binders renamed per
+   expansion), by physical identity: only these may carry a name starting with "_". *)
+let generated : unit Phys.t = Phys.create 64
+
 (* Names starting with "_" belong to the labels the compiler generates (_LET1, _WHI9, ...), so a
-   user name can never collide with one. *)
-let user_name (sexp : sexp) (s : string) : string =
-  if String.length s > 0 && s.[0] = '_' then
+   user name can never collide with one. [atom] is the name's own node, when [sexp] is the form
+   around it. *)
+let user_name ?atom (sexp : sexp) (s : string) : string =
+  if String.length s > 0 && s.[0] = '_' && not (Phys.mem generated (Option.value atom ~default:sexp)) then
     fail sexp (sprintf "`%s`: names starting with `_` are reserved for the compiler" s)
   else s
 
@@ -47,9 +52,11 @@ let user_name (sexp : sexp) (s : string) : string =
 let pmars_keywords = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
                       "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"; "ORG"; "END"; "PIN"; "EQU"; "FOR"; "ROF"]
 
-let label_name (sexp : sexp) (s : string) : string =
-  let s = user_name sexp s in
-  if List.mem s pmars_predefined then
+let label_name ?atom (sexp : sexp) (s : string) : string =
+  let s = user_name ?atom sexp s in
+  (* a name the expander made is a user's label renamed: already checked, its "_" reserved *)
+  if Option.fold atom ~none:false ~some:(Phys.mem generated) then s
+  else if List.mem s pmars_predefined then
     fail sexp (sprintf "`%s` is a pMARS predefined symbol and cannot be a label" s)
   else if not (valid_label s) then fail sexp (invalid_label s)
   else if List.mem (String.uppercase_ascii s) pmars_keywords then
@@ -92,7 +99,7 @@ let parse_arg (sexp : sexp) : arg =
   | `Atom "none" -> ANone
   | `List [op; _; _] when is_operator op -> AExp (None, parse_rexpr sexp)
   | `List [m; (`List _ as e)] -> AExp (Some (parse_mode m), parse_rexpr e)
-  | `List [`Atom "store"; `Atom s] | `List [`Atom "!"; `Atom s] -> AStore (user_name sexp s)
+  | `List [`Atom ("store" | "!"); (`Atom s as a)] -> AStore (user_name ~atom:a sexp s)
   | `Atom s ->
     (match Int64.of_string_opt s with
     | Some n -> ANum (Int64.to_int n)
@@ -183,7 +190,7 @@ let rec parse_exp (sexp : sexp) : expr =
   match sexp with
   | `List (`Atom "com" :: exps) -> EComment (List.fold_left (fun res s -> res ^ " " ^ (String.escaped (to_string s))) "" exps)
   | `List (`Atom "seq" :: exps) -> ESeq (List.map parse_exp exps, loc)
-  | `List [`Atom "label"; `Atom s] -> ELabel (label_name sexp s, loc)
+  | `List [`Atom "label"; (`Atom s as a)] -> ELabel (label_name ~atom:a sexp s, loc)
   | `List [eop] ->
     (match eop with
     | `Atom "DAT" -> EPrim2 (Dat, MN, ANone, ANone, loc)
@@ -224,7 +231,7 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "do-while" -> EFlow1 (DoWhile, parse_cond e1, parse_exp e2, loc)
     | `Atom "let" ->
       (match e1 with
-      | `List [`Atom id; e] -> ELet (user_name e1 id, parse_arg e, parse_exp e2, loc)
+      | `List [(`Atom id as a); e] -> ELet (user_name ~atom:a e1 id, parse_arg e, parse_exp e2, loc)
       | _ -> fail e1 (sprintf "Not a valid let assignment: %s" (to_string e1)) )
     | _ -> fail sexp (sprintf "Not a valid binary expr: %s" (to_string sexp)) )
   | `List [eop; e1; e2; e3] ->
@@ -248,12 +255,139 @@ let rec parse_exp (sexp : sexp) : expr =
   | _ -> fail sexp (sprintf "Not a valid expr: %s" (to_string sexp))
 
 
+(* The macro layer (docs/specs/2026-10-04-macros-design.md): typed templates, expanded at the
+   s-expression level before anything else, and (for k lo hi body) over constants. *)
+type kind = KNum | KLab | KVar | KCode
+
+type template = { name : string; params : (string * kind) list; body : sexp; index : int; at : sexp }
+
+let string_of_kind (k : kind) : string =
+  match k with KNum -> "Num" | KLab -> "Lab" | KVar -> "Var" | KCode -> "Code"
+
+(* Words RED gives a meaning to: a template, a parameter or a for variable named like one would
+   change what the expanded program says. *)
+let red_words = ["seq"; "let"; "label"; "com"; "store"; "none"; "repeat"; "if"; "while"; "do-while";
+                 "expect"; "for"; "define"; "program"; "A"; "B"; "AB"; "BA"; "F"; "X"; "I";
+                 "Imm"; "Dir"; "Ind"; "Dec"; "Inc"; "AInd"; "ADec"; "AInc"; "JZ"; "JN"; "DZ"; "DN";
+                 "EQ"; "NE"; "GT"; "LT"; "length"; "cycles"; "overhead"; "boot"; "step"; "covers-core";
+                 "alive"; "dead"; "cell"]
+
+let macro_name (sexp : sexp) (s : string) : string =
+  let s = label_name sexp s in
+  if List.mem s red_words then fail sexp (sprintf "`%s` is a RED word and cannot name a template or parameter" s) ;
+  s
+
+let parse_template (index : int) (item : sexp) : template =
+  match item with
+  | `List [`Atom "define"; `List (`Atom name :: params); body] ->
+    let param p = match p with
+      | `List [`Atom x; `Atom k] ->
+        let kind = match k with
+          | "Num" -> KNum | "Lab" -> KLab | "Var" -> KVar | "Code" -> KCode
+          | _ -> fail p (sprintf "`%s` is not a kind: one of Num, Lab, Var, Code" k) in
+        (macro_name p x, kind)
+      | `Atom _ | `List _ -> fail p (sprintf "Not a parameter: %s (write (name Kind))" (to_string p)) in
+    let params = List.map param params in
+    let names = List.map fst params in
+    if List.length (List.sort_uniq Stdlib.compare names) <> List.length names then
+      fail item (sprintf "`%s` names a parameter twice" name) ;
+    { name = macro_name item name; params; body; index; at = item }
+  | `Atom _ | `List _ -> fail item (sprintf "Not a template: %s (write (define (name (param Kind) ...) body))" (to_string item))
+
+(* Every atom in [s] that [env] names is replaced; a new list carries [loc], the place of the call
+   or for that made it, so an error inside an expansion says where that is. *)
+let rec subst (env : (string * sexp) list) (loc : loc option) (s : sexp) : sexp =
+  match s with
+  | `Atom a -> (match List.assoc_opt a env with Some r -> r | None -> s)
+  | `List l ->
+    let t = `List (List.map (subst env loc) l) in
+    Option.iter (Phys.replace locations t) loc ;
+    t
+
+(* The labels and let binders a template body defines: renamed at each expansion. *)
+let rec defined (s : sexp) : string list =
+  match s with
+  | `List [`Atom "label"; `Atom l] -> [l]
+  | `List [`Atom "let"; `List [`Atom x; init]; body] -> x :: defined init @ defined body
+  | `List l -> List.concat_map defined l
+  | `Atom _ -> []
+
+let rec heads (s : sexp) : string list =
+  match s with
+  | `List (`Atom h :: rest) -> h :: List.concat_map heads rest
+  | `List l -> List.concat_map heads l
+  | `Atom _ -> []
+
+(* [consts] evaluates for bounds; [templates] in definition order. A call may reach only templates
+   defined before its own, so every expansion ends. *)
+let expand (consts : (string * Red.rexpr) list) (templates : template list) (program : sexp) : sexp =
+  List.iter (fun t ->
+    match List.find_opt (fun h -> List.exists (fun u -> u.name = h && u.index >= t.index) templates) (heads t.body) with
+    | Some c -> fail t.at (sprintf "`%s` calls `%s`, which is not defined before it" t.name c)
+    | None -> ()) templates ;
+  let count = ref 0 in
+  let bound (b : sexp) : int =
+    match (try Consts.value consts (parse_rexpr b) with Error _ -> None) with
+    | Some n -> n
+    | None -> fail b (sprintf "a (for ...) bound must be a number known when compiling: %s" (to_string b)) in
+  let rec go (scope : string list) (s : sexp) : sexp =
+    match s with
+    | `Atom _ -> s
+    | `List [(`Atom "let" as l); (`List [(`Atom x as xa); init] as binding); body] ->
+      (* the binder's own node is kept: a renamed one is known by its identity (generated) *)
+      let b = `List [xa; go scope init] in
+      Option.iter (Phys.replace locations b) (loc_of binding) ;
+      let t = `List [l; b; go (x :: scope) body] in
+      Option.iter (Phys.replace locations t) (loc_of s) ;
+      t
+    | `List [`Atom "for"; `Atom k; lo; hi; body] ->
+      let k = macro_name s k in
+      let lo = bound lo and hi = bound hi in
+      if hi - lo + 1 > 1000 then fail s "a (for ...) repeats at most 1000 times" ;
+      let iterations = if hi < lo then [] else List.init (hi - lo + 1) (fun i -> lo + i) in
+      let t = `List (`Atom "seq" :: List.map (fun i -> go scope (subst [(k, `Atom (string_of_int i))] (loc_of s) body)) iterations) in
+      Option.iter (Phys.replace locations t) (loc_of s) ;
+      t
+    | `List (`Atom h :: args) when List.exists (fun t -> t.name = h) templates ->
+      let t = List.find (fun t -> t.name = h) templates in
+      let n = List.length t.params in
+      if List.length args <> n then
+        fail s (sprintf "`%s` takes %d argument%s, given %d" h n (if n = 1 then "" else "s") (List.length args)) ;
+      List.iter2 (fun (p, kind) a ->
+        let bad why = fail a (sprintf "`%s`'s %s is a %s: %s" h p (string_of_kind kind) why) in
+        match kind, a with
+        | KNum, `Atom x when List.mem x scope -> bad (sprintf "`%s` is a let variable (pass it as a Var)" x)
+        | KNum, `Atom _ -> ()
+        | KNum, `List [op; _; _] when is_operator op -> ()
+        | KNum, `List _ -> bad (sprintf "a number, constant, label or expression, not %s" (to_string a))
+        | KLab, `Atom x when valid_label x && not (List.mem x scope) -> ()
+        | KLab, (`Atom _ | `List _) -> bad (sprintf "a label, not %s" (to_string a))
+        | KVar, `Atom x when List.mem x scope -> ()
+        | KVar, (`Atom _ | `List _) -> bad (sprintf "`%s` is not a let variable here" (to_string a))
+        | KCode, `List _ -> ()
+        | KCode, `Atom _ -> bad (sprintf "a RED expression, not %s" (to_string a))) t.params args ;
+      incr count ;
+      (* labels and let binders of the body renamed first, then the arguments put in: a name passed
+         in is never renamed and never captured *)
+      let fresh = List.filter (fun d -> not (List.mem_assoc d t.params)) (List.sort_uniq Stdlib.compare (defined t.body)) in
+      let renames = List.map (fun d ->
+          let a = `Atom (sprintf "_X%d_%s" !count d) in
+          Phys.replace generated a () ;
+          Option.iter (Phys.replace locations a) (loc_of s) ;
+          (d, a)) fresh in
+      go scope (subst (renames @ List.combine (List.map fst t.params) args) (loc_of s) t.body)
+    | `List l ->
+      let t = `List (List.map (go scope) l) in
+      Option.iter (Phys.replace locations t) (loc_of s) ;
+      t in
+  go [] program
+
 (* A source: a plain expression, or (program (optimize o ...) (expect e) ... body) *)
 let parse_source (sexp : sexp) : source =
   match sexp with
   | `List (`Atom "program" :: items) ->
     let optimize = ref None and expects = ref [] and consts = ref [] and bodies = ref [] in
-    let hill = ref None and meta = ref [] and start = ref None in
+    let hill = ref None and meta = ref [] and start = ref None and templates = ref [] in
     let words item ws = String.concat " " (List.map (fun w -> match w with
       | `Atom s -> s
       | `List _ -> fail item (sprintf "Not a word: %s" (to_string w))) ws) in
@@ -292,17 +426,26 @@ let parse_source (sexp : sexp) : source =
         (match List.find_opt (fun s -> not (List.mem_assoc s !consts)) (names v) with
         | Some s -> fail item (sprintf "a constant is a number: `%s` is not a constant defined before `%s`" s n)
         | None -> consts := (n, v) :: !consts)
-      | `Atom _ | `List _ -> bodies := parse_exp item :: !bodies) items ;
+      | `List (`Atom "define" :: _) ->
+        let t = parse_template (List.length !templates) item in
+        if List.exists (fun u -> u.name = t.name) !templates then fail item (sprintf "template `%s` is defined twice" t.name) ;
+        templates := t :: !templates
+      | `Atom _ | `List _ -> bodies := item :: !bodies) items ;
+    (* the body is expanded once the whole header is known: its constants bound the for loops *)
     (match !bodies with
-    | [body] -> { optimize = !optimize; expects = List.rev !expects; consts = List.rev !consts;
-                  hill = !hill; meta = List.rev !meta; start = !start; body }
+    | [body] ->
+      let body = parse_exp (expand (List.rev !consts) (List.rev !templates) body) in
+      { optimize = !optimize; expects = List.rev !expects; consts = List.rev !consts;
+        hill = !hill; meta = List.rev !meta; start = !start; body }
     | [] | _ :: _ :: _ -> fail sexp "a (program ...) needs exactly one body expression")
-  | `Atom _ | `List _ -> { optimize = None; expects = []; consts = []; hill = None; meta = []; start = None; body = parse_exp sexp }
+  | `Atom _ | `List _ ->
+    { optimize = None; expects = []; consts = []; hill = None; meta = []; start = None; body = parse_exp (expand [] [] sexp) }
 
 (* parse a program from a file *)
 let sexp_from_file : string -> CCSexp.sexp =
   fun filename ->
    Phys.reset locations ;
+   Phys.reset generated ;
    match Located.parse_file filename with
    | Ok s -> s
    | Error msg -> error (sprintf "Unable to parse file %s: %s" filename msg)
@@ -312,6 +455,7 @@ let sexp_from_file : string -> CCSexp.sexp =
    other error, 1-based. *)
 let sexp_from_string (src : string) : CCSexp.sexp =
   Phys.reset locations ;
+  Phys.reset generated ;
   match Located.parse_string src with
   | Ok s -> s
   | Error msg ->

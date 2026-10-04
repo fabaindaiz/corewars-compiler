@@ -9,12 +9,20 @@ open Ast
 
 type renames = (string * string) list
 
-(* The name the user wrote, for messages: _x#1 is x. *)
-let original (s : string) : string =
-  if String.length s > 1 && s.[0] = '_' then
+(* The name the user wrote, for messages: _x#1 is x, _X3_x is x. *)
+let rec original (s : string) : string =
+  let n = String.length s in
+  if n > 1 && s.[0] = '_' then
     match String.rindex_opt s '#' with
-    | Some i -> String.sub s 1 (i - 1)
-    | None -> s
+    | Some i -> original (String.sub s 1 (i - 1))
+    | None ->
+      (* a template's own name renamed per expansion, _X3_v (Parse.expand): v *)
+      if n > 2 && s.[1] = 'X' then
+        (match String.index_from_opt s 2 '_' with
+        | Some j when j > 2 && String.for_all (fun c -> c >= '0' && c <= '9') (String.sub s 2 (j - 2)) ->
+          String.sub s (j + 1) (n - j - 1)
+        | Some _ | None -> s)
+      else s
   else s
 
 let rename_name (env : renames) (s : string) : string =
@@ -64,10 +72,10 @@ let check_single_stores (binders : (string * (string * loc)) list) (e : expr) : 
     | ELet (_, a, b, loc) -> at loc (stores_in_arg a) @ stores b
     | ESeq (es, _) -> List.concat_map stores es in
   let all = stores e in
-  List.iter (fun (unique, (original, _)) ->
+  List.iter (fun (unique, (written, _)) ->
     match List.filter (fun (s, _) -> s = unique) all with
     | _ :: (_, loc) :: _ ->
-      raise (Error (Some loc, sprintf "variable `%s` is stored twice; a let variable lives in one cell" original))
+      raise (Error (Some loc, sprintf "variable `%s` is stored twice; a let variable lives in one cell" (original written)))
     | [] | [_] -> ())
     (List.rev binders)
 

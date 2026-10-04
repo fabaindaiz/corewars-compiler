@@ -286,7 +286,7 @@ today). Before: The command line's error path is tested through `Cored.Driver`
 `STATUS: CT error`.
 
 ### Snippets: named RED fragments with verified metrics and specs · i-7d2612-8e9549
-**State.** Planned. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
+**State.** Unblocked (s-7d2612-140ece): templates are the reuse mechanism. Still planned: the catalogue itself. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
 metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (subproject C or the
 dev branch's lambdas, i-7d2612-ec4d2d).
 
@@ -429,7 +429,8 @@ labels, `#x` is an explicit offset, every let variable is stored exactly once. S
 store-once half of i-7d2612-425c66.
 
 ### The new compiler structure on the dev branch · i-7d2612-ec4d2d
-**State.** Planned (phase 6); a half-done start on `origin/dev` (2025-09-09), not merged. Moves to `lib/{common,core,parsing,surface}`
+**State.** Done as a macro layer (s-7d2612-140ece, d-7d2612-c4e274): typed templates and `for`, rebuilt on `main` as decided;
+the dev branch itself is not merged. Was: planned (phase 6); a half-done start on `origin/dev` (2025-09-09), not merged. Moves to `lib/{common,core,parsing,surface}`
 and `bin/`, adds an opam file, disables `execs/`.
 **Collides with.** d-7d2612-123e41 (it adds a global `gensym`); RED itself (its surface language is
 a simply typed lambda calculus, not RED); every test (none run on the branch). Known defects there:

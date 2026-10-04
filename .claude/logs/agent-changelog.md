@@ -15,8 +15,15 @@ exactly as the hand-written one (46.6 / 18.8, was 42.1 / 15.9); its golden and s
 that reason.
 **Areas.** `src/ast.ml`, `src/parse.ml`, `src/util.ml`, `execs/run_test.ml`, `bbctests/`,
 `behtests/`, `LANGUAGE.md`, `docs/semantics.md`, `docs/decisions.md`, `docs/roadmap.md`.
-**What went wrong.** Nothing yet.
-**Left undone.** The entry point and the macro layer, as the session goes.
+The macro layer (d-7d2612-c4e274, `docs/specs/2026-10-04-macros-design.md`): typed templates and
+`for`, expanded at the s-expression level in the parser; a template's labels and let binders renamed
+`_X<n>_` per expansion; generated names admitted only on the atoms the expander made (by physical
+identity); a template calls only earlier ones. No golden changed.
+**What went wrong.** A phase-2 test parsed the core-clear golden's body without its new header and
+failed the gate (it now writes its program inline). In the expander, rebuilding a `let` made a new
+binder atom and lost the mark of a generated name; the label check also rejected generated names.
+Both caught by the hygiene tests before committing.
+**Left undone.** The quickscan archetype and the new measurement, as the session goes.
 
 ## 2026-10-04 · s-7d2612-9b0d20 — Phase 5: hills, metadata, benchmark, behaviour specs and the documentation review
 

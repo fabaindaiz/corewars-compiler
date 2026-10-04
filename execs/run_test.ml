@@ -1147,6 +1147,45 @@ let test_start_entry () =
     (contains (error_of "(program (start nowhere) (MOV 0 1))") "(start nowhere): no label `nowhere`")
 
 
+(* Tests for the macro layer: typed templates and for *)
+let lines_with (needle : string) (text : string) : string list =
+  List.map squash (List.filter (fun l -> contains l needle) (String.split_on_char '\n' text))
+
+let test_macros_num_and_for () =
+  let out = out_of "(program (define (put (k Num)) (MOV k (Dir k))) (seq (for i 1 3 (put i)) (JMP 0)))" in
+  check Alcotest.(list string) "three expansions" ["MOV.AB#1,$1"; "MOV.AB#2,$2"; "MOV.AB#3,$3"] (lines_with "MOV" out) ;
+  let out = out_of "(program (const step 10) (define (at (k Num)) (DAT 0 (* k step))) (seq (JMP 0) (for i 1 2 (at i))))" in
+  check Alcotest.(list string) "a Num in an expression" ["DAT#0,#1*step"; "DAT#0,#2*step"] (lines_with "DAT    #0" out)
+
+let test_macros_lab_var_code () =
+  let out = out_of "(program (define (guard (x Var) (out Lab) (body Code)) (if (JZ x) (JMP out) body)) (let (c 0) (seq (guard c done (NOP)) (label done) (JMP 0) (DAT 0 (store c)))))" in
+  check Alcotest.bool "the label passed in" true (contains (squash out) "JMP$done") ;
+  check Alcotest.bool "the variable passed in" true (contains (squash out) "$_LET1") ;
+  check Alcotest.bool "the code passed in" true (contains (squash out) "NOP")
+
+let test_macros_hygiene () =
+  let out = out_of "(program (define (spin) (seq (label here) (JMP here))) (seq (spin) (spin)))" in
+  check Alcotest.(list string) "two labels, one per expansion" ["JMP$_X1_here,#0"; "JMP$_X2_here,#0"] (lines_with "JMP" out) ;
+  (* the template's own let x does not capture the caller's x passed as y *)
+  let out = out_of "(program (define (bump (y Var)) (let (x 5) (seq (ADD 1 y) (JMP 0) (DAT 0 (store x))))) (let (x 0) (seq (bump x) (DAT 0 (store x)))))" in
+  check Alcotest.(list string) "the caller's x" ["ADD.AB#1,$_LET1"] (lines_with "ADD" out)
+
+let test_macros_errors () =
+  let err src = error_of src in
+  let has needle src = check Alcotest.bool needle true (contains (err src) needle) in
+  has "`put` takes 1 argument, given 2" "(program (define (put (k Num)) (MOV k 1)) (put 1 2))" ;
+  has "`put`'s k is a Num" "(program (define (put (k Num)) (MOV k 1)) (put (seq (NOP))))" ;
+  has "`at`'s l is a Lab" "(program (define (at (l Lab)) (JMP l)) (at 3))" ;
+  has "`bump`'s v is a Var: `q` is not a let variable here" "(program (define (bump (v Var)) (ADD 1 v)) (bump q))" ;
+  has "`b` calls `c`, which is not defined before it" "(program (define (b) (c)) (define (c) (NOP)) (b))" ;
+  has "a (for ...) bound must be a number known when compiling" "(program (seq (label top) (for i 1 top (NOP))))" ;
+  has "a (for ...) repeats at most 1000 times" "(program (for i 1 5000 (NOP)))" ;
+  has "variable `v` is stored twice" "(program (define (twice) (let (v 1) (seq (DAT 0 (store v)) (DAT 0 (store v))))) (twice))" ;
+  (* an error inside an expansion says where the call is *)
+  check Alcotest.bool "at the call" true
+    (String.starts_with ~prefix:"p.src:1:43: error:" (err "(program (define (bad) (MOV 0 (store z))) (bad))"))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1278,6 +1317,10 @@ let ocaml_tests = [
   "phase6", [
     test_case "A-field modes on numbers and labels" `Quick test_amodes_on_numbers ;
     test_case "(start label) is the entry point" `Quick test_start_entry ;
+    test_case "templates: Num, and for" `Quick test_macros_num_and_for ;
+    test_case "templates: Lab, Var, Code" `Quick test_macros_lab_var_code ;
+    test_case "templates: fresh labels and lets" `Quick test_macros_hygiene ;
+    test_case "templates: what they reject" `Quick test_macros_errors ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

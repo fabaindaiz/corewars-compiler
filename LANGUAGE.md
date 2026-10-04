@@ -224,6 +224,24 @@ Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` w
 - (dead N) no process is left after N executed instructions
 - (cell ADDR "TEXT" N) after N instructions, cell ADDR holds the instruction TEXT
 
+### Templates and repetition
+
+A template is a named RED fragment with typed parameters, defined in the header and expanded where it is called, before anything else is compiled (d-7d2612-c4e274):
+
+```
+(program
+  (const step 400)
+  (define (probe (k Num) (hit Lab))
+    (if (NE I (Dir (+ start (* k step))) (Dir (+ start (* k step) 4))) (JMP hit)))
+  (seq (label start) (for k 1 8 (probe k found)) ...))
+```
+
+- (define (name (param Kind) ...) body) a template; its body is one expression. A parameter's kind is `Num` (a number, constant, label or expression), `Lab` (a label), `Var` (a `let` variable in scope at the call) or `Code` (a RED expression, standing as a statement).
+- (name args ...) a call, where an expression may stand; the arguments must match the kinds.
+- (for k lo hi body) `body` once for each integer `k` from `lo` to `hi` (constants or numbers known when compiling, at most 1000 times), in order.
+
+A label or `let` a template defines is its own at each expansion (renamed `_X<n>_name`), so two calls never clash; a name passed as an argument is used as is, never captured. A template calls only templates defined before it, so expansion always ends. A template costs nothing: it emits what its body emits, once per call.
+
 ### Warnings
 
 The compiler warns, on standard error as `file:line:column: warning: ...`, where the compiled warrior pays a cost that could be removed, and says what would remove it. Which ones depend on the policy (`(optimize ...)`):

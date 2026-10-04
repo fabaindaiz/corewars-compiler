@@ -38,7 +38,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | Module | Role | Representation it produces |
 |---|---|---|
 | `src/hill.ml` | the hills a warrior may be written for, with their core size, length limit and whether p-space exists | `Hill.t` |
-| `src/parse.ml` | s-expression → AST; the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
+| `src/parse.ml` | s-expression → AST; first the macro layer (`expand`: templates and `for`, at the s-expression level); the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
 | `src/ast.ml` | the annotated AST `'a eexpr`, `loc`, `meta = { tag; loc }`, the one user error `Error`; `tag_expr` numbers every node in pre-order from 1 | `meta eexpr` (tags feed label names) |
 | `src/consts.ml` | `resolve`: a constant used as an operand becomes an immediate expression, an expression without a mode gets one (immediate without labels, direct with), and a `let` or label named after a constant, or a variable inside an expression, is an `Ast.Error` | `Ast.expr` |
 | `src/rename.ml` | `uniquify`: every `let`-bound variable gets a name no other binder uses (`x`, then `_x#1`, … in the reserved `_` space, so no user name can equal one; messages show the original), so initializers resolve where they are bound; the tree keeps its shape, so tags are unchanged | `Ast.expr` |
@@ -72,6 +72,7 @@ Every label the compiler invents is a prefix plus the tag of the node that produ
 | `_IFM`, `_IFF` | `if` with else: else-branch label, end label |
 | `_WHI`, `_WHF` | `while`: loop head, end label |
 | `_WHC` | rotated `while`: the test after the body (d-7d2612-a773b1) |
+| `_X` | a template's own label or let binder, renamed per expansion: `_X<n>_<name>`, `n` counting expansions in source order (d-7d2612-c4e274) |
 | `_DWH` | `do-while`: loop head |
 
 User names may not start with `_`, so no user label can take one of these (d-7d2612-bd5def).
