@@ -879,6 +879,49 @@ let test_cells_against_cells () =
   check rmods "arithmetic: the ICWS'94 default" [RF] (md IADD "(ADD (Ind a) (Ind b))")
 
 
+(* Tests for constants (EQU) and expressions *)
+let out_of (src : string) : string = (drive [("p.src", src)] ["p.src"]).out
+
+let line_with (needle : string) (text : string) : string =
+  Option.value ~default:"" (List.find_opt (fun l -> contains l needle) (String.split_on_char '\n' text))
+
+let squash (s : string) : string = String.concat "" (String.split_on_char ' ' s)
+
+let test_consts_equ () =
+  let out = out_of "(program (const step 3044) (let (b 0) (seq (repeat (seq (ADD step b) (MOV I b (Ind b)))) (DAT 0 (store b)))))" in
+  check Alcotest.string "EQU" "stepEQU3044" (squash (line_with "EQU" out)) ;
+  check Alcotest.string "a constant is a number" "ADD.AB#step,$_LET1" (squash (line_with "ADD" out)) ;
+  let lines = String.split_on_char '\n' out in
+  let index needle = Option.get (List.find_index (fun l -> contains l needle) lines) in
+  check Alcotest.bool "before the code" true (index "EQU" < index "ADD")
+
+let test_consts_expressions () =
+  let out = out_of "(program (const step 2667) (seq (JMP (+ imp (* 2 step))) (ADD (* 2 step) (Dir (+ imp 1))) (label imp) (MOV I (# 0) (Dir step))))" in
+  check Alcotest.string "a label: direct" "JMP$imp+(2*step),#0" (squash (line_with "JMP" out)) ;
+  check Alcotest.string "no label: immediate" "ADD.AB#2*step,$imp+1" (squash (line_with "ADD" out)) ;
+  check Alcotest.string "a constant with a mode" "MOV.I#0,$step" (squash (line_with "MOV" out))
+
+let test_consts_layout_evaluates () =
+  (* imp is cell 2: from the JMP at 0, imp+2*step is 2 + 5334 cells ahead; from the ADD at 1,
+     imp+1 is 2 cells ahead *)
+  let p = L.build ~consts:[("step", XNum 2667)] (compile_body ~consts:["step"] (body_of
+      "(seq (JMP (+ imp (* 2 step))) (ADD (* 2 step) (Dir (+ imp 1))) (label imp) (MOV I (# 0) (Dir step)))")) in
+  check Alcotest.int "JMP target" 5336 p.cells.(0).a.value ;
+  check Alcotest.(pair int int) "ADD operands" (5334, 2) (p.cells.(1).a.value, p.cells.(1).b.value) ;
+  check Alcotest.int "MOV's B" 2667 p.cells.(2).b.value
+
+let test_consts_errors () =
+  let err src = (drive [("p.src", src)] ["p.src"]).err in
+  check Alcotest.bool "a let of a constant's name" true
+    (contains (err "(program (const x 3) (let (x 1) (DAT 0 (store x))))") "`x` is a constant") ;
+  check Alcotest.bool "a variable in an expression" true
+    (contains (err "(let (x 1) (seq (ADD (+ x 1) x) (DAT 0 (store x))))") "variable `x` cannot be part of an expression") ;
+  check Alcotest.bool "a constant naming a label" true
+    (contains (err "(program (const s (+ top 1)) (seq (label top) (DAT s 0)))") "a constant is a number") ;
+  check Alcotest.bool "a label of a constant's name" true
+    (contains (err "(program (const top 1) (seq (label top) (DAT 0 0)))") "`top` is a constant")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1006,6 +1049,12 @@ let ocaml_tests = [
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
   ] ;
+  "consts", [
+    test_case "(const name n) is an EQU before the code" `Quick test_consts_equ ;
+    test_case "expressions keep their names" `Quick test_consts_expressions ;
+    test_case "Layout evaluates expressions" `Quick test_consts_layout_evaluates ;
+    test_case "what a constant cannot be" `Quick test_consts_errors ;
+  ] ;
   "cells", [
     test_case "a cell beside a value is its B-field" `Quick test_cells_beside_a_value ;
     test_case "a cell against a cell is the whole cell" `Quick test_cells_against_cells ;
@@ -1034,7 +1083,9 @@ let () =
   
   let compiler : compiler =
     (* A golden is what run_compile.exe prints: the default policy's choice (Optimize.choose). *)
-    SCompiler ( fun _ s -> (Cored.Optimize.compile_prog Cored.Metrics.default_policy (parse_exp (sexp_from_string s))) ) in
+    SCompiler ( fun _ s ->
+      let src = parse_source (sexp_from_string s) in
+      Cored.Optimize.compile_prog ~consts:src.consts Cored.Metrics.default_policy src.body ) in
   
   let bbc_tests =
     let name : string = "compare" in

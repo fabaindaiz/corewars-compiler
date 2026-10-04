@@ -40,6 +40,7 @@ e ::= (label l) | (com …) | (OP [mod] a a)                          primitives
 c ::= (JZ [mod] a) | (JN [mod] a) | (DZ [mod] a) | (DN [mod] a)       unary conditions
     | (EQ [mod] a a) | (NE [mod] a a) | (GT [mod] a a) | (LT [mod] a a)   binary conditions
 a ::= n | id | (mode n) | (mode id) | (store x) | none                operands
+    | (op x x) | (mode (op x x))      op ∈ + - * / %, x ::= n | id | (op x x)   expressions
 ```
 
 `Ast.tag_expr` numbers every node in pre-order; the number `n` of a node names the labels it
@@ -63,6 +64,12 @@ generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of 
 - **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `_LETn`, through the modifier
   that selects `f`. An indirect use (`@`, `<`, `>`) goes through that field (`*`, `{`, `}` when
   `f = A`). `#x` is the offset to `_LETn`, not its value.
+- **Constants and expressions** (d-7d2612-d9339f). A header `(const c v)` defines `c` with `v` a
+  number or an expression of constants defined before it (no label: EQU substitutes text). A
+  constant is a number wherever it is used; no `let` binder or label may be named after one (checked
+  by `Consts.resolve`). An expression names numbers, constants and labels, never a `let` variable
+  (checked); without a written mode it is immediate when it names no label, direct otherwise. Its
+  value is pMARS's: a label counts from the instruction holding the expression.
 - **Cells** (d-7d2612-891901). A plain reference (`(Dir -1)`, a label) and the target of an indirect
   use name a cell. With no modifier written, a cell beside a number or a variable is read and
   written at its B-field, the ICWS'94 convention: `(MOV x (Dir -1))` with `x` in A is `MOV.AB`,
@@ -114,6 +121,7 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 
 | Construct | Emitted |
 |---|---|
+| `(program (const c v) ... e)` | `c EQU v` lines before the code, then `⟦e⟧`; an expression operand is printed as is, nested operations in parentheses |
 | `(repeat e)` | `_REPn: ⟦e⟧; JMP _REPn` |
 | `(repeat e a)` | `_REPn: ⟦e⟧; JMP _REPn, a` (the `JMP` evaluates `a` every iteration, so `(Inc p)` increments `p`; a `(store x)` in `a` labels the `JMP` `_LETm`: x's place is its B-field; d-7d2612-d9e5d3) |
 | `(if c e)` | `⟦c⟧pre→_IFn; ⟦e⟧; _IFn:` |

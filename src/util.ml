@@ -25,6 +25,7 @@ let compile_mode (mode : mode) (dest : place) : rmode =
 type darg =
 | ADRef of mode * int
 | ADLab of mode * string
+| ADExp of mode * rexpr
 
 let arg_to_darg (arg : arg) : darg =
   match arg with
@@ -34,6 +35,8 @@ let arg_to_darg (arg : arg) : darg =
   | ARef (m, n) -> ADRef (m, n)
   | ALab (m, s) -> ADLab (m, s)
   | AStore (s) -> error (sprintf "Not a valid place to store: %s" s)
+  | AExp (Some m, e) -> ADExp (m, e)
+  | AExp (None, _) -> failwith "an expression without a mode: Consts.resolve did not run"
 
 
 type carg =
@@ -41,11 +44,13 @@ type carg =
 | ACLab of mode * string (* label variable *)
 | ACVar of mode * string (* direct reference *)
 | ACPnt of mode * string (* indirect reference *)
+| ACExp of mode * rexpr  (* expression, evaluated by pMARS *)
 
 let darg_to_carg (darg : darg) (env : env) : carg =
   let _, _, lenv = env in
   match darg with
   | ADRef (m, n) -> ACRef (m, n)
+  | ADExp (m, e) -> ACExp (m, e)
   | ADLab (m, s) ->
     (match List.assoc_opt s lenv with
     | Some _ ->
@@ -58,6 +63,7 @@ let carg_to_rarg (carg : carg) (env : env) : rarg =
   let _, penv, lenv = env in
   match carg with
   | ACRef (m, n) -> RRef ((compile_mode m PB), n)
+  | ACExp (m, e) -> RExp ((compile_mode m PB), e)
   | ACLab (m, s) -> RLab ((compile_mode m PB), s)
   | ACVar (m, s) ->
     let l = (translate_lenv s lenv) in
@@ -84,7 +90,7 @@ let place_to_opmod (place : place) : opmod =
 let carg_to_opmod (carg : carg) (env : env) : opmod =
   let _, penv, _ = env in
   match carg with
-  | ACRef (m, _) | ACLab (m, _) ->
+  | ACRef (m, _) | ACLab (m, _) | ACExp (m, _) ->
     (match m with
     | MImm -> TNum
     | MDir | MInd (_) -> TCell )

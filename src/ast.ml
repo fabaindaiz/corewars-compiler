@@ -23,6 +23,7 @@ type arg =
 | AId of string
 | ARef of mode * int
 | ALab of mode * string
+| AExp of mode option * Red.rexpr (* an expression; its mode is decided by Consts.resolve when not written *)
 
 
 type cond1 =
@@ -132,7 +133,8 @@ type expr = loc eexpr
 type meta = { tag : tag; loc : loc }
 
 (* A source file: an optional (program ...) header around one body expression. *)
-type source = { optimize : string list option; expects : expectation list; body : expr }
+(* consts: the (const name value) items of the header, in order: emitted as EQU lines. *)
+type source = { optimize : string list option; expects : expectation list; consts : (string * Red.rexpr) list; body : expr }
 
 (* Every node gets a tag in pre-order from 1; labels are named after tags, so this numbering is
    part of the output and must not change. A comment takes none itself, but as an element of a seq
@@ -186,3 +188,4 @@ let string_of_arg(a : arg) : string =
   | AId s -> s
   | ARef (_, n) -> Int.to_string n
   | ALab (_, s) -> s
+  | AExp (_, e) -> Red.pp_rexpr e

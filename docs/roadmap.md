@@ -233,7 +233,10 @@ lines 165–166) and the epilogue is `DAT.F #0, #0`. A `JMZ`/`JMN` scanner sees 
 **Decide first.** Whether to emit `DAT $0, $0` (the user's question, 2026-10-04).
 
 ### Constants as named EQU · i-7d2612-a3f2b6
-**State.** Planned. Constant optimizers (optiMAX, mopt) tune `EQU` constants; RED inlines them.
+**State.** Done (s-7d2612-333abd): `(const name value)` in the header is an `EQU` line, and operand
+expressions `(op a b)` over numbers, constants and labels are emitted for pMARS (d-7d2612-d9339f);
+`Layout` evaluates them for the metrics. Constant optimizers (optiMAX, mopt) tune `EQU` constants,
+which RED used to inline.
 
 ### Compile-error tests · i-7d2612-70ea22
 **State.** Half done. The command line's error path is tested through `Cored.Driver`

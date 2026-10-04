@@ -20,8 +20,13 @@ asserts `.I`, the decision's point.
 **What went wrong.** I wrote a decision id and a session id by hand before generating them (one in
 a test comment, also against the no-ids-in-comments rule; one in the roadmap); both replaced by
 generated ids before committing.
-**Left undone.** Constants and expressions, the imp spiral, phase 4's warnings, the smaller pending
-items.
+Constants and expressions (d-7d2612-d9339f): header `(const name value)` emitted as `EQU`, operand
+expressions `(op a b)` emitted for pMARS, a new `Consts` module resolving names and rejecting a
+`let` or label named after a constant and a variable inside an expression; `Layout` evaluates
+expressions. No golden changed. The `compare` suite now parses goldens as sources, so a golden may
+carry a header. Also corrected: `LANGUAGE.md` still said the compiler did not change its output by
+policy, untrue since phase 3.
+**Left undone.** The imp ring archetype's record, phase 4's warnings, the smaller pending items.
 
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
 

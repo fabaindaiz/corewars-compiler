@@ -13,8 +13,10 @@ let candidates : options list =
 
 (* The whole program is compiled once per candidate: at most 100 cells each, so eight compiles cost
    nothing next to one pMARS run. *)
-let choose (policy : Metrics.policy) (e : Ast.expr) : options * emitted list * Metrics.t =
-  let measure o = let body = compile_body ~opts:o e in (o, body, Metrics.measure (Layout.build body)) in
+let choose ?(consts = []) (policy : Metrics.policy) (e : Ast.expr) : options * emitted list * Metrics.t =
+  let measure o =
+    let body = compile_body ~opts:o ~consts:(List.map fst consts) e in
+    (o, body, Metrics.measure (Layout.build ~consts body)) in
   match List.map measure candidates with
   | [] -> failwith "Optimize.choose: no candidate"
   | first :: rest ->
@@ -28,8 +30,8 @@ let describe (o : options) : string =
   | [] -> "none"
   | names -> String.concat ", " names
 
-let compile_body (policy : Metrics.policy) (e : Ast.expr) : emitted list =
-  let _, body, _ = choose policy e in body
+let compile_body ?consts (policy : Metrics.policy) (e : Ast.expr) : emitted list =
+  let _, body, _ = choose ?consts policy e in body
 
-let compile_prog (policy : Metrics.policy) (e : Ast.expr) : string =
-  let opts, _, _ = choose policy e in Compile.compile_prog ~opts e
+let compile_prog ?consts (policy : Metrics.policy) (e : Ast.expr) : string =
+  let opts, _, _ = choose ?consts policy e in Compile.compile_prog ~opts ?consts e

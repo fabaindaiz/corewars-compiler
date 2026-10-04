@@ -25,7 +25,7 @@ let rename_arg (env : renames) (a : arg) : arg =
   | AStore s -> AStore (rename_name env s)
   | AId s -> AId (rename_name env s)
   | ALab (m, s) -> ALab (m, rename_name env s)
-  | ANone | ANum _ | ARef _ -> a
+  | ANone | ANum _ | ARef _ | AExp _ -> a
 
 let rename_cond (env : renames) (c : cond) : cond =
   match c with
@@ -40,7 +40,7 @@ let rename_flow (env : renames) (op : flow1) : flow1 =
 
 let stores_in_arg (a : arg) : string list = match a with
   | AStore s -> [s]
-  | ANone | ANum _ | AId _ | ARef _ | ALab _ -> []
+  | ANone | ANum _ | AId _ | ARef _ | ALab _ | AExp _ -> []
 
 let stores_in_flow (op : flow1) : string list = match op with
   | Repeat a -> stores_in_arg a

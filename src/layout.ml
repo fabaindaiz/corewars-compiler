@@ -87,7 +87,7 @@ let place_cells (body : Compile.emitted list) : raw list =
   List.rev acc
 
 
-let build ?(coresize = default_coresize) (body : Compile.emitted list) : program =
+let build ?(coresize = default_coresize) ?(consts = []) (body : Compile.emitted list) : program =
   let raws = Array.of_list (place_cells body) in
   let n = Array.length raws in
   let table = Hashtbl.create 16 in
@@ -98,8 +98,28 @@ let build ?(coresize = default_coresize) (body : Compile.emitted list) : program
       | Some first -> add (Duplicate_label (l, first, pos))
       | None -> Hashtbl.add table l pos) r.r_labels ;
     if r.r_long then add (Long_line pos)) raws ;
+  (* An expression is evaluated as pMARS does: a label is its offset from the cell that holds it, a
+     constant its value; a division by zero, which pMARS rejects, is 0 here. *)
+  let rec eval pos (x : rexpr) : int =
+    match x with
+    | XNum n -> n
+    | XName s ->
+      (match List.assoc_opt s consts, Hashtbl.find_opt table s with
+      | Some v, _ -> eval pos v
+      | None, Some t -> t - pos
+      | None, None -> add (Undefined_label s) ; 0)
+    | XBin (op, a, b) ->
+      let a = eval pos a and b = eval pos b in
+      (match op with
+      | '+' -> a + b
+      | '-' -> a - b
+      | '*' -> a * b
+      | '/' -> if b = 0 then 0 else a / b
+      | '%' -> if b = 0 then 0 else a mod b
+      | _ -> failwith (Printf.sprintf "Layout.eval: no operator %c" op)) in
   let operand pos (a : rarg) : operand =
     match a with
+    | RExp (m, x) -> { mode = m; value = norm coresize (eval pos x); label = None }
     | RNone -> { mode = RImm; value = 0; label = None }
     | RRef (m, k) -> { mode = m; value = norm coresize k; label = None }
     | RLab (m, l) ->

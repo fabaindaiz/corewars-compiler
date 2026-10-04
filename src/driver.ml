@@ -66,7 +66,7 @@ and compile_file ~read f report optimize warn emit_beh : output =
     | None -> stop (sprintf "unknown objective `%s`: one of speed, size, stealth, boot" n)) names in
   (* The policy picks the transformations (Optimize.choose): what is printed, measured and checked
      is the chosen variant. *)
-  let opts, _, chosen = Optimize.choose policy src.body in
+  let opts, _, chosen = Optimize.choose ~consts:src.consts policy src.body in
   let metrics () = chosen in
   let expects = List.map (fun x -> (x, None)) src.expects @ Expect.collect (Ast.tag_expr src.body) in
   let failures = List.filter_map (fun x -> match Expect.check (metrics ()) x with
@@ -74,7 +74,7 @@ and compile_file ~read f report optimize warn emit_beh : output =
     | Some Expect.Pass | None -> None) expects in
   if failures <> [] && not warn then stop (String.concat "\n" failures) ;
   let warnings = String.concat "" (List.map (sprintf "warning: %s\n") failures) in
-  let redcode = Compile.compile_prog ~opts src.body ^ "\n" in
+  let redcode = Compile.compile_prog ~opts ~consts:src.consts src.body ^ "\n" in
   let files = match emit_beh with
     | None -> []
     | Some path ->

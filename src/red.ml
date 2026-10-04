@@ -26,11 +26,30 @@ let pp_mode (rmode : rmode) : string =
   | RBInc -> ">"
 
 
+(* An operand expression, printed for pMARS to evaluate: numbers, labels and EQU constants under
+   + - * / %. *)
+type rexpr =
+| XNum of int
+| XName of string
+| XBin of char * rexpr * rexpr
+
+(* Nested operations are parenthesized, so pMARS's precedence never decides; a negative number too. *)
+let rec pp_rexpr (e : rexpr) : string =
+  match e with
+  | XNum n -> if n < 0 then sprintf "(%d)" n else Int.to_string n
+  | XName s -> s
+  | XBin (op, a, b) -> sprintf "%s%c%s" (pp_rexpr_operand a) op (pp_rexpr_operand b)
+and pp_rexpr_operand (e : rexpr) : string =
+  match e with
+  | XBin _ -> "(" ^ pp_rexpr e ^ ")"
+  | XNum _ | XName _ -> pp_rexpr e
+
 (* red arguments for opcodes *)
 type rarg =
 | RNone                  (* none arg *)
 | RRef of rmode * int    (* number arg *)
 | RLab of rmode * string (* string arg *)
+| RExp of rmode * rexpr  (* expression arg *)
 
 (* rarguments for instruction to string *)
 let pp_rarg (rarg : rarg) : string =
@@ -38,6 +57,7 @@ let pp_rarg (rarg : rarg) : string =
   | RNone       -> sprintf "#%-6s"  (Int.to_string 0)
   | RRef (m, n) -> sprintf "%s%-6s" (pp_mode m) (Int.to_string n)
   | RLab (m, l) -> sprintf "%s%-6s" (pp_mode m) (l)
+  | RExp (m, e) -> sprintf "%s%-6s" (pp_mode m) (pp_rexpr e)
 
 
 (* instruction modifiers *)

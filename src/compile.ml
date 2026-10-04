@@ -24,7 +24,7 @@ let emit ?origin ?construct ?(stores = []) (instr : instruction) : emitted =
 let stores_of (a1 : arg) (a2 : arg) : (string * place) list =
   let one a p = match a with
     | AStore s -> [(s, p)]
-    | ANone | ANum _ | AId _ | ARef _ | ALab _ -> [] in
+    | ANone | ANum _ | AId _ | ARef _ | ALab _ | AExp _ -> [] in
   one a1 PA @ one a2 PB
 
 
@@ -47,7 +47,7 @@ let compile_arg (arg : arg) (env : env) : carg * rarg =
 
 let immediate (carg : carg) : bool =
   match carg with
-  | ACRef (m, _) | ACLab (m, _) | ACVar (m, _) | ACPnt (m, _) -> m = MImm
+  | ACRef (m, _) | ACLab (m, _) | ACVar (m, _) | ACPnt (m, _) | ACExp (m, _) -> m = MImm
 
 (* JMZ/JMN/DJN test or decrement one field of their B-target, and their A operand is only where
    to jump: the field the tested variable is stored in decides (.A or .B). An immediate #x is the
@@ -252,8 +252,10 @@ let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted lis
 (* An operand that predecrements or postincrements moves a pointer each time it is evaluated, even as
    the B operand of a JMP. *)
 let moves_a_pointer (b : rarg) : bool = match b with
-  | RRef ((RADec | RBDec | RAInc | RBInc), _) | RLab ((RADec | RBDec | RAInc | RBInc), _) -> true
-  | RNone | RRef ((RImm | RDir | RAInd | RBInd), _) | RLab ((RImm | RDir | RAInd | RBInd), _) -> false
+  | RRef ((RADec | RBDec | RAInc | RBInc), _) | RLab ((RADec | RBDec | RAInc | RBInc), _)
+  | RExp ((RADec | RBDec | RAInc | RBInc), _) -> true
+  | RNone | RRef ((RImm | RDir | RAInd | RBInd), _) | RLab ((RImm | RDir | RAInd | RBInd), _)
+  | RExp ((RImm | RDir | RAInd | RBInd), _) -> false
 
 let thread_jumps (body : emitted list) : emitted list =
   (* Each instruction with the labels on its cell, in order. *)
@@ -310,12 +312,14 @@ let rec peephole (body : emitted list) : emitted list =
     | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
              | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> false) in
   let user_label l = not (String.starts_with ~prefix:"_" l) in
-  (* Cells between an operand written as a number and the cell it counts to, both ends included. *)
+  (* Cells between an operand written as a number and the cell it counts to, both ends included; an
+     expression's span is not known here, so it counts every cell. *)
   let spans = List.concat (List.mapi (fun j ((e : emitted), _) -> match e.instr with
     | INSTR (_, _, a, b) ->
       List.filter_map (fun r -> match r with
         | RRef ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), n) -> Some (j, min j (j + n), max j (j + n))
-        | RRef (RImm, _) | RLab _ | RNone -> None) [a; b]
+        | RExp ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), _) -> Some (j, min_int, max_int)
+        | RRef (RImm, _) | RExp (RImm, _) | RLab _ | RNone -> None) [a; b]
     | ILAB _ | ICOM _ -> []) (Array.to_list cells)) in
   let counted i = List.exists (fun (j, lo, hi) -> j <> i && lo <= i && i <= hi) spans in
   let dead i = match cells.(i) with
@@ -327,8 +331,8 @@ let rec peephole (body : emitted list) : emitted list =
   | None -> body
   | Some i -> let gone = fst cells.(i) in peephole (List.filter (fun e -> e != gone) body)
 
-let compile_body ?(opts = no_opts) (e : expr) : emitted list =
-  let body = thread_jumps (compile_expr opts (tag_expr (Rename.uniquify e)) empty_env) in
+let compile_body ?(opts = no_opts) ?(consts = []) (e : expr) : emitted list =
+  let body = thread_jumps (compile_expr opts (tag_expr (Rename.uniquify (Consts.resolve consts e))) empty_env) in
   if opts.peephole then peephole body else body
 
 
@@ -344,9 +348,11 @@ let epilogue = [INSTR (IDAT, RN, RRef (RDir, 0), RRef (RDir, 0))]
    in an instruction line hung it, 200 did not). *)
 let max_line = 256
 
-let compile_prog ?opts (e : expr) : string =
-  let instrs = List.map (fun (x : emitted) -> x.instr) (compile_body ?opts e) in
-  let text = (prelude) ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
+(* Constants are EQU lines before the code: pMARS substitutes an EQU only after its definition. *)
+let compile_prog ?opts ?(consts = []) (e : expr) : string =
+  let instrs = List.map (fun (x : emitted) -> x.instr) (compile_body ?opts ~consts:(List.map fst consts) e) in
+  let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr v)) consts) in
+  let text = (prelude) ^ equs ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
   List.iteri (fun i line ->
     let n = String.length line in
     if n >= max_line then

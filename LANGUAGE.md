@@ -41,6 +41,12 @@ If the string corresponds to some variable in scope, the string will be replaced
 
 All numbers are taken modulo the core size (8000 on the 94b hill) and stored as `0..7999`, so `-1` is `7999`.
 
+### Constants and expressions
+
+A constant is defined in the program header, `(const step 3044)`, and emitted as `step EQU 3044` before the code, so the warrior keeps its names and a constant optimizer can tune it. Its value is a number or an expression of earlier constants; it cannot name a label (EQU substitutes text, so a label would mean a different cell at every use). No `let` variable or label may take a constant's name.
+
+An expression is `(op a b)` with `op` one of `+ - * / %` and each operand a number, a constant, a label or another expression: `(+ imp 2667)`, `(* 2 step)`. It is emitted as is (`imp+2667`, `imp+(2*step)`) for pMARS to evaluate, and a label in it counts from the instruction that holds it, as in hand-written redcode. Without a mode, an expression is immediate when it names only constants and numbers, and direct when it names a label, as a number and a label are; `(Dir (+ imp 1))` or `(# step)` write the mode. A constant alone is a number: `(ADD step p)` is `ADD #step, ...`. A `let` variable cannot be part of an expression: it is a field of a cell, not a number known when the warrior is assembled.
+
 ### Addresing modes (mode)
 
 Addresing modes are used to specify how the argument is used in the instruction. If the addressing mode is not specified, the default mode is used.
@@ -187,8 +193,9 @@ A file may wrap its single body expression in an optional header. A file without
   body)
 ```
 
-- (program items) the header: any number of `optimize` and `expect` items, and exactly one body expression
-- (optimize objectives) at least one objective, in the order in which the compiler weighs its metrics: `speed` (cycles per loop iteration), `size` (warrior length), `stealth` (cells a scanner can see), `boot` (cycles before the first loop). The default is `speed size`; `run_compile.exe --optimize size,speed` overrides the header. The compiler measures and reports today; it does not yet change its output by policy.
+- (program items) the header: any number of `optimize`, `expect` and `const` items, and exactly one body expression
+- (const name value) a constant (see *Constants and expressions*)
+- (optimize objectives) at least one objective, in the order in which the compiler weighs its metrics: `speed` (cycles per loop iteration), `size` (warrior length), `stealth` (cells a scanner can see), `boot` (cycles before the first loop). The default is `speed size`; `run_compile.exe --optimize size,speed` overrides the header. The compiler compiles each combination of its optional transformations, measures them and keeps the one the policy prefers.
 
 ### Expectations (expect)
 

@@ -63,9 +63,26 @@ let parse_mode (sexp : sexp) : mode =
   | `Atom "Inc" | `Atom ">" -> MInd (MIInc)
   | _ -> fail sexp (sprintf "Not a valid mode: %s" (to_string sexp))
 
+(* An expression for pMARS: numbers, names (labels, constants) and + - * / %, two operands each. *)
+let rec parse_rexpr (sexp : sexp) : Red.rexpr =
+  match sexp with
+  | `Atom s ->
+    (match Int64.of_string_opt s with
+    | Some n -> Red.XNum (Int64.to_int n)
+    | None -> Red.XName (user_name sexp s))
+  | `List [`Atom ("+" | "-" | "*" | "/" | "%" as op); a; b] -> Red.XBin (op.[0], parse_rexpr a, parse_rexpr b)
+  | `List _ -> fail sexp (sprintf "Not a valid expression: %s" (to_string sexp))
+
+let is_operator (sexp : sexp) : bool =
+  match sexp with
+  | `Atom ("+" | "-" | "*" | "/" | "%") -> true
+  | `Atom _ | `List _ -> false
+
 let parse_arg (sexp : sexp) : arg =
   match sexp with
   | `Atom "none" -> ANone
+  | `List [op; _; _] when is_operator op -> AExp (None, parse_rexpr sexp)
+  | `List [m; (`List _ as e)] -> AExp (Some (parse_mode m), parse_rexpr e)
   | `List [`Atom "store"; `Atom s] | `List [`Atom "!"; `Atom s] -> AStore (user_name sexp s)
   | `Atom s ->
     (match Int64.of_string_opt s with
@@ -226,7 +243,7 @@ let rec parse_exp (sexp : sexp) : expr =
 let parse_source (sexp : sexp) : source =
   match sexp with
   | `List (`Atom "program" :: items) ->
-    let optimize = ref None and expects = ref [] and bodies = ref [] in
+    let optimize = ref None and expects = ref [] and consts = ref [] and bodies = ref [] in
     List.iter (fun item -> match item with
       | `List [`Atom "optimize"] -> fail item "an (optimize ...) needs at least one objective"
       | `List (`Atom "optimize" :: os) ->
@@ -234,11 +251,21 @@ let parse_source (sexp : sexp) : source =
           | `Atom s -> s
           | `List _ -> fail o (sprintf "Not an objective: %s" (to_string o))) os)
       | `List [`Atom "expect"; e] -> expects := parse_expectation e :: !expects
+      | `List [`Atom "const"; `Atom n; v] ->
+        let n = label_name item n in
+        if List.mem_assoc n !consts then fail item (sprintf "constant `%s` is defined twice" n) ;
+        let v = parse_rexpr v in
+        (* EQU substitutes text: a value naming a label would mean a different cell at every use. *)
+        let rec names (x : Red.rexpr) = match x with
+          | Red.XNum _ -> [] | Red.XName s -> [s] | Red.XBin (_, a, b) -> names a @ names b in
+        (match List.find_opt (fun s -> not (List.mem_assoc s !consts)) (names v) with
+        | Some s -> fail item (sprintf "a constant is a number: `%s` is not a constant defined before `%s`" s n)
+        | None -> consts := (n, v) :: !consts)
       | `Atom _ | `List _ -> bodies := parse_exp item :: !bodies) items ;
     (match !bodies with
-    | [body] -> { optimize = !optimize; expects = List.rev !expects; body }
+    | [body] -> { optimize = !optimize; expects = List.rev !expects; consts = List.rev !consts; body }
     | [] | _ :: _ :: _ -> fail sexp "a (program ...) needs exactly one body expression")
-  | `Atom _ | `List _ -> { optimize = None; expects = []; body = parse_exp sexp }
+  | `Atom _ | `List _ -> { optimize = None; expects = []; consts = []; body = parse_exp sexp }
 
 (* parse a program from a file *)
 let sexp_from_file : string -> CCSexp.sexp =

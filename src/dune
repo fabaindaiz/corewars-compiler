@@ -1,4 +1,4 @@
 (library
  (name cored)
- (modules red ast rename analyse compile lib util parse layout metrics optimize expect driver)
+ (modules red ast consts rename analyse compile lib util parse layout metrics optimize expect driver)
  (libraries containers))
