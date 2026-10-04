@@ -30,8 +30,8 @@ let rename_arg (env : renames) (a : arg) : arg =
 let rename_cond (env : renames) (c : cond) : cond =
   match c with
   | Cond0 -> c
-  | Cond1 (op, a) -> Cond1 (op, rename_arg env a)
-  | Cond2 (op, a1, a2) -> Cond2 (op, rename_arg env a1, rename_arg env a2)
+  | Cond1 (op, m, a) -> Cond1 (op, m, rename_arg env a)
+  | Cond2 (op, m, a1, a2) -> Cond2 (op, m, rename_arg env a1, rename_arg env a2)
 
 let stores_in_arg (a : arg) : string list = match a with
   | AStore s -> [s]
@@ -39,8 +39,8 @@ let stores_in_arg (a : arg) : string list = match a with
 
 let stores_in_cond (c : cond) : string list = match c with
   | Cond0 -> []
-  | Cond1 (_, a) -> stores_in_arg a
-  | Cond2 (_, a1, a2) -> stores_in_arg a1 @ stores_in_arg a2
+  | Cond1 (_, _, a) -> stores_in_arg a
+  | Cond2 (_, _, a1, a2) -> stores_in_arg a1 @ stores_in_arg a2
 
 (* After renaming every name is bound once, so counting stores per name checks each let: a let
    variable lives in one cell, so a second (store x) would define its label twice. *)

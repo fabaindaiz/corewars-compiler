@@ -15,12 +15,12 @@ let analyse_store_arg (arg : arg) (id : string) (place : place) (penv : penv) : 
 let analyse_store_cond (cond : cond) (id : string) (penv : penv) : penv =
   match cond with
   | Cond0 -> penv
-  | Cond1 (_, a) -> (analyse_store_arg a id PB penv)
+  | Cond1 (_, _, a) -> (analyse_store_arg a id PB penv)
   (* compile_cond2 emits GT as SLT b, a (in both layouts): its operands swap fields. *)
-  | Cond2 (Cgt, a1, a2) ->
+  | Cond2 (Cgt, _, a1, a2) ->
     let penv' = (analyse_store_arg a1 id PB penv) in
     (analyse_store_arg a2 id PA penv')
-  | Cond2 ((Ceq | Cne | Clt), a1, a2) ->
+  | Cond2 ((Ceq | Cne | Clt), _, a1, a2) ->
     let penv' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB penv')
 

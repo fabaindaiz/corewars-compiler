@@ -37,12 +37,6 @@ type cond2 =
 | Cgt
 | Clt
 
-type cond =
-| Cond0
-| Cond1 of cond1 * arg
-| Cond2 of cond2 * arg * arg
-
-
 type imod =
 | MDef
 | MN
@@ -53,6 +47,12 @@ type imod =
 | MI
 | MX
 | MF
+
+(* A condition's modifier: MDef unless the user wrote one, as in (NE I a b) or (JZ F x). *)
+type cond =
+| Cond0
+| Cond1 of cond1 * imod * arg
+| Cond2 of cond2 * imod * arg * arg
 
 type prim2 =
 | Dat

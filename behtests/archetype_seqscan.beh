@@ -1,0 +1,6 @@
+# On empty core every compared pair is equal: a lap is ADD.F, SNE.I and the threaded JMP back, and
+# each ADD.F moves both pointers (cell 5) by 8, from 100 and 104.
+golden: bbctests/archetypes/seqscan.bbc
+cell 3 5 DAT.F #108, #112
+cell 4 5 DAT.F #116, #120
+alive 1000

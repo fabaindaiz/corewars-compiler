@@ -1,0 +1,14 @@
+(let (a 100)
+  (let (b 104)
+    (seq
+      (repeat
+        (seq
+          (ADD F inc ptrs)
+          (if (NE I (Ind a) (Ind b))
+            (MOV I bomb (Ind b)))))
+      (label ptrs)
+      (DAT (store a) (store b))
+      (label inc)
+      (DAT 8 8)
+      (label bomb)
+      (DAT 0 0))))

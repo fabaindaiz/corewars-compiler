@@ -124,18 +124,18 @@ let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag
   let emit = emit ~origin:tag ~construct in
   match cond with
   | Cond0 -> []
-  | Cond1 (op, a2) ->
+  | Cond1 (op, imod, a2) ->
     let a1 = ALab (MDir, label) in
     let opcode = (compile_cond1 op mode) in
-    let _, rarg1 = (compile_arg a1 env) in
+    let carg1, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
-    let rmod = jump_modifier carg2 env in
+    let rmod = compile_mod carg1 carg2 imod opcode env in
     (* A (store x) in a condition makes the condition's cell x's place: label it, as a primitive does. *)
     List.map emit (compile_label a2 env)
     @ [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))]
-  | Cond2 (op, a1, a2) ->
+  | Cond2 (op, imod, a1, a2) ->
     let opcode, a1, a2, always_skip = (compile_cond2 op mode a1 a2) in
-    let rmod, rarg1, rarg2 = (compile_args a1 a2 MDef opcode env) in
+    let rmod, rarg1, rarg2 = (compile_args a1 a2 imod opcode env) in
     let skip = if always_skip then [emit (INSTR (ISNE, RAB, RRef (RImm, 0), RRef (RImm, 1)))] else [] in
     List.map emit (compile_label a1 env @ compile_label a2 env)
     @ [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))] @ skip @ [emit (jump_label label)]

@@ -672,6 +672,30 @@ let test_phase2_threaded_loop_is_one_loop () =
   check range "cycles" (r 2 4) (List.hd m.loops).cycles ;
   check Alcotest.(option string) "closed by the repeat" (Some "repeat") (List.hd m.loops).construct
 
+let modifiers (op : opcode) (src : string) : rmod list =
+  List.filter_map (fun i -> match i with
+    | INSTR (o, md, _, _) when o = op -> Some md
+    | INSTR _ | ICOM _ | ILAB _ -> None) (instrs_of_src src)
+
+let rmods = Alcotest.list rmod_t
+
+let test_phase2_condition_modifier () =
+  let ptrs c = Printf.sprintf "(let (a 100) (let (b 104) (seq (if %s (NOP)) (DAT (store a) (store b)))))" c in
+  check rmods "NE I compares whole cells" [RI] (modifiers ISNE (ptrs "(NE I (Ind a) (Ind b))")) ;
+  check rmods "no modifier: as before" [RAB] (modifiers ISNE (ptrs "(NE (Ind a) (Ind b))")) ;
+  check rmods "JZ F tests both fields" [RF]
+    (modifiers IJMN "(let (x 0) (seq (if (JZ F x) (NOP)) (DAT 0 (store x))))") ;
+  check rmods "DN A in a do-while" [RA]
+    (modifiers IDJN "(let (x 3) (seq (do-while (DN A x) (NOP)) (DAT 0 (store x))))") ;
+  (* the always-skipping SNE of a post-condition LT keeps its own modifier *)
+  let lt = "(let (x 0) (let (y 0) (seq (do-while (LT F x y) (NOP)) (DAT (store x) (store y)))))" in
+  check rmods "LT F: SLT.F" [RF] (modifiers ISLT lt) ;
+  check rmods "LT F: SNE.AB #0, #1" [RAB] (modifiers ISNE lt)
+
+let test_phase2_condition_bad_modifier () =
+  check Alcotest.string "error" "p.src:1:25: error: Not a valid imod: Q\n"
+    (error_of "(let (x 0) (seq (if (JZ Q x) (NOP)) (DAT 0 (store x))))")
+
 let test_phase2_labelled_dat_is_data () =
   let counts src = let m = M.measure (layout_of_src src) in (m.data, m.unreachable) in
   let pair = Alcotest.(pair int int) in
@@ -796,6 +820,8 @@ let ocaml_tests = [
     test_case "a user's JMP is not threaded through" `Quick test_phase2_user_jmp_not_followed ;
     test_case "a JMP to itself terminates" `Quick test_phase2_self_loop_terminates ;
     test_case "a threaded jump closes the same loop" `Quick test_phase2_threaded_loop_is_one_loop ;
+    test_case "a condition takes a modifier" `Quick test_phase2_condition_modifier ;
+    test_case "a condition's bad modifier is an error" `Quick test_phase2_condition_bad_modifier ;
     test_case "a labelled DAT never run is data" `Quick test_phase2_labelled_dat_is_data ;
   ] ;
   "interp", [

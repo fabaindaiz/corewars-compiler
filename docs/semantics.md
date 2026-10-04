@@ -37,8 +37,8 @@ Abstract syntax, as `src/ast.ml` represents it (`LANGUAGE.md` has the concrete f
 e ::= (label l) | (com …) | (OP [mod] a a)                          primitives
     | (repeat e) | (if c e) | (if c e e) | (while c e) | (do-while c e)   control flow
     | (let (x a) e) | (seq e …)                                       binding, sequence
-c ::= (JZ a) | (JN a) | (DZ a) | (DN a)                               unary conditions
-    | (EQ a a) | (NE a a) | (GT a a) | (LT a a)                       binary conditions
+c ::= (JZ [mod] a) | (JN [mod] a) | (DZ [mod] a) | (DN [mod] a)       unary conditions
+    | (EQ [mod] a a) | (NE [mod] a a) | (GT [mod] a a) | (LT [mod] a a)   binary conditions
 a ::= n | id | (mode n) | (mode id) | (store x) | none                operands
 ```
 
@@ -123,6 +123,10 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 | `NE a b` | `SNE a, b; JMP t` | `SEQ a, b; JMP t` |
 | `GT a b` | `SLT b, a; JMP t` | `SLT b, a; SNE #0, #1; JMP t` |
 | `LT a b` | `SLT a, b; JMP t` | `SLT a, b; SNE #0, #1; JMP t` |
+
+A condition's modifier, when written (`(NE I a b)`, `(JZ F x)`), is the test instruction's modifier;
+the always-skipping `SNE #0, #1` keeps `.AB`. Without one, the test takes the modifier an
+instruction would (§3; d-7d2612-8f9340).
 
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the

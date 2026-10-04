@@ -68,6 +68,8 @@ Unary conditions are used to specify when the control flow is executed based on 
 - (DZ x) decrement x and x is zero (only in `if`, `if` with else, and `while`)
 - (DN x) decrement x and x is not zero (only in `do-while`)
 
+- (JZ mod x) | (JN mod x) | (DZ mod x) | (DN mod x) the same, with the test's modifier given: `(JZ F x)` is zero in both fields
+
 A unary condition tests the field its variable is stored in (`.A` or `.B`); a plain number or label is tested on its B-field.
 
 ### Binary conditions (cond2)
@@ -79,7 +81,11 @@ Binary conditions are used to specify when the control flow is executed based on
 - (GT x y) x is greater than y
 - (LT x y) x is less than y
 
+- (EQ mod x y) | (NE mod x y) | (GT mod x y) | (LT mod x y) the same, with the comparison's modifier given
+
 Comparisons are unsigned: values are compared as `0..7999`, so `(LT -1 3)` is false.
+
+A modifier is written as for instructions (`A`, `B`, `AB`, `BA`, `F`, `X`, `I`), right after the operator. Without one, the comparison of two pointers takes its modifier from the fields the pointers live in: `(NE (Ind a) (Ind b))` with `a` and `b` in one cell's A and B fields compares the A-field of one target with the B-field of the other. To compare the two cells whole, as a SEQ scanner does, write `(NE I (Ind a) (Ind b))`.
 
 In `do-while`, `GT` and `LT` add a third instruction (`SNE #0, #1`, which always skips) so the comparison stays strict; the loop still spends two control instructions per iteration (`SLT` and the jump back), as before.
 

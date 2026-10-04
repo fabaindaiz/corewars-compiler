@@ -1,0 +1,36 @@
+NAME: a SEQ scanner in RED
+DESCRIPTION: compares two cells 4 apart, whole (NE I), and bombs the second when they differ; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_seqscan.beh
+SRC:
+(let (a 100)
+  (let (b 104)
+    (seq
+      (repeat
+        (seq
+          (ADD F inc ptrs)
+          (if (NE I (Ind a) (Ind b))
+            (MOV I bomb (Ind b)))))
+      (label ptrs)
+      (DAT (store a) (store b))
+      (label inc)
+      (DAT 8 8)
+      (label bomb)
+      (DAT 0 0))))
+EXPECTED:
+;redcode-94b
+
+_REP5 
+  ADD.F  $inc   , $ptrs  
+  SNE.I  *_LET1 , @_LET2 
+  JMP    $_REP5 , #0     
+  MOV.I  $bomb  , @_LET2 
+_IF10 
+  JMP    $_REP5 , #0     
+ptrs  
+_LET1 
+_LET2 
+  DAT    #100   , #104   
+inc   
+  DAT    #8     , #8     
+bomb  
+  DAT    #0     , #0     
+  DAT    #0     , #0     

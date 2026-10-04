@@ -78,28 +78,6 @@ let parse_arg (sexp : sexp) : arg =
   | _ -> fail sexp (sprintf "Not a valid arg: %s" (to_string sexp))
 
 
-let parse_cond (sexp : sexp) : cond =
-  match sexp with
-  | `List [cop; a] ->
-    let parg = (parse_arg a) in
-    (match cop with
-    | `Atom "JZ" -> Cond1 (Cjz, parg)
-    | `Atom "JN" -> Cond1 (Cjn, parg)
-    | `Atom "DZ" -> Cond1 (Cdz, parg)
-    | `Atom "DN" -> Cond1 (Cdn, parg)
-    | _ -> fail sexp (sprintf "Not a valid unary cond: %s" (to_string sexp)) )
-  | `List [cop; a1; a2] ->
-    let parg1 = (parse_arg a1) in
-    let parg2 = (parse_arg a2) in
-    (match cop with
-    | `Atom "EQ" -> Cond2 (Ceq, parg1, parg2)
-    | `Atom "NE" -> Cond2 (Cne, parg1, parg2)
-    | `Atom "GT" -> Cond2 (Cgt, parg1, parg2)
-    | `Atom "LT" -> Cond2 (Clt, parg1, parg2)
-    | _ -> fail sexp (sprintf "Not a valid binary cond: %s" (to_string sexp)) )
-  | _ -> fail sexp (sprintf "Not a valid cond: %s" (to_string sexp))
-
-
 let parse_imod (sexp : sexp) : imod =
   match sexp with
   | `Atom "A" -> MA
@@ -110,6 +88,38 @@ let parse_imod (sexp : sexp) : imod =
   | `Atom "F" -> MF
   | `Atom "X" -> MX
   | _ -> fail sexp (sprintf "Not a valid imod: %s" (to_string sexp))
+
+(* The operator decides the arity, so an optional modifier after it is never ambiguous: (JZ F x) is
+   unary with a modifier, (EQ x y) binary without one. *)
+let cond1_op (cop : sexp) : cond1 option =
+  match cop with
+  | `Atom "JZ" -> Some Cjz
+  | `Atom "JN" -> Some Cjn
+  | `Atom "DZ" -> Some Cdz
+  | `Atom "DN" -> Some Cdn
+  | _ -> None
+
+let cond2_op (cop : sexp) : cond2 option =
+  match cop with
+  | `Atom "EQ" -> Some Ceq
+  | `Atom "NE" -> Some Cne
+  | `Atom "GT" -> Some Cgt
+  | `Atom "LT" -> Some Clt
+  | _ -> None
+
+let parse_cond (sexp : sexp) : cond =
+  let bad kind = fail sexp (sprintf "Not a valid %s cond: %s" kind (to_string sexp)) in
+  match sexp with
+  | `List [cop; a] ->
+    (match cond1_op cop with Some op -> Cond1 (op, MDef, parse_arg a) | None -> bad "unary")
+  | `List [cop; x; y] ->
+    (match cond1_op cop, cond2_op cop with
+    | Some op, _ -> Cond1 (op, parse_imod x, parse_arg y)
+    | None, Some op -> Cond2 (op, MDef, parse_arg x, parse_arg y)
+    | None, None -> bad "binary")
+  | `List [cop; m; a1; a2] ->
+    (match cond2_op cop with Some op -> Cond2 (op, parse_imod m, parse_arg a1, parse_arg a2) | None -> bad "binary")
+  | _ -> fail sexp (sprintf "Not a valid cond: %s" (to_string sexp))
 
 let parse_int (sexp : sexp) : int =
   match sexp with
