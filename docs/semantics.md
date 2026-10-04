@@ -27,7 +27,8 @@ compiler relies on:
   B/A-indirect, `<`/`{` predecrement, `>`/`}` postincrement.
 - **Modifiers** (`.A .B .AB .BA .F .X .I`) select which fields an instruction reads and writes.
   ICWS'94 A.2.1.2 gives the default when none is written.
-- **Loading**: execution starts at the first instruction (`ORG 0` by default).
+- **Loading**: execution starts at the first instruction (`ORG 0` by default), or at the label an
+  `ORG` names; RED emits `ORG l` for `(start l)` (d-7d2612-3bce15).
 
 ## 2. Syntax
 
@@ -37,10 +38,10 @@ Abstract syntax, as `src/ast.ml` represents it (`LANGUAGE.md` has the concrete f
 e ::= (label l) | (com …) | (OP [mod] a a)                          primitives
     | (repeat e [a]) | (if c e) | (if c e e) | (while c e) | (do-while c e)   control flow
     | (let (x a) e) | (seq e …)                                       binding, sequence
+    | (name a …) | (for k n n e)    template calls and repetition, expanded away before the rules below
 c ::= (JZ [mod] a) | (JN [mod] a) | (DZ [mod] a) | (DN [mod] a)       unary conditions
     | (EQ [mod] a a) | (NE [mod] a a) | (GT [mod] a a) | (LT [mod] a a)   binary conditions
 a ::= n | id | (mode n) | (mode id) | (store x) | none                operands
-    | (name a …) | (for k n n e)    template calls and repetition, expanded away before the rules below
     | (op x x) | (mode (op x x))      op ∈ + - * / %, x ::= n | id | (op x x)   expressions
 ```
 

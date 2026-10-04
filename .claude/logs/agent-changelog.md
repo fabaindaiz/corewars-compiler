@@ -40,6 +40,19 @@ included a blank line: off by one, caught by the spec's own run. The host pMARS 
 the hand-written quickscan against RetroQ and the core-clear against two opponents; `bench.py`
 leaves them out (i-7d2612-0cb9e9). A backtrace under `lldb --batch` hung (likely the macOS
 debugging prompt) and was stopped.
+**Branch review** (fresh context, `feat/phase-5..feat/phase-6`): one critical and four important
+findings, all fixed test first. A `for` in a template replaced the caller's arguments of its name
+(`(thrice (ADD 1 i))` became `ADD #1, #1..#3`), and a let, label or for of that name inside a `for`
+silently lost its uses (d-7d2612-52b2e3); a template's own labels were treated as compiler-made by
+every user-label guard and rejected in expressions and as `Lab` arguments (same row); a pointer's
+value was not counted across a removed jump, so skip fusion moved the cell `(Ind p)` reached
+(d-7d2612-65d788; the jump-to-next removal had the same gap since phase 3). Six minors deferred to
+i-7d2612-faa781; the documents it found out of date (semantics' syntax and loading, architecture's
+compile and layout rows, LANGUAGE's fusion cost) corrected.
+**What went wrong, reviewing.** Hygiene was tested for labels and let binders, never for the `for`
+variable, though the design names the capture case; the guards keyed on the `_` prefix predate
+templates, and adding `_X` did not revisit them. Both are the same miss: a new name class not
+checked against every place that classifies names.
 **Left undone.** The bench baseline (`tools/bench_baseline.json`) with the quickscan; the snippets
 catalogue (i-7d2612-8e9549); a Silk-style paper and Mice; unary skip fusion (i-7d2612-40b941); the
 pMARS trap's cause (i-7d2612-0cb9e9).

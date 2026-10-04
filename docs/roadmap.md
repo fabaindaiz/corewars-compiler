@@ -297,6 +297,22 @@ today). Before: The command line's error path is tested through `Cored.Driver`
 metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (subproject C or the
 dev branch's lambdas, i-7d2612-ec4d2d).
 
+### Smaller gaps from the phase-6 review · i-7d2612-faa781
+**State.** Planned (s-7d2612-140ece). Found by the branch review, each with a reproducer there;
+none miscompiles silently except the first, which pMARS then rejects:
+- a template's let binder is renamed throughout its body, scope ignored: `(seq (JMP top) (let (top
+  1) ...))` in a template with a global `top` emits `JMP $_X1_top`, an undefined label in pMARS;
+- `(for k lo hi ...)` with bounds near the integer limits overflows `hi - lo + 1` and ends in an
+  internal error (exit 2) instead of the 1000 limit;
+- nested `for`s multiply: `(for i 1 1000 (for j 1 1000 (NOP)))` runs for seconds before the length
+  check; a bound on the expanded size would stop it at once;
+- the header words (`start`, `hill`, `name`, `author`, `strategy`, `optimize`, `const`) are not RED
+  words, so a template may take their name and its call at the top of the body is read as a header
+  item;
+- the later-template check counts the head of a let binding (`(let (b 3) ...)` reads as a call of a
+  template `b`);
+- the A-field mode error on a let variable prints the internal name (`_x#1`, `_X1_v`).
+
 ## Phase 3 — The optimizer, under the policy
 
 Transformations that change emitted code to improve the policy's metric, each measured with `--report` before and after. Speed first: one instruction per iteration is worth about five times eight cells.
