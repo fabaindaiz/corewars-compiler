@@ -34,9 +34,9 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   a redefinition and keeps the first one. Generated labels start with `_`, which user names may not
   (d-7d2612-bd5def). Enforced: the parser (`test_phase1_reserved_prefix_rejected`),
   `behtests/label_collision.beh`.
-- **A warrior fits the target's MAXLENGTH (100 on 94b), epilogue included, and every line is under
-  256 characters** (longer lines hang pMARS). Enforced: the `execute` suite for length;
-  `Compile.compile_prog` rejects a long line (`test_phase1_long_line_is_an_error`).
+- **A warrior fits its hill's MAXLENGTH (100 on 94b), epilogue included, and every line is under
+  256 characters** (longer lines hang pMARS). Enforced: `Compile.compile_prog` rejects both
+  (`test_hills_rules`, `test_phase1_long_line_is_an_error`); the `execute` suite assembles under 94b.
 - **Execution starts at the first emitted instruction** (no `ORG`/`END` is emitted). Enforced: —.
 - **A rewrite after emission (jump threading, the peephole) never passes or removes a cell that
   does more than jump**: a user's `JMP` or label, a variable, an operand that moves a pointer, a
@@ -56,8 +56,9 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
 - **Known bugs are recorded, not fixed in passing** (d-7d2612-c5bb3c): a characterization golden in
   `bbctests/known-bugs/`, a `known-failing` spec in `behtests/`, a roadmap item. When a fix makes the
   spec pass, `tools/behave.py` fails until the mark and the roadmap item move in the same change.
-- **The target settings are 94b** (`pmars/config/94b.opt`; d-7d2612-6d88cd). Other hills are a
-  roadmap item (i-7d2612-217183), not a flag to flip in one test.
+- **The tests' settings are 94b** (`pmars/config/94b.opt`; d-7d2612-6d88cd). A program may name
+  another hill (`(hill 94nop)`, `--hill`; d-7d2612-65fa08); a test that needs one says so in its
+  source, never by flipping a suite's settings.
 
 ## Guardrails that are NOT relaxed
 

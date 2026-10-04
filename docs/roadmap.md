@@ -355,14 +355,16 @@ changes over one iteration, inner loops included when their trip count is known.
 A warrior that can be submitted: other hills than 94b, the header lines KotH expects, and the benchmark as a regression signal.
 
 ### Multiple hill targets · i-7d2612-217183
-**State.** Planned; the stated direction (d-7d2612-6d88cd). A target parameter (94b, 94nop, tiny,
+**State.** Done (s-7d2612-9b0d20): `(hill key)` and `--hill key` (d-7d2612-65fa08) for 94b, 94nop, 94, 94x, tiny and nano.
+Not done: the `execute` suite still assembles everything under 94b. Was: A target parameter (94b, 94nop, tiny,
 nano, lp) selecting the header `;redcode-<hill>`, MAXLENGTH, CORESIZE for constants, and whether
 `LDP`/`STP` are allowed (94nop has no p-space).
 **Collides with.** Every golden's header; the `execute` suite's config path.
 **Decide first.** Is the target a CLI flag, a header form in RED, or both?
 
 ### Warrior header metadata · i-7d2612-b682d5
-**State.** Planned. Emit `;name`, `;author`, `;strategy` and `;assert` (pMARS warns on every
+**State.** Done (s-7d2612-9b0d20): `(name ...)`, `(author ...)`, `(strategy ...)` as written, `;assert` with a
+named hill (d-7d2612-56cfae). Was: Emit `;name`, `;author`, `;strategy` and `;assert` (pMARS warns on every
 compiled warrior: "Missing ';assert'"; KotH replies the same).
 
 ### Benchmark score as a regression signal · i-7d2612-f27a91

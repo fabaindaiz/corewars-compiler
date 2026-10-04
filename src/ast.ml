@@ -149,7 +149,10 @@ type meta = { tag : tag; loc : loc }
 
 (* A source file: an optional (program ...) header around one body expression. *)
 (* consts: the (const name value) items of the header, in order: emitted as EQU lines. *)
-type source = { optimize : string list option; expects : expectation list; consts : (string * Red.rexpr) list; body : expr }
+(* hill: the (hill key) item, if written; meta: the (name ...), (author ...) and (strategy ...) items
+   as written, in order, each a comment line in the output. *)
+type source = { optimize : string list option; expects : expectation list; consts : (string * Red.rexpr) list;
+                hill : string option; meta : (string * string) list; body : expr }
 
 (* Every node gets a tag in pre-order from 1; labels are named after tags, so this numbering is
    part of the output and must not change. A comment takes none itself, but as an element of a seq

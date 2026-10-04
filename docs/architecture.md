@@ -37,6 +37,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 
 | Module | Role | Representation it produces |
 |---|---|---|
+| `src/hill.ml` | the hills a warrior may be written for, with their core size, length limit and whether p-space exists | `Hill.t` |
 | `src/parse.ml` | s-expression → AST; the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
 | `src/ast.ml` | the annotated AST `'a eexpr`, `loc`, `meta = { tag; loc }`, the one user error `Error`; `tag_expr` numbers every node in pre-order from 1 | `meta eexpr` (tags feed label names) |
 | `src/consts.ml` | `resolve`: a constant used as an operand becomes an immediate expression, an expression without a mode gets one (immediate without labels, direct with), and a `let` or label named after a constant, or a variable inside an expression, is an `Ast.Error` | `Ast.expr` |
@@ -53,7 +54,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | `src/driver.ml` | the command line as a function: arguments in; standard output, standard error, files to write and exit code out; an `Ast.Error` becomes `file:line:col: error: ...` and exit 1, a `Failure` an internal error and exit 2 | `Driver.output` |
 | `src/red.ml` | the Redcode target: opcodes, modes, modifiers, and the pretty-printer that fixes the column padding | text |
 
-**Dependency direction:** `red` ← `ast` ← `consts` ← `rename` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
+**Dependency direction:** `red` ← `hill` ← `ast` ← `consts` ← `rename` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
 ← `optimize` ← `expect` ← `warnings` ← `driver`; `parse` depends on `ast`, `red` (expressions) and `consts` (a constant's value is checked). `execs/run_compile.ml` only performs what
 `Driver.run` returns. dune rejects cycles, so the direction cannot invert silently; a new module states where it
 sits in this chain.

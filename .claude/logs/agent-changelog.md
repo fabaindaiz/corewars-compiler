@@ -5,6 +5,22 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-9b0d20 — Phase 5: hills, metadata, benchmark, behaviour specs and the documentation review
+
+**What.** On branch `feat/phase-5`, from `feat/phase-4` (neither merged). The user's decisions: the
+hill from a header item and a flag, the flag winning; metadata only as written, `;assert` only with
+a named hill; `make bench` outside the gate; the missing behaviour specs. Built: `src/hill.ml`
+(94b, 94nop, 94, 94x, tiny, nano, settings from koth.org's table and Koenigstuhl's archives, SAL
+being unreachable), `(hill ...)`, `--hill`, `(name ...)`, `(author ...)`, `(strategy ...)`; the
+length limit and the p-space rule are compile errors; the `compare` suite compiles goldens through
+`Driver.run`, so a golden is exactly what the command line prints.
+**Areas.** `src/hill.ml`, `src/ast.ml`, `src/parse.ml`, `src/compile.ml`, `src/optimize.ml`,
+`src/driver.ml`, `src/dune`, `execs/run_test.ml`, `AGENTS.md`, `LANGUAGE.md`, `REFERENCE.md`,
+`docs/decisions.md`, `docs/architecture.md`, `docs/roadmap.md`.
+**What went wrong.** I wrote a decision id by hand into `tools/bench.py`'s docstring again before
+generating it; replaced before committing.
+**Left undone.** See below as the session goes.
+
 ## 2026-10-04 · s-7d2612-333abd — Phase 2's operator design and phase 4's warnings
 
 **What.** On branch `feat/phase-4`, from `main`. The user's decisions: a cell beside a value is its

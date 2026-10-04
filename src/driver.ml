@@ -14,10 +14,7 @@ type output = {
 
 type report = No_report | Text | Json
 
-let usage = "usage: run_compile.exe [--optimize o1,o2] [--report[=json]] [--expect=warn] [--warn=all|none] [--emit-beh FILE.beh] <filename>"
-
-(* 94b: pmars/config/94b.opt, -l 100 *)
-let maxlength = 100
+let usage = "usage: run_compile.exe [--optimize o1,o2] [--report[=json]] [--expect=warn] [--warn=all|none] [--hill KEY] [--emit-beh FILE.beh] <filename>"
 
 exception Stop of output
 
@@ -26,7 +23,7 @@ let stop ?(code = 1) (err : string) : 'a = raise (Stop { out = ""; err = err ^ "
 (* --report and --report=json are two forms of one option, which Stdlib.Arg does not express. *)
 let parse_args (args : string list) =
   let report = ref No_report and optimize = ref None and file = ref None in
-  let warn = ref false and emit_beh = ref None and warnings = ref Warnings.Policy in
+  let warn = ref false and emit_beh = ref None and warnings = ref Warnings.Policy and hill = ref None in
   let rec go args = match args with
     | "--report" :: rest -> report := Text ; go rest
     | "--report=json" :: rest -> report := Json ; go rest
@@ -34,12 +31,13 @@ let parse_args (args : string list) =
     | "--expect=warn" :: rest -> warn := true ; go rest
     | "--warn=all" :: rest -> warnings := Warnings.All ; go rest
     | "--warn=none" :: rest -> warnings := Warnings.Nothing ; go rest
+    | "--hill" :: h :: rest -> hill := Some h ; go rest
     | "--emit-beh" :: path :: rest -> emit_beh := Some path ; go rest
     | f :: rest when !file = None -> file := Some f ; go rest
     | _ :: _ -> stop usage
     | [] -> () in
   go args ;
-  (!report, !optimize, !file, !warn, !emit_beh, !warnings)
+  (!report, !optimize, !file, !warn, !emit_beh, !warnings, !hill)
 
 let execution (x : Ast.expectation) : bool =
   match x with
@@ -47,16 +45,16 @@ let execution (x : Ast.expectation) : bool =
   | XLength _ | XCycles _ | XOverhead _ | XBoot _ | XStep _ | XCoversCore -> false
 
 let rec compile ~(read : string -> string option) (args : string list) : output =
-  let report, optimize, file, warn, emit_beh, warnings = parse_args args in
+  let report, optimize, file, warn, emit_beh, warnings, hill = parse_args args in
   let f = match file with Some f -> f | None -> raise (Stop { out = usage ^ "\n"; err = ""; code = 0; files = [] }) in
   (* A user's error says where (file:line:column when the node is known); an impossible state
      inside the compiler is an internal error, exit 2, so it is not mistaken for the user's. *)
-  try compile_file ~read f report optimize warn emit_beh warnings with
+  try compile_file ~read f report optimize warn emit_beh warnings hill with
   | Ast.Error (Some l, msg) -> stop (sprintf "%s:%d:%d: error: %s" f l.line l.col msg)
   | Ast.Error (None, msg) -> stop (sprintf "%s: error: %s" f msg)
   | Failure msg -> stop ~code:2 (sprintf "%s: internal error: %s" f msg)
 
-and compile_file ~read f report optimize warn emit_beh warn_mode : output =
+and compile_file ~read f report optimize warn emit_beh warn_mode hill_flag : output =
   let text = match read f with Some t -> t | None -> stop (sprintf "error: no such file: %s" f) in
   let sexp = Parse.sexp_from_string text in
   let src = Parse.parse_source sexp in
@@ -68,7 +66,14 @@ and compile_file ~read f report optimize warn emit_beh warn_mode : output =
     | None -> stop (sprintf "unknown objective `%s`: one of speed, size, stealth, boot" n)) names in
   (* The policy picks the transformations (Optimize.choose): what is printed, measured and checked
      is the chosen variant. *)
-  let variants = Optimize.measure_all ~consts:src.consts src.body in
+  (* The hill: the command line's, else the header's, else 94b, without an ;assert. *)
+  let named = match hill_flag with Some h -> Some h | None -> src.hill in
+  let hill = Option.map (fun k -> match Hill.find k with
+    | Some h -> h
+    | None -> stop (sprintf "%s: error: unknown hill `%s`: one of %s" f k Hill.keys)) named in
+  let target = Option.value hill ~default:Hill.default in
+  let maxlength = target.length in
+  let variants = Optimize.measure_all ~consts:src.consts ~coresize:target.coresize src.body in
   let opts, _, chosen = Optimize.pick policy variants in
   (* A variant faster than the chosen one is one the policy declined for an objective it ranks
      higher: only then is a loop's extra control instruction worth a warning. *)
@@ -86,7 +91,7 @@ and compile_file ~read f report optimize warn emit_beh warn_mode : output =
     | None -> sprintf "%s: warning: %s\n" f w.message)
       (Warnings.check ~mode:warn_mode ~policy ~expects ~faster (metrics ()) tagged) in
   let warnings = String.concat "" costs ^ String.concat "" (List.map (sprintf "warning: %s\n") failures) in
-  let redcode = Compile.compile_prog ~opts ~consts:src.consts src.body ^ "\n" in
+  let redcode = Compile.compile_prog ~opts ~consts:src.consts ?hill ~meta:src.meta src.body ^ "\n" in
   let files = match emit_beh with
     | None -> []
     | Some path ->

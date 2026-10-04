@@ -13,10 +13,10 @@ let candidates : options list =
 
 (* The whole program is compiled once per candidate: at most 100 cells each, so eight compiles cost
    nothing next to one pMARS run. *)
-let measure_all ?(consts = []) (e : Ast.expr) : (options * emitted list * Metrics.t) list =
+let measure_all ?(consts = []) ?coresize (e : Ast.expr) : (options * emitted list * Metrics.t) list =
   List.map (fun o ->
     let body = compile_body ~opts:o ~consts:(List.map fst consts) e in
-    (o, body, Metrics.measure (Layout.build ~consts body))) candidates
+    (o, body, Metrics.measure (Layout.build ?coresize ~consts body))) candidates
 
 let pick (policy : Metrics.policy) (variants : (options * emitted list * Metrics.t) list) : options * emitted list * Metrics.t =
   match variants with

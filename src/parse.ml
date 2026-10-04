@@ -250,6 +250,10 @@ let parse_source (sexp : sexp) : source =
   match sexp with
   | `List (`Atom "program" :: items) ->
     let optimize = ref None and expects = ref [] and consts = ref [] and bodies = ref [] in
+    let hill = ref None and meta = ref [] in
+    let words item ws = String.concat " " (List.map (fun w -> match w with
+      | `Atom s -> s
+      | `List _ -> fail item (sprintf "Not a word: %s" (to_string w))) ws) in
     List.iter (fun item -> match item with
       | `List [`Atom "optimize"] -> fail item "an (optimize ...) needs at least one objective"
       | `List (`Atom "optimize" :: os) ->
@@ -257,6 +261,8 @@ let parse_source (sexp : sexp) : source =
           | `Atom s -> s
           | `List _ -> fail o (sprintf "Not an objective: %s" (to_string o))) os)
       | `List [`Atom "expect"; e] -> expects := parse_expectation e :: !expects
+      | `List [`Atom "hill"; `Atom h] -> hill := Some h
+      | `List (`Atom ("name" | "author" | "strategy" as k) :: ws) when ws <> [] -> meta := (k, words item ws) :: !meta
       | `List [`Atom "const"; `Atom n; v] ->
         let n = label_name item n in
         if List.mem_assoc n !consts then fail item (sprintf "constant `%s` is defined twice" n) ;
@@ -271,9 +277,10 @@ let parse_source (sexp : sexp) : source =
         | None -> consts := (n, v) :: !consts)
       | `Atom _ | `List _ -> bodies := parse_exp item :: !bodies) items ;
     (match !bodies with
-    | [body] -> { optimize = !optimize; expects = List.rev !expects; consts = List.rev !consts; body }
+    | [body] -> { optimize = !optimize; expects = List.rev !expects; consts = List.rev !consts;
+                  hill = !hill; meta = List.rev !meta; body }
     | [] | _ :: _ :: _ -> fail sexp "a (program ...) needs exactly one body expression")
-  | `Atom _ | `List _ -> { optimize = None; expects = []; consts = []; body = parse_exp sexp }
+  | `Atom _ | `List _ -> { optimize = None; expects = []; consts = []; hill = None; meta = []; body = parse_exp sexp }
 
 (* parse a program from a file *)
 let sexp_from_file : string -> CCSexp.sexp =

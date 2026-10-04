@@ -1068,6 +1068,34 @@ let test_review4_header_step_is_stated () =
     (warnings_in (err_of ("(program (expect (step 4)) " ^ Printf.sprintf (Scanf.format_from_string bomber "%s") "" ^ ")")))
 
 
+(* Tests for phase 5: hills and warrior metadata *)
+let first_lines (n : int) (text : string) : string list =
+  List.filteri (fun i _ -> i < n) (List.filter (fun l -> l <> "") (String.split_on_char '\n' text))
+
+let test_hills_header_and_flag () =
+  check Alcotest.(list string) "(hill 94nop)" [";redcode-94nop"; ";assert CORESIZE==8000 && MAXLENGTH==100"]
+    (first_lines 2 (out_of "(program (hill 94nop) (MOV 0 1))")) ;
+  let o = drive [("p.src", "(program (hill 94nop) (MOV 0 1))")] ["--hill"; "tiny"; "--report"; "p.src"] in
+  check Alcotest.(list string) "--hill overrides" [";redcode-tiny"; ";assert CORESIZE==800 && MAXLENGTH==20"] (first_lines 2 o.out) ;
+  check Alcotest.bool "measured on its core and length" true (contains o.err "length 2/20") ;
+  check Alcotest.(list string) "no hill: 94b, no assert" [";redcode-94b"; "MOV.I  $0     , $1"]
+    (List.map String.trim (first_lines 2 (out_of "(MOV (Dir 0) (Dir 1))")))
+
+let test_hills_rules () =
+  check Alcotest.string "unknown" "p.src: error: unknown hill `foo`: one of 94b, 94nop, 94, 94x, tiny, nano\n"
+    (error_of "(program (hill foo) (MOV 0 1))") ;
+  check Alcotest.bool "no p-space on 94nop" true
+    (contains (error_of "(program (hill 94nop) (seq (LDP 0 1) (DAT 0 0)))") "94nop has no p-space") ;
+  check Alcotest.bool "longer than the hill allows" true
+    (contains (error_of ("(program (hill tiny) (seq " ^ String.concat " " (List.init 20 (fun _ -> "(NOP)")) ^ "))"))
+       "the warrior is 21 cells; tiny allows 20")
+
+let test_metadata () =
+  check Alcotest.(list string) "name, author, strategy, as written"
+    [";redcode-94b"; ";name My Dwarf"; ";author Somebody"; ";strategy bombs every fourth cell"]
+    (first_lines 4 (out_of "(program (name My Dwarf) (author Somebody) (strategy bombs every fourth cell) (MOV 0 1))"))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1195,6 +1223,11 @@ let ocaml_tests = [
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
   ] ;
+  "hills", [
+    test_case "a hill from the header or the flag" `Quick test_hills_header_and_flag ;
+    test_case "what a hill rules out" `Quick test_hills_rules ;
+    test_case "name, author, strategy" `Quick test_metadata ;
+  ] ;
   "review4", [
     test_case "a cell the program references is data" `Quick test_review4_referenced_cells_are_data ;
     test_case "every change to a pointer counts in its step" `Quick test_review4_every_change_counts ;
@@ -1249,10 +1282,11 @@ let ocaml_tests = [
 let () =
   
   let compiler : compiler =
-    (* A golden is what run_compile.exe prints: the default policy's choice (Optimize.choose). *)
+    (* A golden is what run_compile.exe prints (its header, policy, hill and all); a compile error is
+       the error it prints. *)
     SCompiler ( fun _ s ->
-      let src = parse_source (sexp_from_string s) in
-      Cored.Optimize.compile_prog ~consts:src.consts Cored.Metrics.default_policy src.body ) in
+      let o = Cored.Driver.run ~read:(fun _ -> Some s) ["golden.src"] in
+      if o.code = 0 then o.out else failwith o.err ) in
   
   let bbc_tests =
     let name : string = "compare" in

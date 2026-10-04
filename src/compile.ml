@@ -361,13 +361,37 @@ let max_line = 256
 (* Constants are EQU lines before the code: pMARS substitutes an EQU only after its definition, and
    substitutes its text before evaluating, so a value that is an operation keeps its parentheses
    (a EQU 1+2 used as a*3 would be 1+2*3). *)
-let compile_prog ?opts ?(consts = []) (e : expr) : string =
+(* A hill without p-space rejects LDP and STP (koth.org: 94nop disallows it). *)
+let check_pspace (hill : Hill.t) (e : expr) : unit =
+  let rec go (e : expr) = match e with
+    | EPrim2 ((Ldp | Stp), _, _, _, loc) when not hill.pspace ->
+      raise (Error (Some loc, sprintf "%s has no p-space: LDP and STP are not allowed" hill.key))
+    | EComment _ | EExpect _ | ELabel _ | EPrim2 _ -> ()
+    | EFlow1 (_, _, b, _) | ELet (_, _, b, _) -> go b
+    | EFlow2 (_, _, b1, b2, _) -> go b1 ; go b2
+    | ESeq (es, _) -> List.iter go es in
+  go e
+
+(* The header: the hill's line, then what the source wrote of name, author and strategy, then an
+   ;assert of the hill's settings when the source or the command line named a hill (KotH and pMARS
+   warn without one; the compiler never invents an author). *)
+let header (hill : Hill.t) ~(asserted : bool) (meta : (string * string) list) : string =
+  sprintf "\n;redcode-%s\n" hill.key
+  ^ String.concat "" (List.map (fun (k, v) -> sprintf ";%s %s\n" k v) meta)
+  ^ (if asserted then sprintf ";assert CORESIZE==%d && MAXLENGTH==%d\n" hill.coresize hill.length else "")
+
+let compile_prog ?opts ?(consts = []) ?hill ?(meta = []) (e : expr) : string =
   let names = List.map fst consts in
+  let target = Option.value hill ~default:Hill.default in
   Consts.check_divisions consts e ;
+  check_pspace target e ;
   let body = compile_body ?opts ~consts:names e in
   let instrs = List.map (fun (x : emitted) -> x.instr) body in
+  let cells = List.length (List.filter (fun i -> match i with INSTR _ -> true | ILAB _ | ICOM _ -> false) (instrs @ epilogue)) in
+  if cells > target.length then
+    error (sprintf "the warrior is %d cells; %s allows %d" cells target.key target.length) ;
   let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr_operand v)) consts) in
-  let text = (prelude) ^ equs ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
+  let text = header target ~asserted:(hill <> None) meta ^ equs ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
   let too_long line = String.length line >= max_line in
   let lines = String.split_on_char '\n' text in
   match List.find_index too_long lines with
