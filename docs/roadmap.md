@@ -86,9 +86,11 @@ internal errors, converted to a message and exit code in the driver.
 **Why it is in phase 1.** Every warning of phase 4 must say where in the source it applies.
 
 ### Lines of 256 characters or more hang pMARS · i-7d2612-174acf
-**State.** Planned. No spec (a probe would hang the gate).
+**State.** Done (s-7d2612-2c7e4d). `compile_prog` raises a compile error naming the line and its
+length when any emitted line reaches 256 characters (the user's choice: exact, at emission); the
+driver prints it and exits 1. `Layout`'s `Long_line` diagnostic uses the same constant.
 Measured on pMARS 0.9.4: a 245-character label hung, 200 worked. RED passes user labels through.
-**Decide first.** A maximum label length in the parser, or a check on emitted line length.
+**Decided** (2026-10-04, user): a check on emitted line length.
 
 ### User labels can collide with generated labels, and store-once is unchecked · i-7d2612-425c66
 **State.** Planned. Known-failing: `behtests/label_collision.beh`.

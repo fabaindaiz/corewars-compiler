@@ -30,8 +30,8 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   a redefinition and keeps the first one. Enforced: `behtests/`. **Violated today:**
   i-7d2612-425c66.
 - **A warrior fits the target's MAXLENGTH (100 on 94b), epilogue included, and every line is under
-  256 characters** (longer lines hang pMARS). Enforced: the `execute` suite for length; — for line
-  length (i-7d2612-174acf).
+  256 characters** (longer lines hang pMARS). Enforced: the `execute` suite for length;
+  `Compile.compile_prog` rejects a long line (`test_phase1_long_line_is_an_error`).
 - **Execution starts at the first emitted instruction** (no `ORG`/`END` is emitted). Enforced: —.
 
 **Tests**

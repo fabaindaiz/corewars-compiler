@@ -201,6 +201,16 @@ let prelude = "
 
 let epilogue = [INSTR (IDAT, RN, RNone, RNone)]
 
+(* pMARS 0.9.4 hangs on a source line of 256 characters or more (measured: a 245-character label
+   in an instruction line hung it, 200 did not). *)
+let max_line = 256
+
 let compile_prog (e : expr) : string =
   let instrs = List.map (fun (x : emitted) -> x.instr) (compile_body e) in
-  (prelude) ^ (pp_instrs instrs) ^ (pp_instrs epilogue)
+  let text = (prelude) ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
+  List.iteri (fun i line ->
+    let n = String.length line in
+    if n >= max_line then
+      raise (CTError (sprintf "redcode line %d has %d characters; pMARS hangs on lines of %d or more" (i + 1) n max_line)))
+    (String.split_on_char '\n' text) ;
+  text

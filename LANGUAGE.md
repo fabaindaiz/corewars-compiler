@@ -159,7 +159,7 @@ Control flows are used to specify the execution order of the instructions. Use c
 - (let (id arg) body) introduce a new variable in the scope (no extra instruction)
 
 - (seq instrs) execute a sequence of instructions (no extra instruction)
-- (label text) create a label in the code (no extra instruction). Labels are case-sensitive, `[A-Za-z_][A-Za-z0-9_]*`; do not use names the compiler generates (`LET`, `REP`, `IF`, `IFM`, `IFF`, `WHI`, `WHF`, `DWH` followed by a number) or pMARS keywords (i-7d2612-425c66)
+- (label text) create a label in the code (no extra instruction). Labels are case-sensitive, `[A-Za-z_][A-Za-z0-9_]*`; do not use names the compiler generates (`LET`, `REP`, `IF`, `IFM`, `IFF`, `WHI`, `WHF`, `DWH` followed by a number) or pMARS keywords (i-7d2612-425c66). A label so long that an emitted line reaches 256 characters is a compile error (pMARS hangs on such lines)
 - (com words ...) a comment line in the output, `; words ...` (no instruction)
 
 Every compiled program ends with an extra `DAT 0, 0`: a program that runs past its last instruction dies there.

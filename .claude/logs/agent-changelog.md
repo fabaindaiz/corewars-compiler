@@ -20,7 +20,8 @@ outer variable's field (`ADD.A`, was `ADD.AB`); its golden moved to `bbctests/ex
 the other half, the initializer capture, which the roadmap had as unmeasured: it is real, and fixed
 it with a uniquify pass (`src/rename.ml`) before tagging — no golden changed; new golden and spec
 `let_capture`. Fixed i-7d2612-fffa6c with the layout the user chose (`SLT; SNE #0, #1; JMP`);
-new goldens and specs `dowhile_gt_count`, `dowhile_lt_count`.
+new goldens and specs `dowhile_gt_count`, `dowhile_lt_count`. Fixed i-7d2612-174acf: an emitted
+line of 256+ characters is a compile error.
 **Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
 `behtests/let_shadowing.beh`: cell 1 holds `DAT.F #5, #0` after JMP and ADD (was `#1, #4`).
 

@@ -47,9 +47,7 @@ type program = {
 
 let default_coresize = 8000
 
-(* pMARS 0.9.4 hangs on a source line of 256 characters or more (measured: a 245-character label
-   in an instruction line hung it, 200 did not). *)
-let max_line = 256
+let max_line = Compile.max_line
 
 let norm (coresize : int) (n : int) : int = ((n mod coresize) + coresize) mod coresize
 

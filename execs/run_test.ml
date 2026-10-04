@@ -517,6 +517,13 @@ let test_phase1_dowhile_gt_layout () =
     (opcodes "(let (x 5) (let (y 3) (seq (JMP (Dir 2)) (DAT (store x) (store y)) (do-while (GT x y) (SUB 1 x)))))")
 
 
+let test_phase1_long_line_is_an_error () =
+  let l = String.make 250 'a' in
+  let o = drive [("p.src", Printf.sprintf "(seq (label %s) (JMP %s))" l l)] ["p.src"] in
+  check Alcotest.(pair string int) "err, code"
+    ("error: redcode line 5 has 269 characters; pMARS hangs on lines of 256 or more\n", 1) (o.err, o.code)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -602,6 +609,7 @@ let ocaml_tests = [
     test_case "an inner let does not move an outer variable" `Quick test_phase1_shadowing_keeps_outer_field ;
     test_case "an initializer is resolved where its let binds it" `Quick test_phase1_initializer_resolved_where_bound ;
     test_case "do-while GT: strict, one extra cell" `Quick test_phase1_dowhile_gt_layout ;
+    test_case "a line of 256+ characters is an error" `Quick test_phase1_long_line_is_an_error ;
   ] ;
   "interp", [
 
