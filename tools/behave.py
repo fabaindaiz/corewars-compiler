@@ -16,7 +16,8 @@ A spec (`behtests/<name>.beh`), one directive per line; a line starting with `#`
     alive N                               a process is still running after N executed instructions
     dead N                                no process is left after N executed instructions
     cell N ADDR TEXT                      after N instructions, core cell ADDR disassembles to TEXT
-                                          (whitespace-insensitive, e.g. `DAT.F #10, #10`)
+                                          (whitespace-insensitive, e.g. `DAT.F #10, #10`; an
+                                          empty cell, which cdb lists blank, is `DAT.F $0, $0`)
 
 The redcode comes from the golden, not from a fresh compile, so this runs without the OCaml
 toolchain; the `compare` suite is what ties each golden to the compiler (d-7d2612-b92028).
@@ -105,6 +106,10 @@ def cdb(pmars: str, warrior: Path, commands: str) -> list[str]:
     return run.stdout.splitlines()
 
 
+# What pMARS fills the core with before loading warriors (pmars.c, INITIALINST).
+EMPTY_CORE = "DAT.F $0, $0"
+
+
 def squash(text: str) -> str:
     return re.sub(r"\s+", "", text)
 
@@ -124,12 +129,15 @@ def check_probe(pmars: str, warrior: Path, word: str, args: list[str]) -> str | 
     out = cdb(pmars, warrior, f"skip {n - 1}\ncalc CYCLE\nlist {addr}\n")
     # A dead warrior ends cdb before `list` runs, and the only listing left would be the start-up
     # one: the cycle count is printed only while a process is alive.
-    if not any(CALC_LINE.match(line) for line in out):
+    calc = next((i for i, line in enumerate(out) if CALC_LINE.match(line)), None)
+    if calc is None:
         return f"dead after {n} instructions: cell {addr} was never listed"
-    cell = re.compile(rf"^(?:\(cdb\) )?0*{addr}\s+(\S.*)$")
+    cell = re.compile(rf"^(?:\(cdb\) )?0*{addr}(?:\s+(.*))?$")
     # The last listing of the cell is `list`'s: cdb also prints the instruction at the start (cell 0,
-    # before anything runs) and after `skip`, which can be the same address.
-    listed = [m.group(1).strip() for line in out if (m := cell.match(line)) and not CALC_LINE.match(line)]
+    # before anything runs) and after `skip`, which can be the same address. cdb prints a cell equal
+    # to empty core as its address alone (`cellview` in pMARS's disasm.c hides INITIALINST), which
+    # looks like `calc`'s output: the listing is whatever matches after the cycle count.
+    listed = [(m.group(1) or "").strip() or EMPTY_CORE for line in out[calc + 1:] if (m := cell.match(line))]
     if not listed:
         return f"no listing of cell {addr} (the warrior may be dead after {n} instructions)"
     got = listed[-1]

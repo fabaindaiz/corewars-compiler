@@ -33,7 +33,7 @@ printf 'skip 272\nlist 1\ncalc CYCLE\npqueue\nquit\n' | $P -@ pmars/config/94b.o
 |---|---|
 | `skip K` | execute **K+1** instructions, then print the next one |
 | `step` | execute one instruction, print the next |
-| `list A` / `list A,B` | disassemble cells A..B (addresses relative to load address 0) |
+| `list A` / `list A,B` | disassemble cells A..B (addresses relative to load address 0); a cell equal to empty core, `DAT.F $0, $0`, prints as its address alone |
 | `calc CYCLE` | cycles left (80000 minus instructions executed, with one process) |
 | `registers` | cycle, processes active, process queue |
 | `pqueue` | the process queue (after `SPL`) |
