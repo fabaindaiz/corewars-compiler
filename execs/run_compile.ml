@@ -53,7 +53,7 @@ let () =
         output_string oc (Expect.to_beh ~redcode:(Filename.basename red) (List.map fst expects)))
     | None -> ()) ;
     (match !report with
-    | Json -> printf "%s\n" (Metrics.to_json (metrics ()))
+    | Json -> printf "%s\n" (Metrics.to_json ~policy (metrics ()))
     | Text ->
       eprintf "%spolicy: %s\n" (Metrics.to_text ~maxlength (metrics ()))
         (String.concat " > " (List.map Metrics.string_of_objective policy)) ;

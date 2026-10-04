@@ -328,10 +328,25 @@ let to_text ~(maxlength : int) (m : t) : string =
       | Step _ | Counter _ -> ()) m.predictions) m.loops ;
   Buffer.contents b
 
-let to_json (m : t) : string =
+(* A JSON string: quote, backslash and control characters escaped; other bytes (UTF-8) as they are. *)
+let json_string (s : string) : string =
+  let b = Buffer.create (String.length s + 2) in
+  Buffer.add_char b '"' ;
+  String.iter (fun c -> match c with
+    | '"' -> Buffer.add_string b "\\\""
+    | '\\' -> Buffer.add_string b "\\\\"
+    | '\n' -> Buffer.add_string b "\\n"
+    | '\t' -> Buffer.add_string b "\\t"
+    | '\r' -> Buffer.add_string b "\\r"
+    | c when Char.code c < 0x20 -> Buffer.add_string b (sprintf "\\u%04x" (Char.code c))
+    | c -> Buffer.add_char b c) s ;
+  Buffer.add_char b '"' ;
+  Buffer.contents b
+
+let to_json ?policy (m : t) : string =
   let range r = sprintf "{\"min\":%d,\"max\":%d}" r.min r.max in
   let opt f = function Some x -> f x | None -> "null" in
-  let str s = sprintf "\"%s\"" (String.escaped s) in
+  let str = json_string in
   let ints xs = "[" ^ String.concat "," (List.map string_of_int xs) ^ "]" in
   let field f = match f with FA -> "\"A\"" | FB -> "\"B\"" in
   let prediction pr = match pr with
@@ -343,6 +358,9 @@ let to_json (m : t) : string =
   let loop l = sprintf "{\"header\":%d,\"label\":%s,\"body\":%s,\"node\":%s,\"construct\":%s,\"cycles\":%s,\"overhead\":%s,\"exit\":%s}"
       l.loop.header (opt str l.label) (ints l.loop.body) (opt string_of_int l.node) (opt str l.construct)
       (range l.cycles) (range l.overhead) (opt string_of_int l.exit) in
-  sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[%s],\"diagnostics\":%s}"
+  sprintf "{\"length\":%d,\"code\":%d,\"data\":%d,\"epilogue\":%d,\"unreachable\":%d,\"nonzero\":%d,\"nonblank\":%d,\"boot\":%s,\"spl_sites\":%d,\"dynamic_jumps\":%d,\"div_by_zero\":%s,\"loops\":[%s],\"predictions\":[%s],\"diagnostics\":%s,\"coresize\":%d%s}"
     m.length m.code m.data m.epilogue m.unreachable m.nonzero m.nonblank (opt range m.boot)
-    m.spl_sites m.dynamic_jumps (ints m.div_by_zero) (String.concat "," (List.map loop m.loops)) (String.concat "," (List.map prediction m.predictions)) diagnostics
+    m.spl_sites m.dynamic_jumps (ints m.div_by_zero) (String.concat "," (List.map loop m.loops)) (String.concat "," (List.map prediction m.predictions)) diagnostics m.coresize
+    (match policy with
+     | Some ps -> sprintf ",\"policy\":[%s]" (String.concat "," (List.map (fun o -> str (string_of_objective o)) ps))
+     | None -> "")

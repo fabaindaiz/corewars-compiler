@@ -409,6 +409,15 @@ let test_minor_unreachable_qualified () =
     (contains (M.to_text ~maxlength:100 (metrics_of (example "prog4"))) "unreachable 2 (ignoring 4 dynamic jumps)")
 
 
+let test_minor_json_string () =
+  check Alcotest.string "escapes" "\"a\\\"b\\n\\u0001\xc3\xa9\"" (M.json_string "a\"b\n\001\xc3\xa9")
+
+let test_minor_json_policy_coresize () =
+  let j = M.to_json ~policy:[M.Speed; M.Size] (metrics_of (example "prog1")) in
+  check Alcotest.bool "coresize" true (contains j "\"coresize\":8000") ;
+  check Alcotest.bool "policy" true (contains j "\"policy\":[\"speed\",\"size\"]")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -475,6 +484,8 @@ let ocaml_tests = [
     test_case "execution probes need N >= 1" `Quick test_minor_probe_count_positive ;
     test_case "(optimize) needs an objective" `Quick test_minor_optimize_needs_objective ;
     test_case "unreachable says it ignores dynamic jumps" `Quick test_minor_unreachable_qualified ;
+    test_case "JSON string escaping" `Quick test_minor_json_string ;
+    test_case "JSON carries policy and coresize" `Quick test_minor_json_policy_coresize ;
   ] ;
   "interp", [
 
