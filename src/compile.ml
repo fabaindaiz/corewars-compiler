@@ -286,7 +286,6 @@ let thread_jumps (body : emitted list) : emitted list =
     | Some (IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
            | ILDP | ISTP) | None -> false in
   let falls_into i = i = 0 || continues (i - 1) || (i >= 2 && skips (i - 2)) in
-  let user_label l = not (String.starts_with ~prefix:"_" l) in
   let generated_jmp l = match Hashtbl.find_opt at l with
     | Some i ->
       (match cells.(i) with
@@ -321,7 +320,6 @@ let rec peephole ?(consts = []) ?(coresize = Hill.default.coresize) (body : emit
     | INSTR ((ISEQ | ISNE | ISLT | ICMP), _, _, _) -> true
     | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
              | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> false) in
-  let user_label l = not (String.starts_with ~prefix:"_" l) in
   let n = Array.length cells in
   (* An expression as a label plus a number (the label's cell, the offset), or a number alone; None
      when it is neither (two labels, a label multiplied, a value only pMARS knows). *)

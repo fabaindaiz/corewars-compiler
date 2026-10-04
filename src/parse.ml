@@ -85,7 +85,8 @@ let rec parse_rexpr (sexp : sexp) : Red.rexpr =
     | None ->
       let s = user_name sexp s in
       (* a name pMARS reads: a label, a constant, or one of its predefined symbols *)
-      if valid_label s || List.mem s pmars_predefined then Red.XName s else fail sexp (invalid_label s))
+      if valid_label s || Phys.mem generated sexp || List.mem s pmars_predefined then Red.XName s
+      else fail sexp (invalid_label s))
   | `List [`Atom ("+" | "-" | "*" | "/" | "%" as op); a; b] -> Red.XBin (op.[0], parse_rexpr a, parse_rexpr b)
   | `List _ -> fail sexp (sprintf "Not a valid expression: %s" (to_string sexp))
 
@@ -312,6 +313,14 @@ let rec defined (s : sexp) : string list =
   | `List l -> List.concat_map defined l
   | `Atom _ -> []
 
+(* The variables of the (for k ...) in [s]: renamed at each expansion too, so a for replaces only
+   its own variable, never a name an argument brought in. *)
+let rec for_vars (s : sexp) : string list =
+  match s with
+  | `List [`Atom "for"; `Atom k; _; _; body] -> k :: for_vars body
+  | `List l -> List.concat_map for_vars l
+  | `Atom _ -> []
+
 let rec heads (s : sexp) : string list =
   match s with
   | `List (`Atom h :: rest) -> h :: List.concat_map heads rest
@@ -340,8 +349,12 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
       let t = `List [l; b; go (x :: scope) body] in
       Option.iter (Phys.replace locations t) (loc_of s) ;
       t
-    | `List [`Atom "for"; `Atom k; lo; hi; body] ->
-      let k = macro_name s k in
+    | `List [`Atom "for"; (`Atom k as ka); lo; hi; body] ->
+      let k = if Phys.mem generated ka then k else macro_name s k in
+      (* the body's k are all replaced by numbers: a binder of that name inside would lose its uses *)
+      if List.mem k (defined body @ for_vars body) then
+        fail s (let o = Rename.original k in
+                sprintf "`%s` is the variable of a (for %s ...): a let, label or for inside it cannot take its name" o o) ;
       let lo = bound lo and hi = bound hi in
       if hi - lo + 1 > 1000 then fail s "a (for ...) repeats at most 1000 times" ;
       let iterations = if hi < lo then [] else List.init (hi - lo + 1) (fun i -> lo + i) in
@@ -360,8 +373,9 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
         | KNum, `Atom _ -> ()
         | KNum, `List [op; _; _] when is_operator op -> ()
         | KNum, `List _ -> bad (sprintf "a number, constant, label or expression, not %s" (to_string a))
-        | KLab, `Atom x when valid_label x && not (List.mem x scope) -> ()
-        | KLab, (`Atom _ | `List _) -> bad (sprintf "a label, not %s" (to_string a))
+        | KLab, `Atom x when (valid_label x || Phys.mem generated a) && not (List.mem x scope) -> ()
+        | KLab, `Atom x -> bad (sprintf "a label, not %s" (Rename.original x))
+        | KLab, `List _ -> bad (sprintf "a label, not %s" (to_string a))
         | KVar, `Atom x when List.mem x scope -> ()
         | KVar, (`Atom _ | `List _) -> bad (sprintf "`%s` is not a let variable here" (to_string a))
         | KCode, `List _ -> ()
@@ -369,7 +383,8 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
       incr count ;
       (* labels and let binders of the body renamed first, then the arguments put in: a name passed
          in is never renamed and never captured *)
-      let fresh = List.filter (fun d -> not (List.mem_assoc d t.params)) (List.sort_uniq Stdlib.compare (defined t.body)) in
+      let fresh = List.filter (fun d -> not (List.mem_assoc d t.params))
+          (List.sort_uniq Stdlib.compare (defined t.body @ for_vars t.body)) in
       let renames = List.map (fun d ->
           let a = `Atom (sprintf "_X%d_%s" !count d) in
           Phys.replace generated a () ;

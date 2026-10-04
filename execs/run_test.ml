@@ -1189,6 +1189,41 @@ let test_macros_errors () =
     (String.starts_with ~prefix:"p.src:1:43: error:" (err "(program (define (bad) (MOV 0 (store z))) (bad))"))
 
 
+(* A for inside a template replaces its own variable only: never a name the caller passed in *)
+let test_review6_for_does_not_capture () =
+  let thrice = out_of "(program (define (thrice (c Code)) (for i 1 3 c)) (let (i 0) (seq (thrice (ADD 1 i)) (JMP 0) (DAT 0 (store i)))))" in
+  check Alcotest.(list string) "Code argument" ["ADD.AB#1,$_LET1"; "ADD.AB#1,$_LET1"; "ADD.AB#1,$_LET1"] (lines_with "ADD" thrice) ;
+  let bump = out_of "(program (define (bump (v Var)) (for k 1 2 (ADD 1 v))) (let (k 0) (seq (bump k) (JMP 0) (DAT 0 (store k)))))" in
+  check Alcotest.(list string) "Var argument" ["ADD.AB#1,$_LET1"; "ADD.AB#1,$_LET1"] (lines_with "ADD" bump) ;
+  let go = out_of "(program (define (go (l Lab)) (for k 1 2 (JMP l))) (seq (label k) (go k)))" in
+  check Alcotest.(list string) "Lab argument" ["JMP$k,#0"; "JMP$k,#0"] (lines_with "JMP" go)
+
+(* A name bound inside a for's body would be replaced by the for's numbers: it is an error *)
+let test_review6_for_variable_rebound () =
+  let has needle src = check Alcotest.bool needle true (contains (error_of src) needle) in
+  has "`k` is the variable of a (for k ...)" "(program (for k 1 2 (let (k 3) (seq (ADD 1 k) (DAT 0 (store k))))))" ;
+  has "`k` is the variable of a (for k ...)" "(program (for k 1 2 (for k 1 2 (NOP))))" ;
+  has "`k` is the variable of a (for k ...)" "(program (for k 1 2 (seq (label k) (NOP))))"
+
+(* A template's own label is a label: in an expression, and as a Lab argument *)
+let test_review6_template_label_is_a_label () =
+  check Alcotest.string "in an expression" "" (error_of "(program (define (spin) (seq (label here) (NOP) (JMP (+ here 0)))) (spin))") ;
+  let out = out_of "(program (define (go (t Lab)) (JMP t)) (define (loop) (seq (label here) (NOP) (go here))) (loop))" in
+  check Alcotest.(list string) "as a Lab argument" ["JMP$_X1_here,#0"] (lines_with "JMP" out) ;
+  check Alcotest.bool "an error names the label as written" true
+    (contains (error_of "(program (define (at (l Lab)) (JMP l)) (define (b) (let (v 1) (seq (at v) (DAT 0 (store v))))) (b))") "a label, not v")
+
+(* A label a template defines is the user's label renamed: every guard that keeps a user's label
+   keeps it *)
+let test_review6_template_label_is_the_users () =
+  let jumps src = List.length (lines_with "JMP" (out_of src)) in
+  check Alcotest.int "outside a template: the labelled jump stays" 2
+    (jumps "(let (x 0) (seq (if (JZ x) (seq (NOP) (label l)) (seq)) (ADD 1 l) (JMP 0) (DAT 0 (store x))))") ;
+  check Alcotest.int "inside a template: the same" 2
+    (jumps "(program (define (t (v Var)) (seq (if (JZ v) (seq (NOP) (label l)) (seq)) (ADD 1 l))) (let (x 0) (seq (t x) (JMP 0) (DAT 0 (store x)))))") ;
+  check Alcotest.bool "a labelled DAT in a template is data, not dead code" false
+    (contains (error_of "(program (define (b) (seq (JMP 0) (label bomb) (DAT 0 0))) (b))") "dead code")
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1350,6 +1385,10 @@ let ocaml_tests = [
     test_case "templates: what they reject" `Quick test_macros_errors ;
     test_case "an EQ/NE if around one instruction is a skip" `Quick test_fused_skip ;
     test_case "fusion with label-anchored expressions" `Quick test_fused_skip_with_expressions ;
+    test_case "a for captures no argument" `Quick test_review6_for_does_not_capture ;
+    test_case "a for's variable is not rebound inside it" `Quick test_review6_for_variable_rebound ;
+    test_case "a template's label is a label" `Quick test_review6_template_label_is_a_label ;
+    test_case "a template's label is the user's" `Quick test_review6_template_label_is_the_users ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

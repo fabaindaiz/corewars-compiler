@@ -42,11 +42,14 @@ each parameter's atom replaced by the argument, then expanded again (its own cal
 `for` evaluates `lo` and `hi` when compiling (numbers, constants, enclosing `for` variables and `Num`
 parameters bound to numbers) and expands `body` with `k` replaced by each number.
 
-**Hygiene.** At each expansion, every label the template body defines (`(label l)`) and every `let`
-binder it introduces is renamed `_X<n>_<name>`, `n` counting the program's expansions in source
+**Hygiene.** At each expansion, every label the template body defines (`(label l)`), every `let`
+binder and every `for` variable it introduces is renamed `_X<n>_<name>`, `n` counting the program's expansions in source
 order (per compilation, never a global counter: d-7d2612-123e41), and every reference inside the body
 follows. Arguments are substituted after the renaming, so a name passed in is never renamed and never
-captured. User names may not start with `_`, so a renamed name never meets one.
+captured. User names may not start with `_`, so a renamed name never meets one. A renamed label is still the
+user's label (a guard that keeps user labels keeps it), and stands wherever a label stands. Inside a
+`for`, a `let`, `label` or `for` of the same name is an error: the `for` replaces every use of its
+name by a number, the binder's included (d-7d2612-52b2e3, from the branch review).
 
 **Termination.** A template may call only templates defined before it, so a call never reaches
 itself; a `for` runs a known number of times (at most 1000). Every expansion therefore ends, and

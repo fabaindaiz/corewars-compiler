@@ -1,0 +1,16 @@
+NAME: a for in a template leaves the caller's argument alone
+DESCRIPTION: the caller passes (ADD 1 i) to a template that repeats it with a (for i ...): the i is the caller's let variable, not the for's numbers (d-7d2612-52b2e3); see behtests/template_for_argument.beh
+SRC:
+(program
+  (define (thrice (c Code)) (for i 1 3 c))
+  (let (i 0) (seq (thrice (ADD 1 i)) (JMP 0) (DAT 0 (store i)))))
+EXPECTED:
+;redcode-94b
+
+  ADD.AB #1     , $_LET1 
+  ADD.AB #1     , $_LET1 
+  ADD.AB #1     , $_LET1 
+  JMP    #0     , #0     
+_LET1 
+  DAT    #0     , #0     
+  DAT    $0     , $0     

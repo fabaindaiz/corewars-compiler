@@ -1,0 +1,5 @@
+# Three ADDs (cells 0-2) each add 1 to the caller's i, the DAT at cell 4: after three
+# instructions it holds 3. Had the template's for captured i, the ADDs would add to themselves.
+golden: bbctests/examples/template_for_argument.bbc
+cell 3 4 DAT.F #0, #3
+alive 100

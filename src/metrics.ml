@@ -256,7 +256,7 @@ let measure (p : program) : t =
      bomber's (label bomb) (DAT 0 0); a generated label names no data), or when an executed
      instruction reads or writes it, through a label or a number (a bomb that is an SPL, a cell
      (MOV x (Dir -1)) writes); anything else never executed is dead code. *)
-  let named (c : cell) = List.exists (fun l -> not (String.starts_with ~prefix:"_" l)) c.labels in
+  let named (c : cell) = List.exists user_label c.labels in
   let n = Array.length p.cells in
   let referenced = Array.make n false in
   (* An indirect operand also reaches the cell its pointer names, by the pointer's field as loaded

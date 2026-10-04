@@ -123,6 +123,11 @@ let error (msg : string) : 'a = raise (Error (None, msg))
 let pmars_predefined = ["CORESIZE"; "MAXLENGTH"; "MAXPROCESSES"; "MAXCYCLES"; "MINDISTANCE"; "VERSION";
                         "WARRIORS"; "ROUNDS"; "PSPACESIZE"; "CURLINE"; "READLIMIT"; "WRITELIMIT"]
 
+(* A label the user wrote: no compiler prefix, or a template's own label renamed per expansion
+   (_X<n>_name, Parse.expand), which the user wrote all the same. *)
+let user_label (l : string) : bool =
+  not (String.starts_with ~prefix:"_" l) || String.starts_with ~prefix:"_X" l
+
 let valid_label (s : string) : bool =
   let letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
   let rest c = letter c || (c >= '0' && c <= '9') || c = '_' in

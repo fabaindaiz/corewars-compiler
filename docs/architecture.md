@@ -75,7 +75,9 @@ Every label the compiler invents is a prefix plus the tag of the node that produ
 | `_X` | a template's own label or let binder, renamed per expansion: `_X<n>_<name>`, `n` counting expansions in source order (d-7d2612-c4e274) |
 | `_DWH` | `do-while`: loop head |
 
-User names may not start with `_`, so no user label can take one of these (d-7d2612-bd5def).
+User names may not start with `_`, so no user label can take one of these (d-7d2612-bd5def). A `_X`
+label is the user's own label renamed: every guard that keeps a user's label keeps it
+(`Ast.user_label`, d-7d2612-52b2e3).
 Changing the tag numbering or a prefix changes every golden that contains one: that is a change to
 the output contract, not a refactor.
 
