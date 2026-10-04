@@ -1,0 +1,20 @@
+NAME: the dwarf in RED
+DESCRIPTION: bombs every fourth cell with its own DAT; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_dwarf.beh
+SRC:
+(let (b 0)
+  (seq
+    (repeat
+      (seq
+        (ADD 4 b)
+        (MOV I b (Ind b))))
+    (DAT 0 (store b))))
+EXPECTED:
+;redcode-94b
+
+_REP4 
+  ADD.AB #4     , $_LET1 
+  MOV.I  $_LET1 , @_LET1 
+  JMP    $_REP4 , #0     
+_LET1 
+  DAT    #0     , #0     
+  DAT    #0     , #0     

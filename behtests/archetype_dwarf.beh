@@ -1,0 +1,4 @@
+# ADD.AB #4 moves the pointer in the bomb's B-field; MOV.I copies the bomb (DAT #0, #4) four cells past it.
+golden: bbctests/archetypes/dwarf.bbc
+cell 2 7 DAT.F #0, #4
+alive 1000

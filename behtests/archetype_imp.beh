@@ -1,0 +1,4 @@
+# The imp copies itself one cell ahead every instruction and never dies.
+golden: bbctests/archetypes/imp.bbc
+cell 1 1 MOV.I $0, $1
+alive 1000

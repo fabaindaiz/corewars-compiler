@@ -1,0 +1,28 @@
+NAME: a paper in RED
+DESCRIPTION: copies its seven cells 1993 cells ahead and splits to the copy; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_paper.beh
+SRC:
+(let (n 7)
+  (let (d 2000)
+    (seq
+      (repeat
+        (seq
+          (MOV 7 (store n))
+          (do-while (JN n) (MOV I (Dec n) (Dec d)))
+          (SPL (Ind d))
+          (ADD 2365 d)))
+      (DAT 0 (store d)))))
+EXPECTED:
+;redcode-94b
+
+_REP5 
+_LET1 
+  MOV.AB #7     , #7     
+_DWH10
+  MOV.I  <_LET1 , <_LET2 
+  JMN.B  $_DWH10, $_LET1 
+  SPL    @_LET2 , #0     
+  ADD.AB #2365  , $_LET2 
+  JMP    $_REP5 , #0     
+_LET2 
+  DAT    #0     , #2000  
+  DAT    #0     , #0     

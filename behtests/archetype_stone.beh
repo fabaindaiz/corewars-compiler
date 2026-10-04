@@ -1,0 +1,4 @@
+# SPL 0 splits every other cycle; the first bomb, DAT #0, #3044, lands 3044 cells past the pointer cell (4).
+golden: bbctests/archetypes/stone.bbc
+cell 4 3048 DAT.F #0, #3044
+alive 1000

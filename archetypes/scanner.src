@@ -1,0 +1,10 @@
+(let (p 20)
+  (seq
+    (repeat
+      (seq
+        (ADD 10 p)
+        (if (JN (Ind p))
+          (MOV I bomb (Ind p)))))
+    (DAT 0 (store p))
+    (label bomb)
+    (DAT 0 0)))

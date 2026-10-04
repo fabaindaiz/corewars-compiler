@@ -1,0 +1,4 @@
+# On empty core the scan never finds a target: p grows by 10 per lap (ADD, JMZ, JMP).
+golden: bbctests/archetypes/scanner.bbc
+cell 3 4 DAT.F #0, #30
+alive 1000

@@ -1,0 +1,9 @@
+NAME: the imp in RED
+DESCRIPTION: MOV 0, 1 copies itself forward; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_imp.beh
+SRC:
+(MOV (Dir 0) (Dir 1))
+EXPECTED:
+;redcode-94b
+
+  MOV.I  $0     , $1     
+  DAT    #0     , #0     

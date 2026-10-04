@@ -1,0 +1,21 @@
+NAME: a core-clear in RED
+DESCRIPTION: MOV.I bomb, >p clears cell after cell; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_clear.beh
+SRC:
+(let (p 4)
+  (seq
+    (repeat
+      (MOV I bomb (Inc p)))
+    (DAT 0 (store p))
+    (label bomb)
+    (DAT 0 0)))
+EXPECTED:
+;redcode-94b
+
+_REP4 
+  MOV.I  $bomb  , >_LET1 
+  JMP    $_REP4 , #0     
+_LET1 
+  DAT    #0     , #4     
+bomb  
+  DAT    #0     , #0     
+  DAT    #0     , #0     

@@ -1,0 +1,8 @@
+(let (b 0)
+  (seq
+    (SPL 0)
+    (repeat
+      (seq
+        (ADD 3044 b)
+        (MOV I b (Ind b))))
+    (DAT 0 (store b))))

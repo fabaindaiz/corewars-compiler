@@ -1,0 +1,5 @@
+# The first MOV writes the bomb to p + 4 (cell 6) and post-increments p (cell 2) to 5.
+golden: bbctests/archetypes/clear.bbc
+cell 1 2 DAT.F #0, #5
+cell 1 6 DAT.F #0, #0
+alive 1000

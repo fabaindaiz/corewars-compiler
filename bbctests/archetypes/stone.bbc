@@ -1,0 +1,22 @@
+NAME: a stone in RED
+DESCRIPTION: SPL 0 in front of a dwarf with step 3044; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_stone.beh
+SRC:
+(let (b 0)
+  (seq
+    (SPL 0)
+    (repeat
+      (seq
+        (ADD 3044 b)
+        (MOV I b (Ind b))))
+    (DAT 0 (store b))))
+EXPECTED:
+;redcode-94b
+
+  SPL    #0     , #0     
+_REP6 
+  ADD.AB #3044  , $_LET1 
+  MOV.I  $_LET1 , @_LET1 
+  JMP    $_REP6 , #0     
+_LET1 
+  DAT    #0     , #0     
+  DAT    #0     , #0     
