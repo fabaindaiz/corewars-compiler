@@ -5,6 +5,24 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-0cb4a2 — Reorganise the roadmap into phases and guard line endings
+
+**What.** Added the audit check `eol-preserved` (a tracked file may not change its line-ending style
+against `HEAD`). Reorganised `docs/roadmap.md` around a north star (d-7d2612-e006c2) into six phases
+plus a toolchain track, without deleting an entry; added the measured gap table and three
+optimizer items (loop rotation, variables in existing fields, peephole). Recorded that the dev
+branch's typed lambda calculus becomes RED's macro layer (d-7d2612-5de7a6).
+**Areas.** `tools/audit.py`, `docs/decisions.md`, `docs/roadmap.md`.
+**Why.** The user asked what to build next and how, based on the research and their suggestions,
+and approved the proposed north star, the dev-branch decision and writing the plan into the roadmap.
+**Architecture.** ✅ Complies: no code changed besides the audit.
+**What went wrong on the way.** The first idea for the line-ending friction was a `.gitattributes`
+with `eol=`; it would have renormalised how git stores every CRLF file, the whole-repository diff the
+fix is meant to prevent, so the guard became an audit check instead.
+**Measured.** `while (JN x)` with a one-instruction body: 3 cycles per iteration, 2 of them control;
+a rotated loop would need 2. A `repeat` bomber: 3 cycles, the same as a hand-written Dwarf.
+**What was left undone.** Everything in the phases; nothing was pushed.
+
 ## 2026-10-03 · s-7d2612-2206a5 — Fix the review's minor findings and merge the cost model into main
 
 **What.** Fixed the branch review's minor findings, each test-first: an `(expect ...)` takes no tag

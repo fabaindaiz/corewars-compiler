@@ -222,7 +222,18 @@ the classic-warriors item (i-7d2612-34b61d) would reuse those programs.
 
 ## Process and tooling
 
-Friction goes here once it has been hit twice, with the arithmetic. Nothing yet.
+Friction goes here once it has been hit twice, with the arithmetic.
+
+### Line endings rewritten by tools · i-7d2612-276a54
+**State.** Done (s-7d2612-0cb4a2).
+**What happened.** Editing by script through a text API turned CRLF files into LF: five files in the
+bootstrap, five more in the cost model, the second time forcing a rewrite of the branch's history.
+**Cost.** One whole-file diff per touched CRLF file, unreadable `git blame`, and about half an hour
+to detect and repair, × every session that edits a CRLF file by script.
+**The fix.** `tools/audit.py` (`eol-preserved`) fails when a tracked file's line-ending style differs
+from `HEAD`, so `make check-tools` stops the commit (d-7d2612-040878). Seen to fail on a planted
+`Makefile` converted to LF.
+**Seen in.** s-7d2612-0a037e, s-7d2612-a654a5.
 
 ## Closed by measurement
 

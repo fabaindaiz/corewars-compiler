@@ -180,6 +180,31 @@ def _():
     return problems
 
 
+def eol_style(data: bytes) -> str:
+    crlf = data.count(b"\r\n")
+    lf = data.count(b"\n") - crlf
+    return "none" if crlf + lf == 0 else "crlf" if lf == 0 else "lf" if crlf == 0 else "mixed"
+
+
+@check("eol-preserved")  # d-7d2612-040878: an edit never rewrites a file's line endings
+def _():
+    problems = []
+    for rel in tracked():
+        path = ROOT / rel
+        if not path.is_file():
+            continue
+        now = path.read_bytes()
+        if b"\0" in now:
+            continue  # binary
+        head = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=ROOT, capture_output=True)
+        if head.returncode != 0:
+            continue  # new file: no style to keep yet
+        before, after = eol_style(head.stdout), eol_style(now)
+        if "none" not in (before, after) and before != after:
+            problems.append(f"{rel}: line endings changed from {before} to {after} (convert back before committing)")
+    return problems
+
+
 @check("label-prefixes-documented")  # docs/architecture.md lists every generated label prefix
 def _():
     prefixes = set(re.findall(r'sprintf "([A-Z]+)%d"', read("src/compile.ml")))
