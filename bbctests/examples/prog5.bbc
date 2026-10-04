@@ -26,5 +26,5 @@ _LET4
   SUB.BA $_LET1 , $_LET3 
 start 
   ADD.AB #4     , *_LET2 
-  ADD.A  #5     , @_LET4 
+  ADD.AB #5     , @_LET4 
   DAT    $0     , $0

@@ -1,0 +1,6 @@
+# Beside a number, a pointer's target is read and written at its B-field, whichever field the
+# pointer lives in: ADD #4 through *_LET2 (an A-field pointer to cell 2) and ADD #5 through
+# @_LET4 (a B-field pointer to cell 1) both add to the target's B-field.
+golden: bbctests/examples/prog5.bbc
+cell 3 1 SUB.AB #3, #5
+cell 3 2 SUB.AB #0, #6

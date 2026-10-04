@@ -68,9 +68,11 @@ let carg_to_rarg (carg : carg) (env : env) : rarg =
     RLab ((compile_mode m p), l)
 
 
+(* What an operand names, for the modifier: a number, a variable's field (A or B), or a cell (a plain
+   reference, or the target of a pointer). *)
 type opmod =
 | TNum
-| TRef
+| TCell
 | TA
 | TB
 
@@ -80,42 +82,35 @@ let place_to_opmod (place : place) : opmod =
   | PB -> TB
 
 let carg_to_opmod (carg : carg) (env : env) : opmod =
-  let aenv, penv, _ = env in
+  let _, penv, _ = env in
   match carg with
   | ACRef (m, _) | ACLab (m, _) ->
     (match m with
     | MImm -> TNum
-    | MDir | MInd (_) -> TRef )
+    | MDir | MInd (_) -> TCell )
   | ACVar (m, s) ->
     (match m with
     | MImm | MDir ->
       let p = (translate_penv s penv) in
       (place_to_opmod p)
     | MInd (_) -> failwith "a direct variable reference with an indirect mode" )
-  | ACPnt (m, s) ->
+  | ACPnt (m, _) ->
     (match m with
-    | MInd (_) ->
-      let arg = (translate_aenv s aenv) in
-      let darg = (arg_to_darg arg) in
-      (match darg with
-      | ADRef (_, _) ->
-        (match List.assoc_opt s penv with
-        | Some p -> (place_to_opmod p)
-        | None -> TB )
-      | ADLab (_, s) -> 
-        (match List.assoc_opt s penv with
-        | Some p -> (place_to_opmod p)
-        | None -> TB ))
+    | MInd (_) -> TCell
     | MImm | MDir -> failwith "a pointer reference with a direct mode" )
 
+(* A variable is read through its field; a cell beside a number or a variable is its B-field, the
+   ICWS'94 convention (docs/semantics.md, Uses); between two cells, or two numbers, nothing tells
+   a field apart, and the opcode's ICWS'94 default (rmod) applies: the whole cell in MOV, SEQ, SNE. *)
 let opmod_to_rmod (mod1 : opmod) (mod2 : opmod) (rmod : rmod) : rmod =
   match mod1, mod2 with
   | TNum, TA -> RA
-  | TNum, TB -> RAB
+  | TNum, (TB | TCell) -> RAB
   | TA, TNum -> RAB
-  | TB, TNum -> RB
+  | (TB | TCell), TNum -> RB
   | TA, TA -> RA
-  | TA, TB -> RAB
-  | TB, TA -> RBA
-  | TB, TB -> RB
-  | _, _ -> rmod
+  | TA, (TB | TCell) -> RAB
+  | (TB | TCell), TA -> RBA
+  | TB, (TB | TCell) -> RB
+  | TCell, TB -> RB
+  | TCell, TCell | TNum, TNum -> rmod

@@ -38,7 +38,7 @@ As of 2026-10-04, end of s-7d2612-3f3b23. `main` holds phases 1 to 3: it measure
 (the cost model, i-7d2612-aeab0f), and the policy picks the optimizations it measures best
 (d-7d2612-6b110b). The gate runs locally with an opam switch in `_opam/`: `dune build`, 138 alcotest
 cases besides `execute` (Linux x86-64 only), an `--emit-beh` spec run end to end in pMARS, the
-audit's 12 checks and 27 behaviour specs, one of them known-failing (i-7d2612-9efd00). Seven
+audit's 12 checks and the behaviour specs, none known-failing since i-7d2612-9efd00 was fixed. Seven
 archetypes are written in RED and match their hand-written cycles.
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
@@ -138,8 +138,9 @@ user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every g
 The user chose `_` (2026-10-04). Built in phase 1.
 
 ### A variable next to a plain reference loses its field to the default modifier · i-7d2612-9efd00
-**State.** Planned. Known-failing: `behtests/mixed_operand_field.beh`, golden
-`bbctests/known-bugs/mixed_operand_field.bbc`. Found by the phase-1 branch review.
+**State.** Done (s-7d2612-333abd): the user decided that a cell beside a value is its B-field
+(d-7d2612-891901); `behtests/mixed_operand_field.beh` passes, unmarked, and its golden moved to
+`bbctests/examples/`. Found by the phase-1 branch review.
 `opmod_to_rmod` decides only when both operands are numbers or variables; a variable beside a plain
 reference (`(MOV x (Dir -1))`, `(SLT x label)`) falls to the ICWS'94 default, so with `x` in an
 A-field `MOV.I` copies the whole cell instead of `x`'s value. Before phase 1 the fallback was `.I`
@@ -208,9 +209,9 @@ its behavioural reason (d-7d2612-6a1527), measured with the cost model.
 **Decide first.** The reserved prefix; which compound operators exist and what each emits.
 
 ### The modifier an indirect use reads in its target · i-7d2612-2581ff
-**State.** Half done (s-7d2612-14641b): conditions accept a modifier (d-7d2612-8f9340), so a SEQ
-scanner can be written (`archetypes/seqscan.src`, `(NE I (Ind a) (Ind b))`). Still open: the
-default. `docs/semantics.md` §3 says which field of a variable an
+**State.** Done. Conditions accept a modifier (s-7d2612-14641b, d-7d2612-8f9340), and the default
+is decided (s-7d2612-333abd, d-7d2612-891901): a pointer's target is a cell, its B-field beside a
+value, whole against another cell, so `(NE (Ind a) (Ind b))` is `SNE.I`. Before: `docs/semantics.md` §3 says which field of a variable an
 indirect use goes *through* (`@` or `*`), not which field of the target cell it reads. Today the
 modifier follows the pointers' fields: `(NE (Ind a) (Ind b))` with `a`, `b` in one `DAT` compiles
 to `SNE.AB *a, @b` (A-field of one target against the B-field of the other), and

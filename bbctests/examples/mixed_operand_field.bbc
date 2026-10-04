@@ -1,5 +1,5 @@
-NAME: known bug: a variable next to a plain reference
-DESCRIPTION: characterization of current output (i-7d2612-9efd00); MOV x (Dir -1) copies the whole cell (.I) instead of x's value, see behtests/mixed_operand_field.beh
+NAME: a variable next to a plain reference
+DESCRIPTION: (MOV x (Dir -1)) with x in the A-field moves x's value into the plain reference's B-field (MOV.AB): beside a value, a cell is its B-field; see behtests/mixed_operand_field.beh
 SRC:
 (let (x 7)
   (seq
@@ -15,6 +15,6 @@ EXPECTED:
 _LET1 
   DAT    #7     , #0     
   DAT    #0     , #0     
-  MOV.I  $_LET1 , $-1    
+  MOV.AB $_LET1 , $-1    
   JMP    #0     , #0     
   DAT    $0     , $0     

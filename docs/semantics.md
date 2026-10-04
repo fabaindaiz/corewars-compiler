@@ -63,6 +63,12 @@ generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of 
 - **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `_LETn`, through the modifier
   that selects `f`. An indirect use (`@`, `<`, `>`) goes through that field (`*`, `{`, `}` when
   `f = A`). `#x` is the offset to `_LETn`, not its value.
+- **Cells** (d-7d2612-891901). A plain reference (`(Dir -1)`, a label) and the target of an indirect
+  use name a cell. With no modifier written, a cell beside a number or a variable is read and
+  written at its B-field, the ICWS'94 convention: `(MOV x (Dir -1))` with `x` in A is `MOV.AB`,
+  `(ADD 1 (Ind p))` is `ADD.AB` whichever field `p` lives in, `(JMZ t (Ind p))` tests the target's
+  B-field. Two cells against each other have no field to tell apart and take the opcode's ICWS'94
+  default: the whole cell in `MOV`, `SEQ`, `SNE`.
 - **Condition placement.** `DZ` is only valid as a pre-condition (`if`, `while`); `DN` only as a
   post-condition (`do-while`). Checked: `compile_cond1` rejects the others.
 - **Labels.** Generated labels and user labels must be distinct, and no label may be a pMARS

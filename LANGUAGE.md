@@ -85,7 +85,7 @@ Binary conditions are used to specify when the control flow is executed based on
 
 Comparisons are unsigned: values are compared as `0..7999`, so `(LT -1 3)` is false.
 
-A modifier is written as for instructions (`A`, `B`, `AB`, `BA`, `F`, `X`, `I`), right after the operator. Without one, the comparison of two pointers takes its modifier from the fields the pointers live in: `(NE (Ind a) (Ind b))` with `a` and `b` in one cell's A and B fields compares the A-field of one target with the B-field of the other. To compare the two cells whole, as a SEQ scanner does, write `(NE I (Ind a) (Ind b))`.
+A modifier is written as for instructions (`A`, `B`, `AB`, `BA`, `F`, `X`, `I`), right after the operator. Without one, two pointers compare their two target cells whole: `(NE (Ind a) (Ind b))` is `SNE.I`, as a SEQ scanner needs.
 
 In `do-while`, `GT` and `LT` add a third instruction (`SNE #0, #1`, which always skips) so the comparison stays strict; the loop still spends two control instructions per iteration (`SLT` and the jump back), as before.
 
@@ -107,7 +107,7 @@ A useful case where to declare them explicitly is when you want to target the en
 - X both fields to the opposite fields
 - I the whole instruction
 
-When no variable decides the modifier (for example, two plain references or numbers), the instruction takes the ICWS'94 default, exactly what pMARS gives the same instruction written by hand: `MOV`/`SEQ`/`SNE` `.AB` with an immediate A, `.B` with only an immediate B, `.I` otherwise; arithmetic the same with `.F` instead of `.I`; `SLT`/`LDP`/`STP` `.AB` with an immediate A, `.B` otherwise; jumps `.B`. So `(ADD 1 1)` is `ADD.AB #1, #1`.
+A plain reference (a label, `(Dir -1)`) or a pointer's target `(Ind p)` names a cell. Beside a number or a variable, a cell is its B-field: with `x` in an A-field, `(MOV x (Dir -1))` is `MOV.AB` (x's value into the cell's B-field), and `(ADD 1 (Ind p))` is `ADD.AB` whichever field `p` lives in. A bomber that copies a whole cell still writes `(MOV I bomb (Ind p))`: a bare variable is its value. When nothing tells a field apart (two cells, or two numbers), the instruction takes the ICWS'94 default, exactly what pMARS gives the same instruction written by hand: `MOV`/`SEQ`/`SNE` `.AB` with an immediate A, `.B` with only an immediate B, `.I` otherwise; arithmetic the same with `.F` instead of `.I`; `SLT`/`LDP`/`STP` `.AB` with an immediate A, `.B` otherwise; jumps `.B`. So `(ADD 1 1)` is `ADD.AB #1, #1`.
 
 ### redcode instructions
 

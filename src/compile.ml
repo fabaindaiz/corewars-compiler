@@ -56,7 +56,7 @@ let jump_modifier (carg2 : carg) (env : env) : rmod =
   if immediate carg2 then RB
   else match carg_to_opmod carg2 env with
     | TA -> RA
-    | TB | TNum | TRef -> RB
+    | TB | TNum | TCell -> RB
 
 (* With no modifier written, the variables' fields decide (opmod_to_rmod); where they do not, the
    ICWS'94 default for the opcode, as pMARS would give the same redcode written by hand. *)

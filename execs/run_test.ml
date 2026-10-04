@@ -683,7 +683,8 @@ let rmods = Alcotest.list rmod_t
 let test_phase2_condition_modifier () =
   let ptrs c = Printf.sprintf "(let (a 100) (let (b 104) (seq (if %s (NOP)) (DAT (store a) (store b)))))" c in
   check rmods "NE I compares whole cells" [RI] (modifiers ISNE (ptrs "(NE I (Ind a) (Ind b))")) ;
-  check rmods "no modifier: as before" [RAB] (modifiers ISNE (ptrs "(NE (Ind a) (Ind b))")) ;
+  (* two pointers name two cells: compared whole *)
+  check rmods "no modifier: whole cells" [RI] (modifiers ISNE (ptrs "(NE (Ind a) (Ind b))")) ;
   check rmods "JZ F tests both fields" [RF]
     (modifiers IJMN "(let (x 0) (seq (if (JZ F x) (NOP)) (DAT 0 (store x))))") ;
   check rmods "DN A in a do-while" [RA]
@@ -857,6 +858,27 @@ let test_review3_peephole_keeps_numeric_spans () =
     (opcodes (chosen "(let (x 1) (seq (JMP (Dir 2)) (DAT 7 7) (if (JN x) (seq)) (ADD (Dir -2) c) (JMP 0) (DAT (store x) 0) (label c) (DAT 0 0)))"))
 
 
+(* Tests for the cell default: a plain reference or a pointer target names a cell, read at its
+   B-field beside a value, whole against another cell *)
+let test_cells_beside_a_value () =
+  let in_a = "(let (x 7) (let (p 5) (seq %s (JMP 0) (DAT (store x) (store p)))))" in
+  let in_b = "(let (x 7) (let (p 5) (seq %s (JMP 0) (DAT (store p) (store x)))))" in
+  let md op tmpl body = modifiers op (Printf.sprintf (Scanf.format_from_string tmpl "%s") body) in
+  check rmods "A-field variable into a plain reference" [RAB] (md IMOV in_a "(MOV x (Dir -1))") ;
+  check rmods "B-field variable into a plain reference" [RB] (md IMOV in_b "(MOV x (Dir -1))") ;
+  check rmods "a plain reference into an A-field variable" [RBA] (md IMOV in_a "(MOV (Dir -1) x)") ;
+  check rmods "a number into an A-field pointer's target" [RAB] (md IADD in_b "(ADD 1 (Ind p))") ;
+  check rmods "a number into a B-field pointer's target" [RAB] (md IADD in_a "(ADD 1 (Ind p))") ;
+  check rmods "an A-field pointer's target, tested" [RB] (md IJMZ in_b "(JMZ (Dir 0) (Ind p))")
+
+let test_cells_against_cells () =
+  let src = "(let (a 100) (let (b 104) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
+  let md op body = modifiers op (Printf.sprintf (Scanf.format_from_string src "%s") body) in
+  check rmods "two pointers, compared" [RI] (md ISNE "(if (NE (Ind a) (Ind b)) (NOP))") ;
+  check rmods "a label into a pointer" [RI] (md IMOV "(MOV top (Ind b))") ;
+  check rmods "arithmetic: the ICWS'94 default" [RF] (md IADD "(ADD (Ind a) (Ind b))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -983,6 +1005,10 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "cells", [
+    test_case "a cell beside a value is its B-field" `Quick test_cells_beside_a_value ;
+    test_case "a cell against a cell is the whole cell" `Quick test_cells_against_cells ;
   ] ;
   "phase3", [
     test_case "a unary while is rotated" `Quick test_phase3_unary_while_rotated ;

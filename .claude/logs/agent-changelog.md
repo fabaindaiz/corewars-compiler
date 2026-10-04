@@ -5,6 +5,24 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-333abd — Phase 2's operator design and phase 4's warnings
+
+**What.** On branch `feat/phase-4`, from `main`. The user's decisions: a cell beside a value is its
+B-field and two cells are whole; constants as `EQU` with pMARS expressions; compile-time repetition
+waits for the macro layer; warnings driven by the policy. Done so far: the cell rule
+(d-7d2612-891901), which fixes i-7d2612-9efd00 (its spec passes; golden moved to
+`bbctests/examples/`) and settles i-7d2612-2581ff; `prog5` changed one line (`ADD.A #5, @_LET4`
+became `ADD.AB`: beside a number, a pointer's target is its B-field), with
+`behtests/prog5_pointer_target.beh`; the phase-2 test asserting the old `.AB` for two pointers now
+asserts `.I`, the decision's point.
+**Areas.** `src/util.ml`, `src/compile.ml`, `execs/run_test.ml`, `bbctests/`, `behtests/`,
+`AGENTS.md`, `LANGUAGE.md`, `docs/semantics.md`, `docs/decisions.md`, `docs/roadmap.md`.
+**What went wrong.** I wrote a decision id and a session id by hand before generating them (one in
+a test comment, also against the no-ids-in-comments rule; one in the roadmap); both replaced by
+generated ids before committing.
+**Left undone.** Constants and expressions, the imp spiral, phase 4's warnings, the smaller pending
+items.
+
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
 
 **What.** The session's close, on the user's request: the closing review of the method

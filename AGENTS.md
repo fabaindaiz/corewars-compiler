@@ -23,9 +23,9 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   equality is a different program. Enforced: `behtests/` (`dowhile_*.beh`, `prog8_while_lt.beh`).
 - **A variable is read and written through the modifier that selects its field** (A or B, decided
   by where its `(store x)` sits). The wrong modifier reads the other field of the same cell.
-  Enforced: `behtests/` (`cond1_afield.beh`, `user_djn_afield.beh`, `let_shadowing.beh`). **Violated
-  today:** a variable next to a plain reference (`MOV x (Dir -1)`) takes the default modifier and
-  loses its field (i-7d2612-9efd00, known-failing spec).
+  Beside it, a cell (a plain reference, or a pointer's target) is its B-field; two cells are read
+  whole (d-7d2612-891901). Enforced: `behtests/` (`cond1_afield.beh`, `user_djn_afield.beh`,
+  `let_shadowing.beh`, `mixed_operand_field.beh`, `prog5_pointer_target.beh`), the `cells` group.
 - **With no modifier given, the variables' fields decide; where they do not, the ICWS'94 default**
   (`Red.default_modifier`, d-7d2612-7aad26), so the compiled code does what the same redcode written
   by hand does in pMARS. Enforced: `test_phase1_icws_default_modifiers`,
