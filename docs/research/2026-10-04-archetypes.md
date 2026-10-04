@@ -46,8 +46,11 @@ code), and `archetypes/NAME.src`, the same warrior in RED. The RED versions are 
 
 The scanner's last figures are from phase 3 (the same day): `(repeat body (store p))` keeps its
 pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3), 6 cells like the hand-written one; it then scored
-63 and 61, above the hand-written 56 and 57. Why it scores higher was not investigated; the two
-layouts differ (the hand-written pointer is a `DAT` of its own, RED's lives in the loop's `JMP`).
+63 and 61, above the hand-written 56 and 57. **Why** (measured later the same day): the layout. A
+hand-written scanner with RED's layout, its pointer in the `JMP`'s B-field (5 cells), scores 61 and
+61; per opponent the two original forms win and lose in both directions (more wins against
+IRONGATE and RAVE, fewer against FSTORM and TORNADO). The pointer in the loop's own `JMP` is the
+better hand-written design here, and RED now expresses it; nothing in the compilation itself scores.
 
 The imp ring row was measured later the same day, once constants and label arithmetic existed
 (d-7d2612-d9339f): it is a three-point ring (one process per point), not a spiral (several per

@@ -28,12 +28,19 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 | Archetype | Cycles/iter RED / hand | Cells RED / hand | Score RED / hand | Gap |
 |---|---|---|---|---|
 | imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT`, kept by decision (d-7d2612-1c1c67) |
-| scanner | 2 / 2 per empty cell (was 3) | 6 / 6 (was 7) | 63, 61 / 56, 57 (was 42) | cycles closed by jump threading (d-7d2612-3f3f32); the pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3) |
+| scanner | 2 / 2 per empty cell (was 3) | 6 / 6 (was 7) | 63, 61 / 56, 57 (was 42) | cycles closed by jump threading (d-7d2612-3f3f32); the pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3); the score is the layout's: a hand-written scanner with it scores 61, 61 |
 | SEQ scanner | 3 / 3 per pair of empty cells | 9 / 7 | 37, 37 / 36, 37 | expressible with `(NE I ...)` (d-7d2612-8f9340); +1 cell for the pointers, +1 epilogue |
 | imp ring (3 points) | 1 / 1 per process | 9 / 8 | 76, 76 / 76, 77 | none but the epilogue; written with constants and label arithmetic (d-7d2612-d9339f) |
 | quickscan | — | — | — | waits for compile-time repetition, the macro layer (i-7d2612-ec4d2d), by the user's decision |
 
 ## Where we are
+
+**Phase 4 and the rest of phase 2 are built** (s-7d2612-333abd, branch `feat/phase-4` from `main`,
+not merged): a cell beside a value is its B-field (i-7d2612-9efd00 fixed), constants as `EQU` with
+label arithmetic (the imp ring is the eighth archetype), warnings driven by the policy, the phase-1
+review's smaller gaps, compile-error goldens, a pointer's step as its net change per lap. **Next:**
+compile-time repetition (the macro layer, i-7d2612-ec4d2d) for the quickscan and the snippets;
+phase 5, the hills and the benchmark as a check.
 
 As of 2026-10-04, end of s-7d2612-3f3b23. `main` holds phases 1 to 3: it measures what it compiles
 (the cost model, i-7d2612-aeab0f), and the policy picks the optimizations it measures best
@@ -207,8 +214,12 @@ a Silk-style paper: each exercises a different construct (`docs/references.md`, 
 **Why it is the north star's measure** (d-7d2612-e006c2). Each archetype gets a hand-written counterpart and a row in the gap table above: cycles per iteration, length and benchmark score, compiled against hand-written. What the archetypes cannot express is what the language lacks.
 
 ### Operators, default modifiers, reserved label prefix and the do-while layout (subproject C) · i-7d2612-7eadd5
-**State.** Planned. Carries the decisions recorded in i-7d2612-fffa6c, i-7d2612-96f7b1 and
-i-7d2612-425c66.
+**State.** Half done (s-7d2612-333abd). Decided and built: the reserved prefix (`_`), the ICWS'94
+defaults, the do-while layout (phase 1); a modifier on conditions (d-7d2612-8f9340); what a cell
+means beside a value (d-7d2612-891901); constants and expressions (d-7d2612-d9339f). Not designed:
+compound operators. No archetype needs one today: the SEQ scanner uses `(NE I ...)`, bombers write
+`MOV I`; the quickscan waits for repetition, not for an operator. Carries the decisions recorded in
+i-7d2612-fffa6c, i-7d2612-96f7b1 and i-7d2612-425c66.
 **Collides with.** d-7d2612-5b410d ends here: C changes emitted code, so every changed golden needs
 its behavioural reason (d-7d2612-6a1527), measured with the cost model.
 **Decide first.** The reserved prefix; which compound operators exist and what each emits.

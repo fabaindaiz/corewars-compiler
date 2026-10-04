@@ -52,8 +52,11 @@ came from.
 Compile-error goldens (i-7d2612-70ea22) in `bbctests/errors/`: the first draft used `(label END)`
 and bbctester could not parse the file, because it splits sections on the bare word `END`
 anywhere; recorded in `docs/architecture.md`.
-**Left undone.** Summing through inner loops with known trip counts,
-compile-error goldens (i-7d2612-70ea22), the scanner's score.
+The scanner's score above the hand-written one, explained by measurement: a hand-written scanner
+with RED's layout (its pointer in the `JMP`) scores 61 and 61, as RED does; per opponent the
+results move in both directions. It is the layout, not the compilation.
+**Left undone.** Summing through inner loops with known trip counts (i-7d2612-fbe7c8); the
+quickscan (waits for the macro layer, by decision); a spiral with several processes per point.
 
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
 
