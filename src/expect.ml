@@ -81,7 +81,8 @@ let check (m : t) ((x, loop) : expectation * tag option) : outcome option =
       verdict (holds c n l.overhead.max) (sprintf "%s spends %d per iteration on control" (name l) l.overhead.max))
   | XStep k -> in_scope (fun ls -> match steps_in m ls with
       | [] -> fail "no fixed-step pointer found"
-      | steps when List.exists (fun (s, _, _, _) -> s = k) steps -> Some Pass
+      (* a step is a number modulo the core: -4 and 7996 are one step *)
+      | steps when List.exists (fun (s, _, _, _) -> Layout.norm m.coresize (s - k) = 0) steps -> Some Pass
       | (s, _, _, _) :: _ -> fail (sprintf "the pointer steps by %d" s))
   | XCoversCore -> in_scope (fun ls -> match steps_in m ls with
       | [] -> fail "no fixed-step pointer found"

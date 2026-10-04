@@ -1101,6 +1101,15 @@ let test_metadata () =
     (first_lines 4 (out_of "(program (name My Dwarf) (author Somebody) (strategy bombs every fourth cell) (MOV 0 1))"))
 
 
+let test_review5_step_modulo_core () =
+  (* a step is a number modulo the core: -4 and 7996 are one step on 94b, 3044 and -156 on tiny *)
+  let sub k = Printf.sprintf "(let (p 0) (seq (repeat (seq (expect (step %s)) (SUB 4 p) (MOV 0 (Ind p)))) (DAT 0 (store p))))" k in
+  check Alcotest.(pair string int) "7996" ("", 0) (let o = drive [("p.src", sub "7996")] ["p.src"] in (o.err, o.code)) ;
+  check Alcotest.(pair string int) "-4" ("", 0) (let o = drive [("p.src", sub "-4")] ["p.src"] in (o.err, o.code)) ;
+  let tiny = "(program (hill tiny) (let (b 0) (seq (repeat (seq (expect (step 3044)) (ADD 3044 b) (MOV I b (Ind b)))) (DAT 0 (store b)))))" in
+  check Alcotest.int "3044 on tiny" 0 (drive [("p.src", tiny)] ["p.src"]).code
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1228,6 +1237,9 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "review5", [
+    test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;
   ] ;
   "hills", [
     test_case "a hill from the header or the flag" `Quick test_hills_header_and_flag ;
