@@ -39,13 +39,13 @@ code), and `archetypes/NAME.src`, the same warrior in RED. The RED versions are 
 | dwarf | `repeat` (`ADD`, `MOV I` through `@`) | 3 | 3 | 4 | 5 | 46, 46 | 44, 48 |
 | stone | `SPL 0` before the dwarf, step 3044 | 3 | 3 | 5 | 6 | 77, 80 | 80, 80 |
 | core-clear | `repeat` (`MOV I` through `>`) | 2 | 2 | 4 | 5 | 45, 46 | 42, 42 |
-| scanner | `repeat` (`ADD`, `if (JN @p)` bomb) | 2 (empty cell) | **3** (empty cell) | 6 | 7 | 56, 57 | **42, 42** |
+| scanner | `repeat` (`ADD`, `if (JN @p)` bomb) | 2 (empty cell) | **3** (empty cell); 2 threaded | 6 | 7 | 56, 57 | **42, 42**; 54, 58 compiled with threading |
 | paper | `repeat` (reset, `do-while (JN n)` copy, `SPL @d`, `ADD`) | 6 + 2 per cell | 6 + 2 per cell | 7 | 8 | 78, 80 | 80, 79 |
 | SEQ scanner | — | — | not expressible | — | — | — | — |
 
 Five of six archetypes compile with **zero cycle overhead**; the sixth, the scanner, loses 14
-points to one extra cycle on its hot path. Every RED warrior is one cell longer than its
-hand-written form.
+points to one extra cycle on its hot path (closed the same day by jump threading, gap 1). Every
+RED warrior is one cell longer than its hand-written form.
 
 ## Gaps found
 
@@ -55,7 +55,9 @@ hand-written form.
    jumps straight back (`JMZ.B scan, @ptr`): 2. Closed by jump threading (peephole,
    i-7d2612-ec59a0): retargeting the `JMZ` to `_REP4` makes the RED code the hand-written code, cell
    for cell, except the epilogue. Measured by editing the compiled warrior that way: 55 and 55,
-   against 56 and 57 by hand. The extra cycle is the whole 14 points.
+   against 56 and 57 by hand. The extra cycle is the whole 14 points. **Closed** the same day: the
+   user pulled threading forward (d-7d2612-3f3f32), and the compiled scanner now emits
+   `JMZ.B $_REP4` and scores 54 and 58.
 2. **One extra cell, always: the epilogue `DAT`.** `compile_prog` appends `DAT 0, 0` so a program
    that falls off its end dies there (`LANGUAGE.md`). None of the six can fall off: each ends in a
    `repeat` or an imp. Five of them also end in a data cell (a variable's `DAT` or a `bomb`) that

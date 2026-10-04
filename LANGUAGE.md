@@ -153,6 +153,8 @@ Control flows are used to specify the execution order of the instructions. Use c
 
 - (if cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
 
+A jump the compiler generated that would land on a `JMP` the compiler generated goes straight to that `JMP`'s target: an `if` at the end of a `repeat` jumps back to the loop's head when its condition is false, one cycle sooner. It changes no cell count, and never touches a jump you wrote.
+
 
 ### Other instructions
 

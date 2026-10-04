@@ -16,7 +16,7 @@ EXPECTED:
 
 _REP4 
   ADD.AB #10    , $_LET1 
-  JMZ.B  $_IF9  , @_LET1 
+  JMZ.B  $_REP4 , @_LET1 
   MOV.I  $bomb  , @_LET1 
 _IF9  
   JMP    $_REP4 , #0     

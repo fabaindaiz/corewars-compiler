@@ -356,7 +356,8 @@ let test_review_many_branches_fast () =
   let t0 = Sys.time () in
   let m = M.measure (layout_of_src src) in
   check Alcotest.bool "measured in under a second" true (Sys.time () -. t0 < 1.0) ;
-  check range "cycles" (r 22 43) (List.hd m.loops).cycles
+  (* the last if's jump is threaded to the loop head: 21 cycles when every if skips *)
+  check range "cycles" (r 21 43) (List.hd m.loops).cycles
 
 let test_review_step_b_immediate () =
   let m = M.measure (layout_of_src
@@ -628,6 +629,53 @@ let test_review1_store_in_gt_condition_field () =
   check (Alcotest.option rmod_t) "ADD.AB on x in the B-field" (Some RAB) add
 
 
+(* Tests for phase 2: jump threading *)
+let instrs_of_src (src : string) : instruction list =
+  List.map (fun (e : emitted) -> e.instr) (compile_body (parse_exp (sexp_from_string src)))
+
+let targets (op : opcode) (is : instruction list) : string list =
+  List.filter_map (fun i -> match i with
+    | INSTR (o, _, RLab (RDir, l), _) when o = op -> Some l
+    | INSTR _ | ICOM _ | ILAB _ -> None) is
+
+let first_label (prefix : string) (is : instruction list) : string =
+  List.find (String.starts_with ~prefix)
+    (List.filter_map (fun i -> match i with ILAB l -> Some l | INSTR _ | ICOM _ -> None) is)
+
+let strings = Alcotest.(list string)
+
+let test_phase2_if_jumps_to_loop_head () =
+  (* the scanner archetype: the if's false branch reached the repeat's JMP through _IF9 *)
+  check strings "JMZ" ["_REP4"] (targets IJMZ (instrs_of_src (golden_src "bbctests/archetypes/scanner.bbc")))
+
+let test_phase2_chain_followed () =
+  (* inner if -> _IF: JMP _IFF (then-branch end) -> _IFF: JMP _REP *)
+  let is = instrs_of_src
+      "(let (x 0) (let (y 0) (seq (repeat (if (JZ x) (if (JN y) (NOP)) (NOP))) (DAT (store x) (store y)))))" in
+  let rep = first_label "_REP" is in
+  check strings "JMZ" [rep] (targets IJMZ is) ;
+  check strings "JMP" [rep; rep] (targets IJMP is)
+
+let test_phase2_user_jump_untouched () =
+  let is = instrs_of_src "(repeat (seq (JMZ foo (Dir 5)) (NOP) (label foo)))" in
+  check strings "user JMZ" ["foo"] (targets IJMZ is)
+
+let test_phase2_user_jmp_not_followed () =
+  (* a JMP the user wrote may have its target rewritten at run time: never thread through it *)
+  let is = instrs_of_src "(let (x 0) (seq (label top) (if (JN x) (NOP)) (JMP top) (DAT (store x) 0)))" in
+  check strings "JMZ" [first_label "_IF" is] (targets IJMZ is)
+
+let test_phase2_threaded_loop_is_one_loop () =
+  (* the threaded JMZ and the repeat's JMP both close _REP4: one loop, 2 cycles on an empty cell *)
+  let m = M.measure (layout_of_src (golden_src "bbctests/archetypes/scanner.bbc")) in
+  check Alcotest.int "one loop" 1 (List.length m.loops) ;
+  check range "cycles" (r 2 4) (List.hd m.loops).cycles
+
+let test_phase2_self_loop_terminates () =
+  let is = instrs_of_src "(repeat (seq))" in
+  check strings "JMP" [first_label "_REP" is] (targets IJMP is)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -731,6 +779,14 @@ let ocaml_tests = [
     test_case "SNE #0, #1 always skips (metrics)" `Quick test_review1_constant_skip_known ;
     test_case "a store inside a condition defines its label" `Quick test_review1_store_in_condition_is_labelled ;
     test_case "a store on the left of GT is in the B-field" `Quick test_review1_store_in_gt_condition_field ;
+  ] ;
+  "phase2", [
+    test_case "an if at a loop's end jumps to its head" `Quick test_phase2_if_jumps_to_loop_head ;
+    test_case "a chain of jumps is followed" `Quick test_phase2_chain_followed ;
+    test_case "a user's jump is not rewritten" `Quick test_phase2_user_jump_untouched ;
+    test_case "a user's JMP is not threaded through" `Quick test_phase2_user_jmp_not_followed ;
+    test_case "a JMP to itself terminates" `Quick test_phase2_self_loop_terminates ;
+    test_case "a threaded jump closes the same loop" `Quick test_phase2_threaded_loop_is_one_loop ;
   ] ;
   "interp", [
 

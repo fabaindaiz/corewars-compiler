@@ -154,11 +154,16 @@ let build ?(coresize = default_coresize) (body : Compile.emitted list) : program
     let rec up i = if not inside.(i) then (inside.(i) <- true ; List.iter up preds.(i)) in
     up s ;
     List.filter (fun i -> inside.(i)) (List.init n Fun.id) in
-  (* Loops that share a header but close through different constructs (a do-while whose body
-     starts with another loop) stay separate: one loop per header and closing construct. *)
-  let keys = List.sort_uniq compare (List.map (fun (s, h) -> (h, cells.(s).origin)) !backs) in
-  let loops = List.map (fun (h, o) ->
-    let edges = List.sort compare (List.filter (fun (s, t) -> t = h && cells.(s).origin = o) !backs) in
+  (* Loops that share a header but close through different labels (a do-while whose body starts
+     with another loop: _DWH and _REP on one cell) stay separate: one loop per header and label
+     jumped to. A threaded jump (Compile.thread_jumps) closes the loop whose label it now names; a
+     jump through a number has no label, and is told apart by the construct that emitted it. *)
+  let closing s = match cells.(s).a.label with
+    | Some l -> Either.Left l
+    | None -> Either.Right cells.(s).origin in
+  let keys = List.sort_uniq compare (List.map (fun (s, h) -> (h, closing s)) !backs) in
+  let loops = List.map (fun (h, k) ->
+    let edges = List.sort compare (List.filter (fun (s, t) -> t = h && closing s = k) !backs) in
     let body = List.sort_uniq compare (List.concat_map natural edges) in
     { header = h; body; back_edges = edges }) keys in
   { cells; succ; loops; diagnostics = List.rev !diags; coresize }

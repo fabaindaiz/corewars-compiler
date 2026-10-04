@@ -100,8 +100,11 @@ type program = { cells : cell array; succ : edge list array; loops : loop list;
   only when the divisor is a constant 0.
 - **Blocks and loops.** Leaders are the entry, every jump or skip target, and every cell after a jump
   or skip. Loops are natural loops of the back edges found by a depth-first walk from cell 0, one
-  loop per header and closing construct: a `do-while` whose body starts with another loop shares
-  its header with that loop and stays a separate loop (review fix, 2026-10-03).
+  loop per header and label jumped to: a `do-while` whose body starts with another loop shares
+  its header with that loop and stays a separate loop (review fix, 2026-10-03). Keyed by label
+  since 2026-10-04 (was: by the construct that emitted the jump): a threaded jump
+  (d-7d2612-3f3f32) closes the loop whose label it names; a jump through a number has no label and
+  is keyed by its construct.
 - **Stated limit.** The view describes the static program. Self-modification (the Dwarf's `ADD` that
   moves its pointer) is modelled as data that changes, not as control that changes; indirect jumps
   are `Dynamic`.

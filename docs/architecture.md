@@ -41,7 +41,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | `src/analyse.ml` | per `let`: finds the field (`PA`/`PB`) where `(store x)` sits | extends `penv` |
 | `src/lib.ml` | environments `aenv` (name → initializer), `penv` (name → field), `lenv` (name → label); `jump_label` | `env` |
 | `src/util.ml` | operand lowering through three small IRs: `darg` (number or label) → `carg` (constant, label, variable or pointer) → `Red.rarg`; and modifier choice `opmod` → `Red.rmod` | `Red.rarg`, `Red.rmod` |
-| `src/compile.ml` | control flow and conditions to labels and jumps, each instruction annotated with its origin tag, generating construct and stored variables; `compile_prog` adds the header and the epilogue `DAT` | `Compile.emitted list`, then text |
+| `src/compile.ml` | control flow and conditions to labels and jumps, each instruction annotated with its origin tag, generating construct and stored variables; `thread_jumps` aims a generated jump that lands on a generated `JMP` at that `JMP`'s target; `compile_prog` adds the header and the epilogue `DAT` | `Compile.emitted list`, then text |
 | `src/layout.ml` | positions: labels resolved to offsets, cells with roles and variables, successors, loops, label and line-length diagnostics | `Layout.program` |
 | `src/metrics.ml` | static metrics, step and counter predictions, the optimization policy, text and JSON reports | `Metrics.t` |
 | `src/expect.ml` | collects `(expect ...)` with their enclosing loop, checks the static ones, writes the execution ones as a behaviour spec | `Expect.outcome`, `.beh` text |

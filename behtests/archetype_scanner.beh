@@ -1,4 +1,5 @@
-# On empty core the scan never finds a target: p grows by 10 per lap (ADD, JMZ, JMP).
+# On empty core the scan never finds a target: an empty cell costs ADD and JMZ, which jumps straight
+# back to the ADD, so after three instructions p (cell 4) has grown by 10 twice.
 golden: bbctests/archetypes/scanner.bbc
-cell 3 4 DAT.F #0, #30
+cell 3 4 DAT.F #0, #40
 alive 1000

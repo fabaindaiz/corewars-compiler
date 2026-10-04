@@ -213,8 +213,34 @@ let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
     List.fold_left (fun res exp -> res @ (compile_expr exp env)) [] exps
   | EExpect _ -> []
 
+(* A generated jump whose target cell holds a generated JMP goes straight to that JMP's target: the
+   same cells, one cycle less each time it is taken (an if at the end of a repeat cost the scanner
+   archetype 3 cycles per empty cell, against 2 by hand). Only jumps the compiler generated are
+   rewritten, and only through JMPs it generated: a JMP the user wrote may have its target changed
+   at run time. A chain is followed until it repeats a label. *)
+let thread_jumps (body : emitted list) : emitted list =
+  let next_instr = Hashtbl.create 16 in
+  let rec index pending (es : emitted list) = match es with
+    | [] -> ()
+    | { instr = ILAB l; _ } :: rest -> index (l :: pending) rest
+    | { instr = ICOM _; _ } :: rest -> index pending rest
+    | ({ instr = INSTR _; _ } as e) :: rest ->
+      List.iter (fun l -> Hashtbl.replace next_instr l e) pending ;
+      index [] rest in
+  index [] body ;
+  let generated_jmp l = match Hashtbl.find_opt next_instr l with
+    | Some { instr = INSTR (IJMP, _, RLab (RDir, l'), _); construct = Some _; _ } -> Some l'
+    | Some { instr = INSTR _ | ILAB _ | ICOM _; _ } | None -> None in
+  let rec final seen l = match generated_jmp l with
+    | Some l' when not (List.mem l' seen) -> final (l' :: seen) l'
+    | Some _ | None -> l in
+  List.map (fun (e : emitted) -> match e with
+    | { instr = INSTR ((IJMP | IJMZ | IJMN | IDJN) as op, md, RLab (RDir, l), b); construct = Some _; _ } ->
+      { e with instr = INSTR (op, md, RLab (RDir, final [l] l), b) }
+    | { instr = INSTR _ | ILAB _ | ICOM _; _ } -> e) body
+
 let compile_body (e : expr) : emitted list =
-  compile_expr (tag_expr (Rename.uniquify e)) empty_env
+  thread_jumps (compile_expr (tag_expr (Rename.uniquify e)) empty_env)
 
 
 let prelude = "

@@ -28,7 +28,7 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 | Archetype | Cycles/iter RED / hand | Cells RED / hand | Score RED / hand | Gap |
 |---|---|---|---|---|
 | imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT` (i-7d2612-400784) |
-| scanner | 3 / 2 per empty cell | 7 / 6 | 42 / 56 | a jump to a jump (i-7d2612-ec59a0); threaded by hand, 55 |
+| scanner | 2 / 2 per empty cell (was 3) | 7 / 6 | 54, 58 / 56, 57 (was 42) | closed by jump threading (d-7d2612-3f3f32) |
 | SEQ scanner | — | — | — | not expressible (i-7d2612-2581ff) |
 | imp spiral, quickscan | — | — | — | need label arithmetic or constants (i-7d2612-a3f2b6) and compile-time repetition (i-7d2612-8e9549) |
 
@@ -254,12 +254,15 @@ first).
 (a phase-4 warning).
 
 ### Peephole cleanup of jumps · i-7d2612-ec59a0
-**State.** Planned (phase 3).
+**State.** Half done (s-7d2612-14641b): jumps to jumps are threaded, pulled forward into phase 2 by
+the user (d-7d2612-3f3f32, `Compile.thread_jumps`). Still planned: a `JMP` to the next cell, an `if`
+whose body is empty.
 Jumps to jumps, a `JMP` to the next cell, an `if` whose body is empty: local rewrites over the
 emitted sequence, each kept only when `--report` shows the policy's metric improving.
 **Measured** (s-7d2612-14641b): the RED scanner's `if` inside a `repeat` jumps to the `repeat`'s
 `JMP` on every empty cell, 3 cycles against 2 by hand; threading that one jump by hand took its
-benchmark score from 42 to 55 (hand-written: 56). The largest gap the archetypes show.
+benchmark score from 42 to 55 (hand-written: 56). The largest gap the archetypes show; closed by
+threading in the compiler, which scores 54 and 58.
 **Collides with.** Goldens that contain such sequences.
 **Decide first.** Nothing beyond the policy.
 

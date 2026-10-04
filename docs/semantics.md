@@ -128,6 +128,13 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the
 jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-fffa6c).
 
+**Jump threading** (d-7d2612-3f3f32). After the scheme above, a jump the compiler generated whose
+target cell holds a `JMP` the compiler generated is aimed at that `JMP`'s target, along a chain until
+a label repeats. `(repeat (seq e (if c e')))` therefore emits `⟦c⟧pre→_REPn` instead of
+`⟦c⟧pre→_IFn`; `_IFn` still labels the `JMP _REPn`, which `e'` reaches by falling through. The
+cells are the same and each taken jump saves a cycle. Jumps and `JMP`s the user wrote are never
+rewritten or followed: their targets may change at run time.
+
 ## 6. Correctness, and how it is checked
 
 **The statement**, in the shape CompCert uses: for every program `P` in the structured fragment

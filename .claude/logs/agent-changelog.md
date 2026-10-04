@@ -28,6 +28,15 @@ its net step (i-7d2612-fbe7c8).
 **What went wrong.** A first SEQ-scanner attempt used the label `cmp`, a pMARS keyword: the parser
 rejected it, as designed. The Wilkies score of one warrior varies by up to 4 points between runs at
 500 rounds, so single runs would have shown gaps that are noise; every score here is two runs.
+**Then, on the user's decisions.** Jump threading (d-7d2612-3f3f32, `Compile.thread_jumps`): a
+generated jump that lands on a generated `JMP` goes to its target. Only the scanner archetype's
+golden changed, `JMZ.B $_IF9` to `JMZ.B $_REP4`; the behavioural reason: an empty cell now costs 2
+cycles, not 3 (its spec now probes that), and the warrior scores 54 and 58 against 56 and 57 by
+hand (was 42). No `prog*` golden had a jump to a jump. The two guard tests (a user's jump, a user's
+`JMP`) were mutated to see each fail. Threading split the scanner's `repeat` into two loops in
+`--report`, because `Layout` keyed a loop by the construct that emitted its back edge; it is now
+keyed by the label the back edge jumps to (cost-model spec updated). The 21-branch metric test's
+minimum moved from 22 to 21 cycles: its last `if` now jumps straight to the loop head.
 **Left undone.** Imp spiral and quickscan (need label arithmetic or constants and compile-time
 repetition), Mice's copy-by-index and a Silk-style paper; the benchmark is a script described in the
 research note, not a check (i-7d2612-f27a91). The decisions the gaps raise are put to the user, not
