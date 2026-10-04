@@ -30,7 +30,19 @@ expression operand counted every cell; counting a label plus a number from its l
 the first version left out the epilogue cell (off by one) and did not take addresses modulo the core
 (`first+8003`, and since the phase-3 peephole `$7998`, counted nothing across); both found by
 reasoning about the quickscan's hit variant, each pinned by a test watched failing.
-**Left undone.** The quickscan archetype and the new measurement, as the session goes.
+The quickscan archetype (`archetypes/quickscan.{src,red}`, two templates and two `for`s), with
+specs for the empty-core path and for a hit (`behtests/archetype_quickscan.beh`,
+`behtests/quickscan_hit.beh`, both mutated). Measured with `bench.py --hill`: the RED quickscan and
+core-clear score exactly as their hand-written twins (33.6 / 25.8, #1044; 46.6 / 18.8, #1029; was
+#1045); `docs/research/2026-10-04-benchmark.md`, phase-6 section.
+**What went wrong, measuring.** The first hit spec counted cells from a numbered listing that
+included a blank line: off by one, caught by the spec's own run. The host pMARS traps (exit 133) on
+the hand-written quickscan against RetroQ and the core-clear against two opponents; `bench.py`
+leaves them out (i-7d2612-0cb9e9). A backtrace under `lldb --batch` hung (likely the macOS
+debugging prompt) and was stopped.
+**Left undone.** The bench baseline (`tools/bench_baseline.json`) with the quickscan; the snippets
+catalogue (i-7d2612-8e9549); a Silk-style paper and Mice; unary skip fusion (i-7d2612-40b941); the
+pMARS trap's cause (i-7d2612-0cb9e9).
 
 ## 2026-10-04 · s-7d2612-9b0d20 — Phase 5: hills, metadata, benchmark, behaviour specs and the documentation review
 

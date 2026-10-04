@@ -32,9 +32,17 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 | SEQ scanner | 3 / 3 per pair of empty cells | 9 / 7 | 37, 37 / 36, 37 | expressible with `(NE I ...)` (d-7d2612-8f9340); +1 cell for the pointers, +1 epilogue |
 | imp ring (3 points) | 1 / 1 per process | 9 / 8 | 76, 76 / 76, 77 | none but the epilogue; written with constants and label arithmetic (d-7d2612-d9339f) |
 | imp spiral (2 waves) | 1 / 1 per process | 13 / 12 | 70.5 / 70.5 (fixed seed) | none but the epilogue |
-| quickscan | — | — | — | waits for compile-time repetition, the macro layer (i-7d2612-ec4d2d), by the user's decision |
+| quickscan (16 probes) | 1 / 1 per probe on empty core | 73 / 72 | 33.6 / 33.6 (fixed seed) | none but the epilogue: written with templates and `for` (d-7d2612-c4e274), each probe's `if` fused into a skip (d-7d2612-6222c1) |
 
 ## Where we are
+
+**Phase 6 is built** (s-7d2612-140ece, branch `feat/phase-6` on `feat/phase-5`, not merged): A-field
+modes on numbers, labels and expressions (i-7d2612-e98368), `(start label)` emitted as `ORG`
+(i-7d2612-e725ef), the macro layer of typed templates and `for` (i-7d2612-ec4d2d), and skip fusion
+under the peephole. The quickscan is the tenth archetype; it and the core-clear now play exactly as
+their hand-written twins (`docs/research/2026-10-04-benchmark.md`, phase-6 section). **Next:** the
+snippets catalogue (i-7d2612-8e9549), a Silk-style paper with `}` (i-7d2612-34b61d), a quickscan
+handing over to a paper or stone, unary skip fusion (i-7d2612-40b941).
 
 **Phase 5 is built** (s-7d2612-9b0d20, branch `feat/phase-5` on `feat/phase-4`, not merged):
 hills by header or flag, metadata as written, `make bench` against Wilkies and Koenigstuhl's top
@@ -215,9 +223,8 @@ Write the classic warriors in RED and measure each against its hand-written form
 **State.** Half done (s-7d2612-14641b). Seven archetypes — imp, dwarf, stone, core-clear, a `JMZ`
 scanner, a SEQ scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
 (`bbctests/archetypes/`), behaviour specs (`behtests/archetype_*.beh`) and the measurements in
-`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd); an imp spiral with two processes per point (s-7d2612-9b0d20). **Still missing:** a quickscan (it waits for compile-time repetition), Mice's
-copy-by-index (its pointer precedes its code; RED has no `ORG`), Silk-style paper (its copy runs through an A-field postincrement, `}`, which RED writes only
-through a variable stored in an A-field: expressible, not attempted). The benchmark is `make bench`
+`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd); an imp spiral with two processes per point (s-7d2612-9b0d20); a quickscan written with templates and `for`, scoring exactly as the hand-written one (s-7d2612-140ece). **Still missing:** Mice's
+copy-by-index (expressible since `(start label)`, not attempted), Silk-style paper (expressible since A-field modes on numbers, `(} x)`, not attempted). The benchmark is `make bench`
 (i-7d2612-f27a91).
 Originally planned: Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
 a Silk-style paper: each exercises a different construct (`docs/references.md`, *Corpora*).
@@ -229,7 +236,7 @@ a Silk-style paper: each exercises a different construct (`docs/references.md`, 
 defaults, the do-while layout (phase 1); a modifier on conditions (d-7d2612-8f9340); what a cell
 means beside a value (d-7d2612-891901); constants and expressions (d-7d2612-d9339f). Not designed:
 compound operators. No archetype needs one today: the SEQ scanner uses `(NE I ...)`, bombers write
-`MOV I`; the quickscan waits for repetition, not for an operator. Carries the decisions recorded in
+`MOV I`; the quickscan needed repetition, not an operator (written since the macro layer). Carries the decisions recorded in
 i-7d2612-fffa6c, i-7d2612-96f7b1 and i-7d2612-425c66.
 **Collides with.** d-7d2612-5b410d ends here: C changes emitted code, so every changed golden needs
 its behavioural reason (d-7d2612-6a1527), measured with the cost model.
@@ -340,6 +347,16 @@ benchmark score from 42 to 55 (hand-written: 56). The largest gap the archetypes
 threading in the compiler, which scores 54 and 58.
 **Collides with.** Goldens that contain such sequences.
 **Decide first.** Nothing beyond the policy.
+**Since** (s-7d2612-140ece, d-7d2612-6222c1): an `EQ`/`NE` `if` around one instruction is fused into
+the inverted skip, and a label plus a number counts cells from its label, modulo the core.
+
+### Unary skip fusion · i-7d2612-40b941
+**State.** Planned (s-7d2612-140ece). A `JZ`/`JN` `if` around one instruction (`JMN fin, x; X;
+fin:`) could be `SNE #0, x; X` (or `SEQ`), as skip fusion does for `EQ`/`NE`: one cell and one
+cycle less. **Collides with.** The field the comparison reads: `SNE.AB #0, x` compares with x's
+B-field, `SNE.A #0, x` with its A-field, and the modifier rules (d-7d2612-891901) must pick the one
+the `JMZ` tested. A `JMZ.F` (both fields zero) has no single-skip form. **Decide first.** Whether the policy may trade a `JMZ.F` for
+two skips.
 
 ## Phase 4 — Warnings
 
@@ -463,6 +480,14 @@ errors, then make the file say so.
 **State.** Planned. `TUTORIAL.md` is a title only. Programming games that teach assembly (TIS-100,
 EXAPUNKS) teach through small constrained goals with cycle and size counts; a tutorial built from
 the classic-warriors item (i-7d2612-34b61d) would reuse those programs.
+
+### Host pMARS traps on some battles · i-7d2612-0cb9e9
+**State.** Planned (s-7d2612-140ece). `_build/pmars-host/pmars` (built by `tools/pmars-host.sh` with
+`-O`) exits with code 133, a trap, on a few battles: the hand-written quickscan against RetroQ with
+seeds 4000 and 4001 (not 1234); the hand-written core-clear against RetroQ and Floody River.
+`tools/bench.py` leaves such an opponent out and says so. **Suspected** (not checked): undefined
+behaviour in pMARS 0.9.4 that clang turns into a trap; 0.9.5 lists overflow and bounds fixes
+(i-7d2612-494e75). **Next step.** A backtrace under lldb, and the same battles under 0.9.5.
 
 ### pMARS 0.9.5 · i-7d2612-494e75
 **State.** Planned. Released 2026-01-03 with overflow and bounds fixes; builds on macOS without the

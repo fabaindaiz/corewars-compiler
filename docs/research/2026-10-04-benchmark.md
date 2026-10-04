@@ -34,7 +34,7 @@ paper, imp ring and imp spiral, on both sets: the compiled code plays the same g
 differ do so by layout, not by cost: the scanner (RED 62.5 / 44.5, hand 58.9 / 42.0: its pointer in
 the loop's `JMP`, measured before as the reason), the SEQ scanner (38.9 / 24.1 against 36.2 / 21.2:
 the same) and the core-clear (42.1 / 15.9 against 46.6 / 18.8: RED's pointer cell comes after the
-code, the hand-written one before it with `END top`; RED has no `ORG`). The north star
+code, the hand-written one before it with `END top`; RED has no `ORG`; closed since, below). The north star
 (d-7d2612-e006c2), near-zero overhead against the hand-written form, holds for every archetype.
 
 ## The distance to the best: strategy, not compilation
@@ -56,7 +56,8 @@ code, the hand-written one before it with `END top`; RED has no `ORG`). The nort
 | imp spiral (RED) | 70.5 | 40.7 | 52.4 | #978 |
 | dwarf (RED) | 48.6 | 28.4 | 50.0 | #990 |
 | SEQ scanner (RED) | 39.0 | 24.1 | 40.4 | #1031 |
-| core-clear (RED) | 42.1 | 15.9 | 36.8 | #1045 |
+| core-clear (RED, with `(start top)`) | 46.6 | 18.8 | 41.0 | #1029 (was 42.1, 15.9, 36.8, #1045) |
+| quickscan (RED) | 33.6 | 25.8 | 37.2 | #1044 |
 
 The top warriors' "top 20" scores leave out the battle against themselves (the first version of this
 table included it).
@@ -72,12 +73,12 @@ constants tuned by optimizers, several by an evolver, Forge-AI). The compiled fo
 their hand-written twins, so closing the gap is writing better warriors, and what RED cannot yet
 write is what keeps the top strategies out of reach:
 
-- **compile-time repetition**: a quickscan is a score of unrolled comparisons (waits for the macro
-  layer, by the user's decision, i-7d2612-ec4d2d);
+- **compile-time repetition**: a quickscan is a score of unrolled comparisons (the macro layer,
+  i-7d2612-ec4d2d; built in phase 6, below);
 - **an A-field postincrement on a number** (`}`): the fast Silk-style paper copies through one;
-  RED writes `}` only through a variable stored in an A-field (i-7d2612-e98368);
+  RED wrote `}` only through a variable stored in an A-field (i-7d2612-e98368; built in phase 6);
 - **an entry point other than the first cell** (`ORG`/`END`): warriors that keep data before code
-  (i-7d2612-e725ef);
+  (i-7d2612-e725ef; built in phase 6);
 - **a phase change**: switching from a scan to a clear when the scan ends is written today with
   labels and jumps, outside the structured fragment.
 
@@ -94,6 +95,37 @@ A sweep of the paper's two constants (distance 2000 or 3200, step 1471, 2365, 30
 one-line change to an `EQU`, moved it by at most 5 points against Wilkies and 9 against the top
 20; the best was the archetype's own (2000, 2365) or (2000, 1471): 71.2. The paper's limit is its
 design (one process copying seven cells), not its constants.
+
+## Phase 6: the three gaps closed (s-7d2612-140ece)
+
+Measured the same way, `python3 tools/bench.py --hill` (fixed seed, one run at a time):
+
+| Warrior | Wilkies | Koenigstuhl top 20 | recursive (estimated) | place of 1107 |
+|---|---|---|---|---|
+| core-clear (RED, `(start top)`) | 46.6 | 18.8 | 41.0 | #1029 |
+| core-clear (hand) | 46.6 | 18.8 | 41.0 | #1029 |
+| quickscan (RED, a template and `for`) | 33.6 | 25.8 | 37.2 | #1044 |
+| quickscan (hand) | 33.6 | 25.8 | 37.2 | #1044 |
+
+- **Entry point.** With `(start top)` the RED core-clear keeps its pointer before its code, as the
+  hand-written one does, and plays the same game: 42.1 / 15.9 / #1045 became 46.6 / 18.8 / #1029.
+- **Repetition.** The quickscan (`archetypes/quickscan.src`: sixteen probes 400 cells apart, a stub
+  per probe that points the bomber at the difference, then a core-clear) is written with a `probe`
+  and a `hit` template and two `for`s. Its first form took 89 cells to the hand-written 72 and scored
+  33.1 / 20.4 against 33.6 / 25.8: each `if` around its `JMP` cost a jump. Skip fusion
+  (d-7d2612-6222c1) compiles such an `if` to the inverted skip; the warrior is now 73 cells (the
+  hand-written 72 and the epilogue) and scores exactly as the hand-written one.
+- **A-field modes.** Built (`(} x)`, d-7d2612-0e831c) and specified (`behtests/afield_postincrement.beh`);
+  the Silk-style paper that needs them is not written yet (i-7d2612-34b61d).
+
+A quickscan alone places low (#1044): on the hill it is the first phase of a paper or a stone, which
+it hands over to once the scan ends. Neither new archetype beats the stone (#899): the distance to
+the top is still the strategy, now written without a compiler cost on these archetypes.
+
+**pMARS on this machine.** The host build (`tools/pmars-host.sh`) traps (exit 133) on a few battles:
+the hand-written quickscan against RetroQ with seeds 4000 and 4001 (not 1234), the hand-written
+core-clear against RetroQ and Floody River. `bench.py` leaves such an opponent out and says so; one
+opponent of 1107 moves a mean by at most about 0.3 points. The cause is not known (i-7d2612-0cb9e9).
 
 ## Reproducing
 
