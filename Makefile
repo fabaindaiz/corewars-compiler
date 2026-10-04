@@ -43,6 +43,9 @@ else
 	dune exec execs/run_test.exe -- test '^([^e]|e[^x]|ex[^e]).*$$'  # every group but execute
 	@echo "check-ocaml: the execute group did not run ($(PLATFORM) cannot run pmars/pmars)"
 endif
+	# End to end: the CLI exports (expect ...) as a behaviour spec, and pMARS runs it.
+	dune exec execs/run_compile.exe -- --emit-beh _build/prog7_expect.beh examples/prog7_expect.src > /dev/null
+	python3 tools/behave.py _build/prog7_expect.beh
 
 clean: clean-tests
 	dune clean
