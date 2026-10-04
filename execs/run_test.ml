@@ -851,6 +851,11 @@ let test_review3_rotated_while_is_the_while () =
   check Alcotest.int "an if-else body: still one loop" 1
     (List.length (loops "(let (x 3) (seq (while (JN x) (if (JN x) (SUB 1 x) (SUB 2 x))) (DAT 0 (store x))))"))
 
+let test_review3_peephole_keeps_numeric_spans () =
+  (* JMP $2 and ADD $-2 count cells across the empty if: removing its jump would move their targets *)
+  check ops "kept" [IJMP; IDAT; IJMZ; IADD; IJMP; IDAT; IDAT]
+    (opcodes (chosen "(let (x 1) (seq (JMP (Dir 2)) (DAT 7 7) (if (JN x) (seq)) (ADD (Dir -2) c) (JMP 0) (DAT (store x) 0) (label c) (DAT 0 0)))"))
+
 
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
@@ -977,6 +982,7 @@ let ocaml_tests = [
   "review3", [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
+    test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
   ] ;
   "phase3", [
     test_case "a unary while is rotated" `Quick test_phase3_unary_while_rotated ;

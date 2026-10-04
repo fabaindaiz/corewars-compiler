@@ -293,7 +293,8 @@ let thread_jumps (body : emitted list) : emitted list =
 (* A generated JMP, JMZ or JMN aimed at the next cell does nothing but cost a cycle and a cell (an
    empty if or else, an empty rotated while). It stays when removing it would change more than
    that: the cell before can skip (it would skip a different cell), its operand decrements or
-   increments, it holds a variable, or it carries a user's label. Its labels move to the next cell,
+   increments, it holds a variable, it carries a user's label, or a numeric offset counts cells
+   across it (JMP $2 over it would land one cell further). Its labels move to the next cell,
    where it went anyway. Removing one can make another jump aim at its next cell: repeated until
    nothing changes. *)
 let rec peephole (body : emitted list) : emitted list =
@@ -309,10 +310,18 @@ let rec peephole (body : emitted list) : emitted list =
     | INSTR ((IDAT | ISPL | IJMP | INOP | IMOV | IADD | ISUB | IMUL | IDIV | IMOD | IJMZ | IJMN | IDJN
              | ILDP | ISTP), _, _, _) | ILAB _ | ICOM _ -> false) in
   let user_label l = not (String.starts_with ~prefix:"_" l) in
+  (* Cells between an operand written as a number and the cell it counts to, both ends included. *)
+  let spans = List.concat (List.mapi (fun j ((e : emitted), _) -> match e.instr with
+    | INSTR (_, _, a, b) ->
+      List.filter_map (fun r -> match r with
+        | RRef ((RDir | RAInd | RBInd | RADec | RBDec | RAInc | RBInc), n) -> Some (j, min j (j + n), max j (j + n))
+        | RRef (RImm, _) | RLab _ | RNone -> None) [a; b]
+    | ILAB _ | ICOM _ -> []) (Array.to_list cells)) in
+  let counted i = List.exists (fun (j, lo, hi) -> j <> i && lo <= i && i <= hi) spans in
   let dead i = match cells.(i) with
     | ({ instr = INSTR ((IJMP | IJMZ | IJMN), _, RLab (RDir, l), b); construct = Some _; stores = []; _ }, labels) ->
       Hashtbl.find_opt at l = Some (i + 1) && not (skips (i - 1)) && not (moves_a_pointer b)
-      && not (List.exists user_label labels)
+      && not (List.exists user_label labels) && not (counted i)
     | ({ instr = INSTR _ | ILAB _ | ICOM _; _ }, _) -> false in
   match List.find_opt dead (List.init (Array.length cells) Fun.id) with
   | None -> body
