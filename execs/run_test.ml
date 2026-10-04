@@ -584,6 +584,19 @@ let test_phase1_icws_default_modifiers () =
       ("(JMZ (Dir 2) (Dir 1))", RB) ]      (* jumps: .B *)
 
 
+(* Tests from the phase-1 branch review *)
+let jump_modifier (src : string) : rmod option =
+  List.find_map (fun (e : emitted) -> match e.instr with
+    | INSTR ((IJMZ | IJMN | IDJN), md, _, _) -> Some md | INSTR _ | ICOM _ | ILAB _ -> None)
+    (compile_body (parse_exp (sexp_from_string src)))
+
+let test_review1_unary_jump_uses_variable_field () =
+  List.iter (fun (src, md) -> check (Alcotest.option rmod_t) src (Some md) (jump_modifier src))
+    [ ("(let (x 2) (seq (DAT (store x) 0) (DJN (Dir -1) x)))", RA);   (* x in A: DJN.A *)
+      ("(let (x 2) (seq (DAT 0 (store x)) (JMN (Dir -1) x)))", RB);   (* x in B: JMN.B *)
+      ("(let (x 2) (seq (DAT (store x) 0) (JMZ (Dir -1) (# x))))", RB) ] (* #x is the B-number: .B *)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -679,6 +692,9 @@ let ocaml_tests = [
     test_case "generated labels start with _" `Quick test_phase1_generated_labels_prefixed ;
     test_case "no modifier given: the ICWS'94 default" `Quick test_phase1_icws_default_modifiers ;
     test_case "tags are numbered as before" `Quick test_phase1_tags_unchanged_by_locations ;
+  ] ;
+  "review1", [
+    test_case "a user JMZ/JMN/DJN uses its variable's field" `Quick test_review1_unary_jump_uses_variable_field ;
   ] ;
   "interp", [
 

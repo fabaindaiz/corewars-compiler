@@ -49,12 +49,22 @@ let immediate (carg : carg) : bool =
   match carg with
   | ACRef (m, _) | ACLab (m, _) | ACVar (m, _) | ACPnt (m, _) -> m = MImm
 
+(* JMZ/JMN/DJN test or decrement one field of their B-target, and their A operand is only where
+   to jump: the field the tested variable is stored in decides (.A or .B). An immediate #x is the
+   instruction's own B-number, and anything else is tested on its B-field (the ICWS'94 default). *)
+let jump_modifier (carg2 : carg) (env : env) : rmod =
+  if immediate carg2 then RB
+  else match carg_to_opmod carg2 env with
+    | TA -> RA
+    | TB | TNum | TRef -> RB
+
 (* With no modifier written, the variables' fields decide (opmod_to_rmod); where they do not, the
    ICWS'94 default for the opcode, as pMARS would give the same redcode written by hand. *)
 let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (opcode : opcode) (env : env) : rmod =
   let mod1 = (carg_to_opmod carg1 env) in
   let mod2 = (carg_to_opmod carg2 env) in
   match imod with
+  | MDef when (opcode = IJMZ || opcode = IJMN || opcode = IDJN) -> jump_modifier carg2 env
   | MDef -> (opmod_to_rmod mod1 mod2 (default_modifier opcode ~a_imm:(immediate carg1) ~b_imm:(immediate carg2)))
   | MN -> RN
   | MA -> RA
@@ -119,11 +129,7 @@ let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag
     let opcode = (compile_cond1 op mode) in
     let _, rarg1 = (compile_arg a1 env) in
     let carg2, rarg2 = (compile_arg a2 env) in
-    (* JMZ/JMN/DJN test or decrement one field of their B-target: the field the tested variable
-       is stored in, .B otherwise (the ICWS'94 default). *)
-    let rmod = (match carg_to_opmod carg2 env with
-      | TA -> RA
-      | TB | TNum | TRef -> RB) in
+    let rmod = jump_modifier carg2 env in
     [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))]
   | Cond2 (op, a1, a2) ->
     let opcode, a1, a2, always_skip = (compile_cond2 op mode a1 a2) in

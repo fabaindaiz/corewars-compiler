@@ -1,0 +1,6 @@
+# x = 2 in the A-field: DJN.A decrements it to 1 (jump), to 0 (fall through), then the epilogue DAT.
+# A .B would decrement the B-field (0 -> 7999) and loop for thousands of iterations.
+golden: bbctests/examples/user_djn_afield.bbc
+alive 3
+cell 3 1 DAT.F #0, #0
+dead 4

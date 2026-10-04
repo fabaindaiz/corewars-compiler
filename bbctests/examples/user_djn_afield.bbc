@@ -1,0 +1,18 @@
+NAME: user DJN on an A-field variable
+DESCRIPTION: DJN top x with x stored in an A-field decrements that field (.A); i-7d2612-3744e5, see behtests/user_djn_afield.beh
+SRC:
+(let (x 2)
+  (seq
+    (JMP (Dir 2))
+    (DAT (store x) 0)
+    (label top)
+    (DJN top x) ))
+EXPECTED:
+;redcode-94b
+
+  JMP    $2     , #0     
+_LET1 
+  DAT    #2     , #0     
+top   
+  DJN.A  $top   , $_LET1 
+  DAT    #0     , #0     

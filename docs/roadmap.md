@@ -110,6 +110,19 @@ never defined) or two (defined twice), a user label that is a pMARS reserved wor
 user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every golden changes once.
 The user chose `_` (2026-10-04). Built in phase 1.
 
+### A variable next to a plain reference loses its field to the default modifier · i-7d2612-9efd00
+**State.** Planned. Known-failing: `behtests/mixed_operand_field.beh`, golden
+`bbctests/known-bugs/mixed_operand_field.bbc`. Found by the phase-1 branch review.
+`opmod_to_rmod` decides only when both operands are numbers or variables; a variable beside a plain
+reference (`(MOV x (Dir -1))`, `(SLT x label)`) falls to the ICWS'94 default, so with `x` in an
+A-field `MOV.I` copies the whole cell instead of `x`'s value. Before phase 1 the fallback was `.I`
+for every opcode; user-written `JMZ`/`JMN`/`DJN`, where the variable is the only tested operand, were
+fixed in the same review (`jump_modifier`, `behtests/user_djn_afield.beh`).
+**Collides with.** Every golden with a variable beside a plain reference (none today but this one).
+**Decide first.** What a plain reference means beside a variable: its B-field (so `MOV.AB`,
+`SLT.AB`, `MOV.BA` …), its whole cell, or a compile error asking for an explicit modifier — part of
+the operator design of phase 2 (i-7d2612-7eadd5).
+
 ### Fallback modifier .I differs from the ICWS'94 defaults · i-7d2612-96f7b1
 **State.** Done (s-7d2612-2c7e4d). `compile_mod` falls back to `Red.default_modifier` (the A.2.1.1
 table) instead of `.I`. Two goldens changed, checked line by line (`prog3`, `prog5`: `ADD`/`SUB .I` →
