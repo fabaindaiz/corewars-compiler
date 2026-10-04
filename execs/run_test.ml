@@ -710,6 +710,12 @@ let test_phase2_self_loop_terminates () =
   check strings "JMP" [first_label "_REP" is] (targets IJMP is)
 
 
+(* Tests from the phase-2 branch review *)
+let test_review2_unary_arity_message () =
+  check Alcotest.string "error" "p.src:1:5: error: Not a valid unary cond: (JZ F F x)\n"
+    (error_of "(if (JZ F F x) (NOP))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -824,6 +830,9 @@ let ocaml_tests = [
     test_case "a condition takes a modifier" `Quick test_phase2_condition_modifier ;
     test_case "a condition's bad modifier is an error" `Quick test_phase2_condition_bad_modifier ;
     test_case "a labelled DAT never run is data" `Quick test_phase2_labelled_dat_is_data ;
+  ] ;
+  "review2", [
+    test_case "a unary cond with too many arguments" `Quick test_review2_unary_arity_message ;
   ] ;
   "interp", [
 

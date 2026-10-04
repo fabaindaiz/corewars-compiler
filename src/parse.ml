@@ -109,16 +109,18 @@ let cond2_op (cop : sexp) : cond2 option =
 
 let parse_cond (sexp : sexp) : cond =
   let bad kind = fail sexp (sprintf "Not a valid %s cond: %s" kind (to_string sexp)) in
+  (* The wrong number of arguments for a known operator is named after the operator's kind. *)
+  let kind cop = if cond1_op cop <> None then "unary" else "binary" in
   match sexp with
   | `List [cop; a] ->
-    (match cond1_op cop with Some op -> Cond1 (op, MDef, parse_arg a) | None -> bad "unary")
+    (match cond1_op cop with Some op -> Cond1 (op, MDef, parse_arg a) | None -> bad (kind cop))
   | `List [cop; x; y] ->
     (match cond1_op cop, cond2_op cop with
     | Some op, _ -> Cond1 (op, parse_imod x, parse_arg y)
     | None, Some op -> Cond2 (op, MDef, parse_arg x, parse_arg y)
     | None, None -> bad "binary")
   | `List [cop; m; a1; a2] ->
-    (match cond2_op cop with Some op -> Cond2 (op, parse_imod m, parse_arg a1, parse_arg a2) | None -> bad "binary")
+    (match cond2_op cop with Some op -> Cond2 (op, parse_imod m, parse_arg a1, parse_arg a2) | None -> bad (kind cop))
   | _ -> fail sexp (sprintf "Not a valid cond: %s" (to_string sexp))
 
 let parse_int (sexp : sexp) : int =
