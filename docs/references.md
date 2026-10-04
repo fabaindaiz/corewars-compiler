@@ -15,9 +15,9 @@ rest on. URLs were checked on 2026-10-02.
   `GT`); the default `ORG 0` start, so emitting no `ORG`/`END` is correct; core values are stored in
   `0..CORESIZE-1`, so comparisons are unsigned.
 
-  **What we do differently, on purpose:** nothing yet. *Not on purpose:* the `.I` fallback modifier
-  (the A.2.1.1 default table says `.B` for `SLT`/`JMZ`/`JMN`/`DJN`), and the post-condition `SLT`
-  layout, which is not strict at equality *(measured)*.
+  **What we do differently, on purpose:** nothing. **Applied since phase 1:** the A.2.1.1 default
+  table where no variable decides the modifier (`Red.default_modifier`, i-7d2612-96f7b1), and a strict
+  post-condition `SLT` layout (i-7d2612-fffa6c).
 
   **Not applied yet:** `DIV`/`MOD` by zero kills the process; `SLT.I` behaves as `SLT.F`.
 
@@ -170,7 +170,7 @@ shaped it:
 | If you are about to touch… | Read | And watch out for |
 |---|---|---|
 | `compile_cond`, `compile_cond2`, any loop layout | ICWS'94 `SLT`/`JMZ`/`DJN`; `docs/semantics.md` *Dynamics* | strict `<`, unsigned values; i-7d2612-fffa6c |
-| `opmod_to_rmod`, modifiers | ICWS'94 A.2.1.1 | the `.I` fallback (i-7d2612-96f7b1); `.I` changes `SLT` to "both fields" |
+| `opmod_to_rmod`, modifiers | ICWS'94 A.2.1.1 | variables' fields first, then `Red.default_modifier`; `.I` turns `SLT` into "both fields" |
 | label generation, `tag_expr` | CC5116 notes; `docs/architecture.md` *Generated labels* | every golden contains the numbering; user-label collisions |
 | `analyse.ml`, `lib.ml`, `rename.ml` environments | Siek (uniquify); `docs/semantics.md` *Statics* | names are unique after `Rename.uniquify`; analysis may rely on it |
 | errors | RWO error handling | raise `Ast.error`, never a new exception; internal states are `failwith` |

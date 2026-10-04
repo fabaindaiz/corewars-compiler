@@ -30,6 +30,16 @@ annotated type (`loc eexpr`, then `meta eexpr` after tagging), `Ast.Error` repla
 keywords, and two stores of one variable are an error (no golden changed). Migrated generated labels to the
 `_` prefix (i-7d2612-425c66): 15 goldens changed, each proven by script to equal its old EXPECTED
 with the labels renamed (padding kept to the printer's `%-6s`); `label_collision` promoted.
+Adopted the ICWS'94 default modifiers where no variable decides (i-7d2612-96f7b1): `prog3` and `prog5`
+changed (`ADD`/`SUB .I` → `.AB`), checked line by line; new golden and spec `add_default_modifier`.
+While writing that spec, found a bug in `tools/behave.py`: a `cell` probe read the first listing of
+the address, which for cell 0 is cdb's start-up line, before anything runs; it now reads the last
+(`list`'s). `behtests/prog1_dwarf.beh` proves it (the old runner reads `$3`, the real cell holds `$7`).
+**What went wrong on the way.** The first assertion for the modifier migration replaced `.I ` on
+every line and so failed on the unchanged `MOV.I`s; narrowed to `ADD`/`SUB`. The prefix migration's
+first comparison failed on every original golden: they end without the last line's padding, the
+newer ones keep it; the comparison now keeps each file's own ending. Two column numbers in the
+located-error tests were miscounted by hand (19 for 18) and corrected before the implementation.
 **Measured.** `behtests/cond1_afield.beh`: alive after 50 instructions (was dead).
 `behtests/let_shadowing.beh`: cell 1 holds `DAT.F #5, #0` after JMP and ADD (was `#1, #4`).
 

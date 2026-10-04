@@ -125,3 +125,14 @@ let pp_instruction (opcode : instruction) : string =
 (* red instruction list to string *)
 let pp_instrs (instrs : instruction list) : string =
   List.fold_left (fun res i -> res ^ "\n" ^ (pp_instruction i)) "" instrs
+
+
+(* ICWS'94 A.2.1.1: the modifier an instruction takes when none is written, from its opcode and
+   whether its A and B operands are immediate. *)
+let default_modifier (op : opcode) ~(a_imm : bool) ~(b_imm : bool) : rmod =
+  match op with
+  | IDAT | INOP -> RF
+  | IMOV | ISEQ | ISNE | ICMP -> if a_imm then RAB else if b_imm then RB else RI
+  | IADD | ISUB | IMUL | IDIV | IMOD -> if a_imm then RAB else if b_imm then RB else RF
+  | ISLT | ILDP | ISTP -> if a_imm then RAB else RB
+  | IJMP | IJMZ | IJMN | IDJN | ISPL -> RB

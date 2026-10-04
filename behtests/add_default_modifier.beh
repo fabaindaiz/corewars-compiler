@@ -1,0 +1,5 @@
+# ADD #1, #1 with no modifier written is ADD.AB (ICWS'94 default): it adds its A-number (1) to its
+# own B-number. Under the old .I fallback both fields grew (#2, #2).
+golden: bbctests/examples/add_default_modifier.bbc
+cell 1 0 ADD.AB #1, #2
+alive 20

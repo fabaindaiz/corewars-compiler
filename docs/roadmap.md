@@ -33,7 +33,9 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next:** phase 1 ends with the ICWS'94 default modifiers (i-7d2612-96f7b1), the second golden migration.
+**Phase 1 is complete** (s-7d2612-2c7e4d): every recorded correctness defect is fixed, `bbctests/known-bugs/`
+is empty, errors carry `file:line:col`, and generated labels are reserved. **Next:** phase 2, the
+classic archetypes written in RED as the acceptance suite (i-7d2612-34b61d).
 
 ## Phase 1 — Correctness, before the output changes
 
@@ -109,8 +111,11 @@ user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every g
 The user chose `_` (2026-10-04). Built in phase 1.
 
 ### Fallback modifier .I differs from the ICWS'94 defaults · i-7d2612-96f7b1
-**State.** Planned. No spec yet.
-When `opmod_to_rmod` cannot decide (two references, no variable), the compiler emits `.I`
+**State.** Done (s-7d2612-2c7e4d). `compile_mod` falls back to `Red.default_modifier` (the A.2.1.1
+table) instead of `.I`. Two goldens changed, checked line by line (`prog3`, `prog5`: `ADD`/`SUB .I` →
+`.AB`); new golden and spec `add_default_modifier` pin the effect in the core. Compound operators
+remain for phase 2 (i-7d2612-7eadd5).
+Before the fix, when `opmod_to_rmod` could not decide (two references, no variable), the compiler emitted `.I`
 (`SLT.I`, `JMZ.I`, `ADD.I #4, #3`). ICWS'94 A.2.1.1 defaults: `SLT`/`JMZ`/`JMN`/`DJN` to `.B`,
 `MOV`/`SEQ`/`SNE` to `.I` only when neither operand is immediate, arithmetic with an immediate
 A-operand to `.AB`. `SLT.I` requires both `A<A` and `B<B`.

@@ -24,8 +24,10 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
 - **A variable is read and written through the modifier that selects its field** (A or B, decided
   by where its `(store x)` sits). The wrong modifier reads the other field of the same cell.
   Enforced: `behtests/` (`cond1_afield.beh`, `let_shadowing.beh`).
-- **With no modifier given, emit the ICWS'94 default, or document the deviation.** Enforced: —.
-  **Undecided today:** the `.I` fallback (i-7d2612-96f7b1).
+- **With no modifier given, the variables' fields decide; where they do not, the ICWS'94 default**
+  (`Red.default_modifier`, d-7d2612-7aad26), so the compiled code does what the same redcode written
+  by hand does in pMARS. Enforced: `test_phase1_icws_default_modifiers`,
+  `behtests/add_default_modifier.beh`.
 - **Generated labels never collide with user labels or pMARS reserved words.** pMARS only warns on
   a redefinition and keeps the first one. Generated labels start with `_`, which user names may not
   (d-7d2612-bd5def). Enforced: the parser (`test_phase1_reserved_prefix_rejected`),
@@ -108,8 +110,8 @@ history: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
 - **Types.** dune's `dev` profile is the strictness level: unused opens and values and
   non-exhaustive matches are errors (the `cored` profile in `dune-workspace` is never selected,
   i-7d2612-ceee87). Never silence a warning or add a `| _ ->` to make a build pass: a wildcard
-  hides every constructor added later, as the `| _, _ -> rmod` fallback in `opmod_to_rmod` shows
-  (i-7d2612-96f7b1).
+  hides every constructor added later, as the `| _, _ -> rmod` fallback in `opmod_to_rmod` showed
+  (it silently produced `.I`; i-7d2612-96f7b1).
 - **Errors.** A user's mistake is `Ast.Error` (raise it with `Ast.error msg`; `compile_expr` adds the
   node's location), printed `file:line:col: error: ...` with exit 1; an impossible state is
   `failwith`, printed as an internal error with exit 2 (d-7d2612-8bba52). No other `*Error`

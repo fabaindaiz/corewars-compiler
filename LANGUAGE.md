@@ -101,7 +101,7 @@ A useful case where to declare them explicitly is when you want to target the en
 - X both fields to the opposite fields
 - I the whole instruction
 
-When the compiler cannot infer a modifier from the variables involved (for example, two plain references), it uses `.I`, which differs from the ICWS'94 default for `SLT`, `JMZ`, `JMN`, `DJN` and arithmetic; whether to keep this is undecided (i-7d2612-96f7b1).
+When no variable decides the modifier (for example, two plain references or numbers), the instruction takes the ICWS'94 default, exactly what pMARS gives the same instruction written by hand: `MOV`/`SEQ`/`SNE` `.AB` with an immediate A, `.B` with only an immediate B, `.I` otherwise; arithmetic the same with `.F` instead of `.I`; `SLT`/`LDP`/`STP` `.AB` with an immediate A, `.B` otherwise; jumps `.B`. So `(ADD 1 1)` is `ADD.AB #1, #1`.
 
 ### redcode instructions
 

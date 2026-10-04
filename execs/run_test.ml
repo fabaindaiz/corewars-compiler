@@ -565,6 +565,25 @@ let test_phase1_generated_labels_prefixed () =
   check Alcotest.(list string) "prog8's labels" ["_LET1"; "_LET2"; "_WHI9"; "_WHF9"] labels
 
 
+let modifier_of (src : string) : rmod option =
+  List.find_map (fun (e : emitted) -> match e.instr with
+    | INSTR (_, md, _, _) -> Some md | ICOM _ | ILAB _ -> None)
+    (compile_body (parse_exp (sexp_from_string src)))
+
+let rmod_t : rmod testable = testable (fun f m -> Format.pp_print_string f ("[" ^ pp_rmod m ^ "]")) (=)
+
+let test_phase1_icws_default_modifiers () =
+  List.iter (fun (src, md) -> check (Alcotest.option rmod_t) src (Some md) (modifier_of src))
+    [ ("(ADD 1 1)", RAB);                  (* arithmetic, A immediate: .AB *)
+      ("(ADD (Dir 1) 0)", RB);             (* arithmetic, only B immediate: .B *)
+      ("(ADD (Dir 1) (Dir 2))", RF);       (* arithmetic, neither: .F *)
+      ("(MOV (Dir 0) (Dir 1))", RI);       (* MOV, neither immediate: .I *)
+      ("(MOV 0 (Dir 1))", RAB);            (* MOV, A immediate: .AB *)
+      ("(SLT (Dir 1) (Dir 2))", RB);       (* SLT, A not immediate: .B *)
+      ("(SEQ (Dir 1) (Dir 2))", RI);       (* SEQ, neither: .I *)
+      ("(JMZ (Dir 2) (Dir 1))", RB) ]      (* jumps: .B *)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -658,6 +677,7 @@ let ocaml_tests = [
     test_case "a pMARS keyword is not a label" `Quick test_phase1_pmars_keyword_label_rejected ;
     test_case "a variable is stored once" `Quick test_phase1_double_store_rejected ;
     test_case "generated labels start with _" `Quick test_phase1_generated_labels_prefixed ;
+    test_case "no modifier given: the ICWS'94 default" `Quick test_phase1_icws_default_modifiers ;
     test_case "tags are numbered as before" `Quick test_phase1_tags_unchanged_by_locations ;
   ] ;
   "interp", [

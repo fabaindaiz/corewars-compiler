@@ -45,11 +45,17 @@ let compile_arg (arg : arg) (env : env) : carg * rarg =
   let rarg = (carg_to_rarg carg env) in
   (carg, rarg)
 
-let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env : env) : rmod =
+let immediate (carg : carg) : bool =
+  match carg with
+  | ACRef (m, _) | ACLab (m, _) | ACVar (m, _) | ACPnt (m, _) -> m = MImm
+
+(* With no modifier written, the variables' fields decide (opmod_to_rmod); where they do not, the
+   ICWS'94 default for the opcode, as pMARS would give the same redcode written by hand. *)
+let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (opcode : opcode) (env : env) : rmod =
   let mod1 = (carg_to_opmod carg1 env) in
   let mod2 = (carg_to_opmod carg2 env) in
   match imod with
-  | MDef -> (opmod_to_rmod mod1 mod2 rmod)
+  | MDef -> (opmod_to_rmod mod1 mod2 (default_modifier opcode ~a_imm:(immediate carg1) ~b_imm:(immediate carg2)))
   | MN -> RN
   | MA -> RA
   | MB -> RB
@@ -59,10 +65,10 @@ let compile_mod (carg1 : carg) (carg2 : carg) (imod : imod) (rmod : rmod) (env :
   | MF -> RF
   | MX -> RX
 
-let compile_args (arg1 : arg) (arg2 : arg) (imod : imod) (rmod : rmod) (env : env) : rmod * rarg * rarg =
+let compile_args (arg1 : arg) (arg2 : arg) (imod : imod) (opcode : opcode) (env : env) : rmod * rarg * rarg =
   let carg1, rarg1 = (compile_arg arg1 env) in
   let carg2, rarg2 = (compile_arg arg2 env) in
-  let rmod = (compile_mod carg1 carg2 imod rmod env) in
+  let rmod = (compile_mod carg1 carg2 imod opcode env) in
   rmod, rarg1, rarg2
 
 
@@ -121,7 +127,7 @@ let compile_cond (cond : cond) (mode : mcond) (label : string ) (env : env) (tag
     [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))]
   | Cond2 (op, a1, a2) ->
     let opcode, a1, a2, always_skip = (compile_cond2 op mode a1 a2) in
-    let rmod, rarg1, rarg2 = (compile_args a1 a2 MDef RI env) in
+    let rmod, rarg1, rarg2 = (compile_args a1 a2 MDef opcode env) in
     let skip = if always_skip then [emit (INSTR (ISNE, RAB, RRef (RImm, 0), RRef (RImm, 1)))] else [] in
     [emit ~stores:(stores_of a1 a2) (INSTR (opcode, rmod, rarg1, rarg2))] @ skip @ [emit (jump_label label)]
 
@@ -158,7 +164,7 @@ let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
   | EPrim2 (op, imod, arg1, arg2, m) -> at m @@ fun () ->
     let tag = m.tag in
     let opcode = (compile_prim2 op) in
-    let rmod, rarg1, rarg2 = (compile_args arg1 arg2 imod RI env) in
+    let rmod, rarg1, rarg2 = (compile_args arg1 arg2 imod opcode env) in
     let labels = List.map (emit ~origin:tag) ((compile_label arg1 env) @ (compile_label arg2 env)) in
     labels @ [emit ~origin:tag ~stores:(stores_of arg1 arg2) (INSTR (opcode, rmod, rarg1, rarg2))]
   | EFlow1 (op, cond, exp, m) -> at m @@ fun () ->

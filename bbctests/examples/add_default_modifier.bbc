@@ -1,0 +1,12 @@
+NAME: ADD with an immediate A takes .AB
+DESCRIPTION: (ADD 1 1) adds 1 to its own B-number only, as pMARS does for ADD #1, #1 written by hand; i-7d2612-96f7b1, see behtests/add_default_modifier.beh
+SRC:
+(seq
+  (ADD 1 1)
+  (JMP 0))
+EXPECTED:
+;redcode-94b
+
+  ADD.AB #1     , #1     
+  JMP    #0     , #0     
+  DAT    #0     , #0     
