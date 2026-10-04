@@ -19,8 +19,8 @@ iteration second, the rest after. Measured on 2026-10-04 with `run_compile.exe -
 | RED construct | Cycles/iter | Control | Hand-written | Gap |
 |---|---|---|---|---|
 | `repeat` bomber (`SUB`, `MOV @`) | 3 | 1 (`JMP`) | 3 (a Dwarf) | none |
-| `while (JN x)` around one instruction | 3 | 2 (`JMZ`, `JMP`) | 2 (`JMN` at the bottom) | +50 % per iteration (i-7d2612-3ca4c2) |
-| a variable in its own `DAT` | boot +1 | — | the value in an unused field | +2 cells, +1 cycle (i-7d2612-400784) |
+| `while (JN x)` around one instruction | 2 (rotated; was 3) | 1 (`JMN`) | 2 (`JMN` at the bottom) | none per iteration, +1 boot cycle (d-7d2612-a773b1) |
+| a variable in its own `DAT` | boot +1 | — | the value in an unused field | +1 cell, +1 cycle; in a `repeat`'s `JMP` with `(repeat body (store p))`, none (d-7d2612-d9e5d3) |
 
 The archetypes themselves, RED against hand-written (`docs/research/2026-10-04-archetypes.md`;
 Wilkies score, 500 rounds, two runs; noise about 4 points):
@@ -34,16 +34,15 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 
 ## Where we are
 
-As of 2026-10-04 (s-7d2612-2206a5, s-7d2612-0cb4a2). `main` measures what it compiles: the cost model
-(i-7d2612-aeab0f) is merged, with the review's findings fixed. `run_compile.exe --report` shows the
-metrics and predictions, `(expect ...)` checks them or exports them to pMARS, and the command line
-is `Cored.Driver`, tested in-process. The gate runs locally with an opam switch in `_opam/`:
-`dune build`, 74 alcotest cases besides `execute` (Linux x86-64 only), an `--emit-beh` spec run end
-to end in pMARS, the audit and seven behaviour specs. **Seven defects are recorded** below, five
-with a failing check; phase 1 has since fixed six of them (see below).
+As of 2026-10-04, end of s-7d2612-3f3b23. `main` holds phases 1 to 3: it measures what it compiles
+(the cost model, i-7d2612-aeab0f), and the policy picks the optimizations it measures best
+(d-7d2612-6b110b). The gate runs locally with an opam switch in `_opam/`: `dune build`, 138 alcotest
+cases besides `execute` (Linux x86-64 only), an `--emit-beh` spec run end to end in pMARS, the
+audit's 12 checks and 27 behaviour specs, one of them known-failing (i-7d2612-9efd00). Seven
+archetypes are written in RED and match their hand-written cycles.
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Phase 3 is built** (s-7d2612-f082c8, branch `feat/phase-3` on `feat/phase-2`, neither merged):
+**Phase 3 is built** (s-7d2612-f082c8; reviewed, its findings fixed; merged to `main` with phase 2):
 optional transformations are chosen by measuring each under the policy (d-7d2612-6b110b); a unary
 `while` is rotated (2 cycles per iteration around one instruction, was 3); `(repeat body (store p))`
 keeps a variable in the loop's `JMP` (the scanner archetype is 6 cells, the hand-written count); a
@@ -343,6 +342,9 @@ compiled warrior: "Missing ';assert'"; KotH replies the same).
 deterministic score in about a second (measured: prog1 55, a classic Dwarf 49, Imp 48).
 **Decide first.** The benchmark has no licence statement: fetch at test time into `_build/`, never
 vendor.
+**Seen in** s-7d2612-14641b: the archetype study scored every warrior this way, with a script that
+lived only in `_build/bench/`; its procedure is written out in
+`docs/research/2026-10-04-archetypes.md`, so another machine can repeat it.
 
 ### The execute suite only assembles warriors · i-7d2612-05c64d
 **State.** Half done. The mechanism is `tools/behave.py` (cdb probes); the content is three
@@ -440,6 +442,44 @@ to detect and repair, × every session that edits a CRLF file by script.
 from `HEAD`, so `make check-tools` stops the commit (d-7d2612-040878). Seen to fail on a planted
 `Makefile` converted to LF.
 **Seen in.** s-7d2612-0a037e, s-7d2612-a654a5.
+
+### Hand counts in tests are wrong before they run · i-7d2612-340f22
+**State.** Planned (s-7d2612-3f3b23). Tests first means expected values computed by hand, and they
+were wrong before the code ran: columns of error positions (three in phase 1), a plan's value, the
+rotated `while`'s death (9 instructions, counted as 8: the entry `JMP` goes to the test).
+**Cost.** About two minutes each to rerun and recount, × about 5 a session.
+**Proposal.** When a probe fails, read the trace (`run-warrior` skill) before changing the probe or
+the code, and say in the changelog which of the two was wrong. No tool needed.
+**Seen in.** s-7d2612-2c7e4d, s-7d2612-f082c8.
+
+### Compound commands refused whole by a permission rule · i-7d2612-51fe9d
+**State.** Planned (s-7d2612-3f3b23). A command chaining an edit or a check with a denied verb
+(`git stash list`, `git checkout -- FILE`) is refused whole, and nothing in it runs; four times in
+these sessions.
+**Cost.** One retry each (about a minute), and once a mutation check silently not run.
+**Proposal.** Restore files with `git show HEAD:FILE > FILE`, park work as a patch in the job's
+scratch directory, and keep denied verbs out of chains (the global rule already says so).
+**Seen in.** s-7d2612-2c7e4d, s-7d2612-14641b, s-7d2612-f082c8.
+
+### One-concern commits split by hand-staged blobs · i-7d2612-f5490f
+**State.** Planned (s-7d2612-3f3b23). Four times this session several fixes landed in the same files
+before committing, and each commit's version had to be rebuilt from `HEAD` and staged with
+`git hash-object` and `git update-index`.
+**Cost.** About ten minutes each, × 4, plus the risk of a commit that never compiled alone (each was
+checked in a temporary worktree).
+**Proposal.** Commit each concern as soon as its tests pass, before starting the next; a review's
+findings one at a time. No tool needed.
+**Seen in.** s-7d2612-14641b, s-7d2612-f082c8.
+
+### Mutation scripts that do not apply · i-7d2612-138e9e
+**State.** Planned (s-7d2612-3f3b23). A mutation that silently did not apply reports a passing test
+as if the guard were untested: Perl regex parentheses, a split on `|` (OCaml or-patterns contain
+it), and an unused variable the `dev` profile rejected.
+**Cost.** About three minutes each, × 3, and a false conclusion if unnoticed.
+**Proposal.** A literal-replacement helper in `tools/` that fails unless the text occurs exactly
+once, builds, runs one test group and restores the file. A tooling change: its own commit, when
+scheduled.
+**Seen in.** s-7d2612-14641b, s-7d2612-f082c8.
 
 ## Closed by measurement
 

@@ -38,8 +38,17 @@ Each rule: what breaks, and what catches it. `—` means nothing catches it yet.
   256 characters** (longer lines hang pMARS). Enforced: the `execute` suite for length;
   `Compile.compile_prog` rejects a long line (`test_phase1_long_line_is_an_error`).
 - **Execution starts at the first emitted instruction** (no `ORG`/`END` is emitted). Enforced: —.
+- **A rewrite after emission (jump threading, the peephole) never passes or removes a cell that
+  does more than jump**: a user's `JMP` or label, a variable, an operand that moves a pointer, a
+  cell a skip or a numeric offset counts (d-7d2612-3f3f32, d-7d2612-b9a097). Both phase reviews
+  found a miscompile here. Enforced: the `review2`, `review3` and `phase3` groups, each guard
+  mutated.
 
 **Tests**
+- **A golden is what `run_compile.exe` prints with the default policy**: `Optimize.choose` picks the
+  optional transformations by measuring them (d-7d2612-6b110b), and the `compare` suite compiles
+  through it. `Compile.compile_body` alone is the unoptimized baseline. Enforced:
+  `test_emit_text_unchanged`, `test_phase3_driver_uses_the_choice`.
 - **Goldens compare byte for byte, padding included** (d-7d2612-5f2a0b), **and an EXPECTED section
   changes only with a stated behavioural reason** (d-7d2612-6a1527): a regenerated golden certifies
   whatever the compiler now does. Enforced: the `compare` suite; the reason: — (say it in the
@@ -114,6 +123,7 @@ history: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
   i-7d2612-ceee87). Never silence a warning or add a `| _ ->` to make a build pass: a wildcard
   hides every constructor added later, as the `| _, _ -> rmod` fallback in `opmod_to_rmod` showed
   (it silently produced `.I`; i-7d2612-96f7b1).
+- **OCaml 5.5 reserves `effect`** (effect handlers): it cannot name a value.
 - **Errors.** A user's mistake is `Ast.Error` (raise it with `Ast.error msg`; `compile_expr` adds the
   node's location), printed `file:line:col: error: ...` with exit 1; an impossible state is
   `failwith`, printed as an internal error with exit 2 (d-7d2612-8bba52). No other `*Error`

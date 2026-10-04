@@ -5,6 +5,35 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
+
+**What.** The session's close, on the user's request: the closing review of the method
+(`.agents/method/prompt-bootstrap.md` §8), then `feat/phase-3` (which contains `feat/phase-2`)
+fast-forwarded into `main` and pushed. Documents put back to true: the roadmap's north star and
+*Where we are* (138 alcotest cases, 27 specs, phases 1 to 3 on `main`), `AGENTS.md` (goldens are
+the default policy's choice; rewrites never pass or remove a cell that does more than jump; `effect`
+is reserved), the `troubleshoot-redcode` skill (three pMARS and policy traps).
+**Areas.** `AGENTS.md`, `docs/roadmap.md`, `.claude/skills/troubleshoot-redcode/SKILL.md`, this log.
+**Frictions, counted in this log.** Hand counts wrong before running: 3 entries mention them.
+Commands refused by a permission rule: 4. Line endings: 4 (already closed by an audit check,
+i-7d2612-276a54). Mutations: 6 entries rely on them, and 3 mutations failed to apply. Commits split
+by hand-staged blobs: 4 times. Each hit twice or more is now a *Process and tooling* entry with its
+arithmetic (i-7d2612-340f22, i-7d2612-51fe9d, i-7d2612-f5490f, i-7d2612-138e9e); none was performed.
+**Learnings that hold with none of this repository's nouns** (for the harvest, not for `.agents/`):
+- A review in a fresh context after each phase found real defects both times (2 of 2), one of them
+  a silent miscompile, after the author's own tests were green: the author's blind spot was the
+  interaction between passes (a rewrite's guard written for the constructs that existed when it was
+  written, then a new construct that put more into the cell it passes).
+- A claim that an option "is never chosen" reasoned about the option alone; measured over the whole
+  program, neighbouring rewrites made it win. Claims about a whole-program choice need a
+  whole-program measurement.
+- A mutation that does not apply looks exactly like a guard that is tested: a mutation step has to
+  check that the text changed and the build passed before reading the test result.
+**What went wrong.** Nothing new at the close; the phase entries below have their own.
+**Left undone.** Phase 2's operator design (i-7d2612-7eadd5: the indirect-use default, constants and
+label arithmetic for the imp spiral and quickscan); phase 4's warnings; the scanner's score above
+the hand-written one, unexplained; the four process proposals above, for the user to schedule.
+
 ## 2026-10-04 · s-7d2612-f082c8 — Phase 3: the optimizer under the policy
 
 **What.** On branch `feat/phase-3`, stacked on `feat/phase-2` (neither merged). The user's decisions:

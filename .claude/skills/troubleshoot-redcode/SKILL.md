@@ -18,6 +18,9 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 | pMARS hangs while assembling hand-made redcode | a line of 256+ characters (a long label); the compiler refuses to emit one (`error: redcode line N has M characters`) | i-7d2612-174acf |
 | `(LT -1 3)` is false | not a bug: values are unsigned mod CORESIZE (`-1` = 7999) | d-7d2612-2a4435 |
 | `cannot execute binary file`, exit 126 | `pmars/pmars` is Linux x86-64; use `tools/pmars-host.sh` | d-7d2612-3d04ba |
+| `Discarding these labels`, then `Undefined label` | a label with no instruction after it: pMARS drops it; the compiler's epilogue gives a trailing label a cell | d-7d2612-1c1c67 |
+| cdb's `list` prints only an address | the cell equals empty core, `DAT.F $0, $0` (pMARS hides it); `tools/behave.py` reads it as that | d-7d2612-f7ae87 |
+| a compiled warrior behaves differently from the same RED under another policy | the policy chooses rotation and the peephole (`--report` names them); a numeric offset into a construct's cells depends on that layout: use labels | d-7d2612-6b110b |
 
 ## pMARS exit codes
 
