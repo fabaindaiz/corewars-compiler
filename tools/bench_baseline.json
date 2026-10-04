@@ -1,0 +1,66 @@
+{
+  "clear (RED)": {
+    "koenigstuhl": 15.9,
+    "wilkies": 42.1
+  },
+  "clear (hand)": {
+    "koenigstuhl": 18.8,
+    "wilkies": 46.6
+  },
+  "dwarf (RED)": {
+    "koenigstuhl": 28.4,
+    "wilkies": 48.6
+  },
+  "dwarf (hand)": {
+    "koenigstuhl": 28.4,
+    "wilkies": 48.6
+  },
+  "imp (RED)": {
+    "koenigstuhl": 43.6,
+    "wilkies": 50.9
+  },
+  "imp (hand)": {
+    "koenigstuhl": 43.6,
+    "wilkies": 50.9
+  },
+  "impring (RED)": {
+    "koenigstuhl": 36.5,
+    "wilkies": 79.4
+  },
+  "impring (hand)": {
+    "koenigstuhl": 36.5,
+    "wilkies": 79.4
+  },
+  "paper (RED)": {
+    "koenigstuhl": 71.2,
+    "wilkies": 81.0
+  },
+  "paper (hand)": {
+    "koenigstuhl": 71.2,
+    "wilkies": 81.0
+  },
+  "scanner (RED)": {
+    "koenigstuhl": 44.5,
+    "wilkies": 62.5
+  },
+  "scanner (hand)": {
+    "koenigstuhl": 42.0,
+    "wilkies": 58.9
+  },
+  "seqscan (RED)": {
+    "koenigstuhl": 24.1,
+    "wilkies": 38.9
+  },
+  "seqscan (hand)": {
+    "koenigstuhl": 21.2,
+    "wilkies": 36.2
+  },
+  "stone (RED)": {
+    "koenigstuhl": 51.8,
+    "wilkies": 80.5
+  },
+  "stone (hand)": {
+    "koenigstuhl": 51.8,
+    "wilkies": 80.5
+  }
+}

@@ -93,6 +93,7 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
   
 - `make clean-tests`: cleans the tests output in the `bbctests` directory 
 
+- `make bench`: score the archetypes (RED and hand-written) against the Wilkies benchmark and the top 20 of Koenigstuhl's 94nop hill, downloaded into `_build/bench/` on first use, and compare with `tools/bench_baseline.json` (`python3 tools/bench.py --update` rewrites it; `--hill` also places each warrior on the whole hill). Needs network; not part of `make check`.
 - `make tests`: execute the tests for the compiler defined in `execs/run_test.ml` (see below).
   Variants include: 
   * `make ctests` for compact representation of the tests execution

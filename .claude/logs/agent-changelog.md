@@ -27,6 +27,8 @@ The Core War documentation reviewed against its sources in a fresh context
 default-modifier table cited by the wrong ICWS'94 section in four documents (A.2.1.1 is the ICWS'86
 conversion; the table is A.2.1.2), cdb's paging (23 lines, not 40), what `pqueue` and `calc CYCLE`
 do, and the package versions.
+`make bench` (`tools/bench.py`, d-7d2612-1d4491): with a fixed seed, RED and hand-written score
+exactly alike for imp, dwarf, stone, paper and the imp ring.
 **Left undone.** See below as the session goes.
 
 ## 2026-10-04 · s-7d2612-333abd — Phase 2's operator design and phase 4's warnings

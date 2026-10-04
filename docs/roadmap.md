@@ -368,7 +368,8 @@ named hill (d-7d2612-56cfae). Was: Emit `;name`, `;author`, `;strategy` and `;as
 compiled warrior: "Missing ';assert'"; KotH replies the same).
 
 ### Benchmark score as a regression signal · i-7d2612-f27a91
-**State.** Planned. `pmars -b -r 200 -F 4000 warrior bench/*.red` against the Wilkies set gives a
+**State.** Done (s-7d2612-9b0d20): `make bench` (d-7d2612-1d4491), baseline in
+`tools/bench_baseline.json`. Was: `pmars -b -r 200 -F 4000 warrior bench/*.red` against the Wilkies set gives a
 deterministic score in about a second (measured: prog1 55, a classic Dwarf 49, Imp 48).
 **Decide first.** The benchmark has no licence statement: fetch at test time into `_build/`, never
 vendor.

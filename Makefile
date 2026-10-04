@@ -1,7 +1,7 @@
 F =  # nothing by default
 src = # nothing by default
 
-.PHONY: init tests ctests compile clean clean-tests check check-tools check-ocaml
+.PHONY: init tests ctests compile clean clean-tests check check-tools check-ocaml bench
 
 # The `execute` group runs pmars/pmars, a Linux x86-64 binary (d-7d2612-3d04ba); elsewhere
 # check-ocaml runs the groups that need no pMARS.
@@ -46,6 +46,11 @@ endif
 	# End to end: the CLI exports (expect ...) as a behaviour spec, and pMARS runs it.
 	dune exec execs/run_compile.exe -- --emit-beh _build/prog7_expect.beh examples/prog7_expect.src > /dev/null
 	python3 tools/behave.py _build/prog7_expect.beh
+
+# Scores the archetypes against downloaded benchmarks; needs network, so not part of check
+# (tools/bench.py says how; --update rewrites tools/bench_baseline.json).
+bench:
+	python3 tools/bench.py
 
 clean: clean-tests
 	dune clean
