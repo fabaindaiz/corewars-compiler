@@ -782,7 +782,7 @@ let test_phase3_dz_while_not_rotated () =
 let binary = "(let (x 3) (seq (while (NE x 0) (SUB 1 x)) (DAT 0 (store x))))"
 
 let test_phase3_binary_while_by_policy () =
-  check ops "never better: kept" [ISNE; IJMP; ISUB; IJMP; IDAT] (opcodes (chosen binary)) ;
+  check ops "no gain here: kept" [ISNE; IJMP; ISUB; IJMP; IDAT] (opcodes (chosen binary)) ;
   check ops "forced: rotated" [IJMP; ISUB; ISEQ; IJMP; IDAT]
     (opcodes (forced { no_opts with rotate_binary = true } binary))
 

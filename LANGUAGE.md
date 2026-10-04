@@ -152,7 +152,7 @@ P-space does not exist on hills such as 94nop.
 Control flows are used to specify the execution order of the instructions. Use control flows generates extra instructions in the code.
 
 - (repeat body) repeat body forever (one extra instruction)
-- (repeat body arg) the same, with `arg` as the B operand of that extra `JMP`, which `JMP` ignores: `(repeat body (store p))` keeps the variable `p` there, in a cell the loop needs anyway, instead of a `DAT` of its own (one cell less)
+- (repeat body arg) the same, with `arg` as the B operand of that extra `JMP`, which does not jump through it but does evaluate it every iteration (so `(Inc p)` there increments `p` each time): `(repeat body (store p))` keeps the variable `p` there, in a cell the loop needs anyway, instead of a `DAT` of its own (one cell less)
 - (if cond then) execute body if cond is true (no extra instruction + cond)
 
 - (while cond body) repeat body while cond is true (one extra instruction + cond). With a `JZ` or `JN` condition and the default policy the test goes after the body and one `JMP` enters it: per iteration only the test runs (one control instruction instead of two), at one more cycle before the first iteration; a policy that puts `boot` first keeps the test at the top
@@ -160,7 +160,7 @@ Control flows are used to specify the execution order of the instructions. Use c
 
 - (if cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
 
-With the default policy, a jump the compiler generated that would land on the very next cell (an empty `else`, an empty `if`, an empty rotated `while`) is left out, unless it also does something: a `DJN` decrements, a `<`/`>` operand moves a pointer, a cell that holds a variable or carries your label stays, and so does a jump right after a `SEQ`/`SNE`/`SLT`, which would otherwise skip a different cell.
+With the default policy, a jump the compiler generated that would land on the very next cell (an empty `else`, an empty `if`, an empty rotated `while`) is left out, unless it also does something: a `DJN` decrements, a `<`/`>` operand moves a pointer, a cell that holds a variable or carries your label stays, and so does a jump right after a `SEQ`/`SNE`/`SLT`, which would otherwise skip a different cell, or one that a number you wrote counts across (`(JMP (Dir 2))` over it). A number that points into the cells of a `while` or an `if` depends on their layout, which the policy chooses: use labels.
 
 A jump the compiler generated that would land on a `JMP` the compiler generated goes straight to that `JMP`'s target: an `if` at the end of a `repeat` jumps back to the loop's head when its condition is false, one cycle sooner. It changes no cell count, never touches a jump you wrote, and never passes a `JMP` that carries one of your labels or that only jumps reach (it would be left dead).
 

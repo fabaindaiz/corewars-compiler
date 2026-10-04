@@ -75,7 +75,8 @@ type prim2 =
 | Ldp
 
 
-(* A repeat's arg is the B operand of its JMP back, which JMP ignores: data, or a (store x). *)
+(* A repeat's arg is the B operand of its JMP back: not a target, but evaluated every iteration
+   (data, a (store x), or a pointer that moves). *)
 type flow1 =
 | Repeat of arg
 | If

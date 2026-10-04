@@ -10,7 +10,7 @@ cost model (`docs/specs/2026-10-03-cost-model-design.md`) measures every choice 
    `GT`, `LT`) only when the policy picks it. `DZ` is never rotated: no single instruction
    decrements and loops while zero.
 2. **Variables in fields:** explicit. `(repeat body arg)` puts `arg` in the B-field of the
-   `repeat`'s own `JMP`, which `JMP` ignores; `(repeat body (store p))` makes that field `p`'s
+   `repeat`'s own `JMP`, which `JMP` evaluates but does not jump through; `(repeat body (store p))` makes that field `p`'s
    place. The compiler never moves a `(store x)` the user wrote.
 3. **Policy:** measure and choose. The compiler compiles the whole program with each combination
    of optional transformations, measures each with the cost model, and keeps the one the policy
@@ -42,9 +42,9 @@ at most 100 cells), so the cost is negligible next to running pMARS once.
 condition holds. Per iteration, a unary condition costs one control instruction instead of two
 (`JMN _WHIn, x` against `JMZ _WHFn, x` plus `JMP _WHIn`); boot costs one more (the entry `JMP`);
 cells are equal. A binary condition costs two control instructions either way, one more cycle of
-boot, and `GT`/`LT` one more cell (the always-skipping `SNE`): under every objective of today's
-policy it is never better, so the default policy never picks it; it is there for a policy that
-would. `_WHC` is a new generated-label prefix.
+boot, and `GT`/`LT` one more cell (the always-skipping `SNE`). By itself it is never better; the
+default policy still picks it where it lets threading or the peephole save a cycle or a cell (the
+phase-3 review found `(repeat (while (NE x 0) ...))` and an empty binary `while`). `_WHC` is a new generated-label prefix.
 
 ## Peephole
 
@@ -56,7 +56,8 @@ empty, an `if`-`else` whose `else` is empty, a rotated `while` whose body is emp
 ## `(repeat body arg)`
 
 `arg` is the B operand of the `repeat`'s `JMP`, `#0` when absent. A `(store p)` there places `p` in
-that B-field (`_LETn` labels the `JMP` cell). The `JMP` is executed every iteration, so the cell is
+that B-field (`_LETn` labels the `JMP` cell). A `(Inc p)` or `(Dec p)` there moves `p` every
+iteration, so threading never passes such a `JMP`. The `JMP` is executed every iteration, so the cell is
 code, and a pointer through it (`@p`) reads its B-field as any variable's. The scanner archetype
 goes from 7 cells to 6, the hand-written count.
 

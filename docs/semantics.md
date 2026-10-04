@@ -109,7 +109,7 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 | Construct | Emitted |
 |---|---|
 | `(repeat e)` | `_REPn: ⟦e⟧; JMP _REPn` |
-| `(repeat e a)` | `_REPn: ⟦e⟧; JMP _REPn, a` (a `(store x)` in `a` labels the `JMP` `_LETm`: x's place is its B-field; d-7d2612-d9e5d3) |
+| `(repeat e a)` | `_REPn: ⟦e⟧; JMP _REPn, a` (the `JMP` evaluates `a` every iteration, so `(Inc p)` increments `p`; a `(store x)` in `a` labels the `JMP` `_LETm`: x's place is its B-field; d-7d2612-d9e5d3) |
 | `(if c e)` | `⟦c⟧pre→_IFn; ⟦e⟧; _IFn:` |
 | `(if c e₁ e₂)` | `⟦c⟧pre→_IFMn; ⟦e₁⟧; JMP _IFFn; _IFMn: ⟦e₂⟧; _IFFn:` |
 | `(while c e)` | `_WHIn: ⟦c⟧pre→_WHFn; ⟦e⟧; JMP _WHIn; _WHFn:` |
@@ -136,20 +136,26 @@ instruction would (§3; d-7d2612-8f9340).
 **Rotation** (d-7d2612-a773b1). `(while c e)` ≡ `(if c (do-while c e))`: the rotated layout jumps
 to the test, which loops back while `c` holds. The compiler emits it when the policy prefers it
 (measure and choose, d-7d2612-6b110b): with a unary condition it saves a control instruction per
-iteration for one more boot cycle; with a binary one it saves nothing per iteration, so today's
-objectives never pick it.
+iteration for one more boot cycle; with a binary one it saves nothing per iteration by itself, and
+is picked only where it lets threading or the peephole save a cycle or a cell elsewhere (a binary
+`while` at the end of a `repeat`, an empty one).
 
 **Peephole** (d-7d2612-b9a097). When the policy prefers it, a generated `JMP`, `JMZ` or `JMN` aimed
 at the next cell is removed and its labels move to that cell, unless the cell before can skip, its
-operand moves a pointer, it holds a variable or it carries a user's label. Removing it changes
-neither what runs nor in which order, only one cycle and one cell.
+operand moves a pointer, it holds a variable, it carries a user's label, or an operand written as a
+number counts cells across it (`JMP $2` over it, `ADD $-2` back past it). Within those guards,
+removing it changes neither what runs nor in which order, only one cycle and one cell. A numeric
+offset that points *into* the cells a construct emits depends on that construct's layout, which the
+policy now chooses (rotation reorders a `while`): such a program means only its compiled redcode
+(§4, outside the structured fragment).
 
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the
 jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-fffa6c).
 
 **Jump threading** (d-7d2612-3f3f32). After the scheme above, a jump the compiler generated whose
-target cell holds a `JMP` the compiler generated is aimed at that `JMP`'s target, along a chain until
+target cell holds a `JMP` the compiler generated (and whose B operand moves no pointer: a `repeat`'s
+data `(Inc p)` runs every iteration) is aimed at that `JMP`'s target, along a chain until
 a label repeats. `(repeat (seq e (if c e')))` therefore emits `⟦c⟧pre→_REPn` instead of
 `⟦c⟧pre→_IFn`; `_IFn` still labels the `JMP _REPn`, which `e'` reaches by falling through. The
 cells are the same and each taken jump saves a cycle. Jumps and `JMP`s the user wrote, and `JMP`s

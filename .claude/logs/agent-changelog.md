@@ -34,6 +34,20 @@ such a jump; new golden and spec `empty_else_peephole`, checked against the unop
 More went wrong: `effect` is a keyword in OCaml 5.5 (effect handlers) and could not name a
 function; a mutation loop split its patterns on `|`, which OCaml or-patterns contain, and three
 mutations had to be rerun.
+**Branch review** (fresh context, before closing phase 3). One critical finding: threading passed a
+`repeat`'s `JMP` whose data was `(Inc p)`, skipping the increment (a silent miscompile; p ended at
+0 instead of 3, `behtests/repeat_data_moves_pointer.beh`); threading now never passes a `JMP` whose
+B operand moves a pointer. One important: a rotated `while` was described by the body's last cell
+(its body falls into the test, the loop header), so an `(expect (cycles ...))` in its body failed
+to compile; `Layout` now records which construct owns each loop-head label (`_REP`, `_WHI`, `_WHC`,
+`_DWH`) and a loop is described by that owner. One minor in code: the peephole removed a cell that
+a numeric offset (`JMP $2`, `ADD $-2`) counted across; such cells now stay, and the semantics says
+that a number pointing into a construct's cells depends on a layout the policy chooses. Documents
+corrected: binary rotation is picked where threading or the peephole then gain (the review found
+two cases), `JMP` evaluates its B operand, eight compiles not four, the scanner spec's comment.
+Each fix's test failed first; each was mutated to see its test fail. My own first claim, that
+binary rotation is never picked, was wrong: I reasoned about the `while` alone, not about what
+threading and the peephole then do around it.
 **Left undone.** A `--report=json` field for the optimizations applied; data in a `while`'s back
 jump; the scanner's score above the hand-written one is unexplained.
 
