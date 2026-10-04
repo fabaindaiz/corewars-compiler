@@ -47,9 +47,11 @@ The SEQ scanner row was measured after conditions gained a modifier the same day
 extra cells are the pointer cell (the hand-written one keeps its pointers in the `SNE.I` itself)
 and the epilogue.
 
-Five of six archetypes compile with **zero cycle overhead**; the sixth, the scanner, loses 14
-points to one extra cycle on its hot path (closed the same day by jump threading, gap 1). Every
-RED warrior is one cell longer than its hand-written form.
+As first measured, five of the six archetypes then expressible compiled with **zero cycle
+overhead**; the sixth, the scanner, lost 14 points to one extra cycle on its hot path (closed the
+same day by jump threading, gap 1). With the SEQ scanner, all seven now match the hand-written
+cycles. Every RED warrior is one cell longer than its hand-written form for the epilogue, the SEQ
+scanner two (its pointer cell).
 
 ## Gaps found
 
@@ -118,8 +120,10 @@ Smaller observations:
 
 ## What this decides, and what it leaves to the user
 
-The cycle gaps the north star cares about come from one place, the jump to a jump (gap 1), which is
-phase 3's peephole item. The length gap is the epilogue (gap 2). The expressiveness gaps (5, 6, 7)
-are the input to subproject C's operator design: which modifier an indirect use reads, whether
-conditions take a modifier, and constants or label arithmetic. They are presented as decisions,
-not decided here.
+The cycle gaps the north star cares about came from one place, the jump to a jump (gap 1). The
+length gap is the epilogue (gap 2). The expressiveness gaps (5, 6, 7) are the input to subproject
+C's operator design. As written first, these were left to the user; the user decided the same day:
+jump threading (d-7d2612-3f3f32), the epilogue kept and made exactly empty core
+(d-7d2612-1c1c67, d-7d2612-f7ae87), a modifier on conditions (d-7d2612-8f9340), labelled data
+counted as data (i-7d2612-cf8fdb). Still open: the indirect-use default (gap 6) and constants or
+label arithmetic (gap 7).

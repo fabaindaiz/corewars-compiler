@@ -126,7 +126,9 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 | `LT a b` | `SLT a, b; JMP t` | `SLT a, b; SNE #0, #1; JMP t` |
 
 A condition's modifier, when written (`(NE I a b)`, `(JZ F x)`), is the test instruction's modifier;
-the always-skipping `SNE #0, #1` keeps `.AB`. Without one, the test takes the modifier an
+the always-skipping `SNE #0, #1` keeps `.AB`. `GT` is emitted as `SLT y, x`, so a written `AB` or
+`BA` is swapped there: `(GT AB x y)` compares `x`'s A-field with `y`'s B-field, as in every other
+comparison. Without one, the test takes the modifier an
 instruction would (§3; d-7d2612-8f9340).
 
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
@@ -137,8 +139,11 @@ jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-f
 target cell holds a `JMP` the compiler generated is aimed at that `JMP`'s target, along a chain until
 a label repeats. `(repeat (seq e (if c e')))` therefore emits `⟦c⟧pre→_REPn` instead of
 `⟦c⟧pre→_IFn`; `_IFn` still labels the `JMP _REPn`, which `e'` reaches by falling through. The
-cells are the same and each taken jump saves a cycle. Jumps and `JMP`s the user wrote are never
-rewritten or followed: their targets may change at run time.
+cells are the same and each taken jump saves a cycle. Jumps and `JMP`s the user wrote, and `JMP`s
+carrying a user's label, are never rewritten or followed: their targets may change at run time. A
+`JMP` is passed only when the cell before it falls into it (or the one before that skips into it):
+otherwise every jump reaching it would go past it, and the cell, still the loop's own closing jump,
+would be dead.
 
 ## 6. Correctness, and how it is checked
 

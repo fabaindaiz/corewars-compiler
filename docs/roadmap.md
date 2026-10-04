@@ -208,11 +208,11 @@ indirect use goes *through* (`@` or `*`), not which field of the target cell it 
 modifier follows the pointers' fields: `(NE (Ind a) (Ind b))` with `a`, `b` in one `DAT` compiles
 to `SNE.AB *a, @b` (A-field of one target against the B-field of the other), and
 `(MOV b (Ind b))` to `MOV.B`, which writes one field of the target. A SEQ scanner needs `SNE.I`, a
-bomber needs `MOV.I`; conditions take no modifier, so a SEQ scanner cannot be written.
+bomber needs `MOV.I`; before conditions took a modifier, a SEQ scanner could not be written.
 **Collides with.** i-7d2612-9efd00 (the same rule for a variable next to a plain reference); every
 golden that moves or compares through a pointer without a modifier.
-**Decide first.** Whether an indirect use reads the whole target (`.I`) by default, whether
-conditions accept a modifier, or a compound operator for the scan.
+**Decide first.** Whether an indirect use reads the whole target (`.I`) by default, or a compound
+operator for the scan.
 
 ### The epilogue DAT differs from empty core in its modes · i-7d2612-ed9f79
 **State.** Done (s-7d2612-14641b): the epilogue is `DAT $0, $0` (d-7d2612-f7ae87); every golden's
@@ -295,7 +295,7 @@ produced each cell.
 
 ### Unreachable counts a labelled data DAT as dead code · i-7d2612-cf8fdb
 **State.** Done (s-7d2612-14641b), the user choosing the first option: a never-executed `DAT` with a
-label counts as data (`test_phase2_labelled_dat_is_data`); an unlabelled one is still dead code.
+user's label counts as data (`test_phase2_labelled_dat_is_data`); an unlabelled one is still dead code.
 Before: A bomb written `(label bomb) (DAT 0 0)` is never executed,
 by design, and `--report` counts it as unreachable code: only a `let` variable's cell counts as
 data. An unreachable-cell warning would fire on every bomber (core-clear and scanner archetypes).

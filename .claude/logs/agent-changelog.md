@@ -60,6 +60,19 @@ the build refused it (warning 27), so the mutation had to keep it used. A comman
 mutation with `git stash list` was refused whole by a permission rule; nothing ran. The split into
 one-concern commits needed intermediate file versions staged with `git hash-object` and
 `git update-index`, because several files carried two concerns.
+**Branch review** (a fresh-context reviewer, before closing phase 2). Two important findings, both
+fixed with tests that failed first: threading passed a `JMP` that only jumps reached (a `while` at
+the end of a `repeat` sent its exit straight to the `repeat`'s head, leaving the `repeat`'s own
+`JMP` dead, the loop described as the `while`'s, and a valid `(expect (cycles ...))` failing to
+compile); and `(GT AB x y)` compiled to `SLT.AB y, x`, the BA reading (`behtests/gt_explicit_modifier.beh`).
+Threading now passes a `JMP` only when the cell before falls into it (or the one before that skips
+into it) and never one carrying a user's label (a third, minor finding: a program that overwrote a
+labelled generated `JMP` behaved differently). Also fixed: a `DAT` whose only label is generated is
+not named data; `(JZ F F x)` is reported as a unary cond. Corrected documents the review found
+untrue (research summary, roadmap i-7d2612-2581ff, decision rows d-7d2612-3f3f32 — whose score was
+the hand-edited warrior's — and d-7d2612-1c1c67). Both threading guards were mutated to see their
+tests fail; the first attempts at those mutations either did not compile (an unused variable) or,
+through Perl regex parentheses, did not apply at all, and were redone as literal replacements.
 **Left undone.** Imp spiral and quickscan (need label arithmetic or constants and compile-time
 repetition), Mice's copy-by-index and a Silk-style paper; the benchmark is a script described in the
 research note, not a check (i-7d2612-f27a91). The decisions the gaps raise are put to the user, not

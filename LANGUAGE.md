@@ -81,7 +81,7 @@ Binary conditions are used to specify when the control flow is executed based on
 - (GT x y) x is greater than y
 - (LT x y) x is less than y
 
-- (EQ mod x y) | (NE mod x y) | (GT mod x y) | (LT mod x y) the same, with the comparison's modifier given
+- (EQ mod x y) | (NE mod x y) | (GT mod x y) | (LT mod x y) the same, with the comparison's modifier given; `AB` reads `x`'s A-field and `y`'s B-field in every comparison (`GT` is emitted as `SLT y, x`, so the compiler writes `.BA` there)
 
 Comparisons are unsigned: values are compared as `0..7999`, so `(LT -1 3)` is false.
 
@@ -159,7 +159,7 @@ Control flows are used to specify the execution order of the instructions. Use c
 
 - (if cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
 
-A jump the compiler generated that would land on a `JMP` the compiler generated goes straight to that `JMP`'s target: an `if` at the end of a `repeat` jumps back to the loop's head when its condition is false, one cycle sooner. It changes no cell count, and never touches a jump you wrote.
+A jump the compiler generated that would land on a `JMP` the compiler generated goes straight to that `JMP`'s target: an `if` at the end of a `repeat` jumps back to the loop's head when its condition is false, one cycle sooner. It changes no cell count, never touches a jump you wrote, and never passes a `JMP` that carries one of your labels or that only jumps reach (it would be left dead).
 
 
 ### Other instructions
