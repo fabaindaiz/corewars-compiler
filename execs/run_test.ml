@@ -1035,6 +1035,19 @@ let test_review4_referenced_cells_are_data () =
   check Alcotest.int "a dead MOV nobody references" 1 (dead "(seq (repeat (NOP)) (MOV 0 1))")
 
 
+let test_review4_every_change_counts () =
+  let steps src = steps_of_loop (M.measure (layout_of_src src)) "repeat" in
+  (* JMZ $1, >p moves p too: 3 + 1 a lap (pMARS: p = 50 after 10 laps from 10) *)
+  check Alcotest.(list (pair int int)) "a > on a JMZ" [(4, 4)]
+    (steps "(let (p 10) (seq (repeat (seq (ADD 3 p) (MOV 0 (Ind p)) (JMZ (Dir 1) (Inc p)))) (DAT 0 (store p))))") ;
+  (* the A operand's } moves an A-field pointer *)
+  check Alcotest.(list (pair int int)) "a } on the A operand" [(3, 3)]
+    (steps "(let (p 10) (seq (repeat (seq (ADD 2 p) (MOV I (Inc p) (Dir 5)))) (DAT (store p) 0)))") ;
+  (* MOV 7 p resets p: its step is not known, so none is predicted *)
+  check Alcotest.(list (pair int int)) "a write that is not a step" []
+    (steps "(let (p 10) (seq (repeat (seq (ADD 3 p) (MOV 7 p) (MOV 0 (Ind p)))) (DAT 0 (store p))))")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1164,6 +1177,7 @@ let ocaml_tests = [
   ] ;
   "review4", [
     test_case "a cell the program references is data" `Quick test_review4_referenced_cells_are_data ;
+    test_case "every change to a pointer counts in its step" `Quick test_review4_every_change_counts ;
   ] ;
   "netstep", [
     test_case "a pointer's step is its net change per lap" `Quick test_net_step ;

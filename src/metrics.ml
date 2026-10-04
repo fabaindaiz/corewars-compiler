@@ -170,12 +170,13 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
         ~weight:(fun _ -> 1) lm.loop.header in
     i = lm.loop.header || List.for_all (fun (s, _) -> s = i || avoiding.(s) = None) lm.loop.back_edges in
   let target (c : cell) = norm p.coresize (c.pos + c.b.value) in
-  (* A field is a destination when a write in the loop goes to it: the cell's own B operand, or a
-     write whose B operand is indirect through it. *)
+  (* A field is a pointer when an operand in the loop goes through it (either operand, any
+     instruction), or when it is the B-field of a write's own cell. *)
   let destination t f =
     List.exists (fun j -> let w = p.cells.(j) in
-      writes w.op && ((j = t && f = FB && w.b.mode = RDir)
-                      || (base_field w.b.mode = Some f && target w = t))) body in
+      (writes w.op && j = t && f = FB && w.b.mode = RDir)
+      || List.exists (fun (o : operand) ->
+          base_field o.mode = Some f && norm p.coresize (w.pos + o.value) = t) [w.a; w.b]) body in
   (* Every change to a pointer field in the loop: an ADD/SUB of a constant to it, or a write through
      it that moves it (< or >). *)
   let by_add = List.filter_map (fun i -> let c = p.cells.(i) in
@@ -190,13 +191,17 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
                     && norm p.coresize amount <> 0 && target c < n && destination (target c) f ->
         Some ((target c, f), (if c.op = IADD then amount else - amount), i)
       | Some _ | None -> None) body in
-  let by_mode = List.filter_map (fun j -> let w = p.cells.(j) in
-      let k = match w.b.mode with
-        | RBInc | RAInc -> Some 1 | RBDec | RADec -> Some (-1)
-        | RImm | RDir | RAInd | RBInd -> None in
-      match k, base_field w.b.mode with
-      | Some k, Some f when writes w.op && target w < n -> Some ((target w, f), k, j)
-      | (Some _ | None), (Some _ | None) -> None) body in
+  (* A < or > (or { or }) moves its pointer whenever the operand is evaluated, on either operand of
+     any instruction. *)
+  let by_mode = List.concat_map (fun j -> let w = p.cells.(j) in
+      List.filter_map (fun (o : operand) ->
+        let k = match o.mode with
+          | RBInc | RAInc -> Some 1 | RBDec | RADec -> Some (-1)
+          | RImm | RDir | RAInd | RBInd -> None in
+        let t = norm p.coresize (w.pos + o.value) in
+        match k, base_field o.mode with
+        | Some k, Some f when t < n -> Some ((t, f), k, j)
+        | (Some _ | None), (Some _ | None) -> None) [w.a; w.b]) body in
   (* A pointer's step is its net change over one lap: the sum of its changes, when each happens once
      on every lap. A change on some laps only, or inside an inner loop whose trip count is not known
      here, leaves the step unknown, and nothing is predicted rather than a wrong number. *)
@@ -204,11 +209,17 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
       if l'.header <> lm.loop.header && List.mem l'.header body && List.for_all (fun i -> List.mem i body) l'.body
       then l'.body else []) p.loops in
   let changes = by_add @ by_mode in
+  (* Any other write straight into a pointer's cell (MOV 7 p, MUL ...) changes it by an amount not
+     known here. *)
+  let overwritten (cell, _) = List.exists (fun j -> let w = p.cells.(j) in
+      writes w.op && w.b.mode = RDir && target w = cell
+      && not (List.exists (fun (_, _, i) -> i = j) by_add)) body in
   let pointers = List.fold_left (fun acc (ptr, _, _) -> if List.mem ptr acc then acc else acc @ [ptr]) [] changes in
   List.filter_map (fun ((cell, field) as ptr) ->
     let mine = List.filter (fun (q, _, _) -> q = ptr) changes in
     let k = List.fold_left (fun acc (_, k, _) -> acc + k) 0 mine in
-    if List.for_all (fun (_, _, i) -> every i && not (List.mem i inner)) mine && norm p.coresize k <> 0
+    if List.for_all (fun (_, _, i) -> every i && not (List.mem i inner)) mine && not (overwritten ptr)
+       && norm p.coresize k <> 0
     then Some (step_of p lm ~cell ~field ~k)
     else None) pointers
 
