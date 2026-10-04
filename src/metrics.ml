@@ -109,10 +109,13 @@ let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   { loop = l; label; node = c.origin; construct = c.construct;
     cycles = Option.value cycles ~default:zero; overhead = Option.value overhead ~default:zero; exit }
 
+(* An immediate A operand makes the instruction itself the A-value (ICWS'94), so its own numbers
+   are the divisors: .A/.AB divide by its A-number, .B/.BA by its B-number, .F/.X/.I by both. *)
 let divides_by_zero (c : cell) : bool =
   let self_zero = c.a.mode = RImm && (match c.md with
     | RB | RBA -> c.b.value = 0
-    | RN | RA | RAB | RF | RX | RI -> c.a.value = 0) in
+    | RN | RA | RAB -> c.a.value = 0
+    | RF | RX | RI -> c.a.value = 0 || c.b.value = 0) in
   (c.op = IDIV || c.op = IMOD) && self_zero
 
 let blank (c : cell) : bool =

@@ -390,6 +390,11 @@ let test_minor_expect_keeps_labels () =
     (compile_prog (expr_of (example "prog8"))) (compile_prog (parse_exp (sexp_from_string with_expect)))
 
 
+let test_minor_div_by_zero_b () =
+  let m = M.measure (layout_of_src "(seq (DIV F 5 (Dir 0)) (DAT 1 1))") in
+  check Alcotest.(list int) "DIV.F #5, $0 divides by its own B-number, 0" [0] m.div_by_zero
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -452,6 +457,7 @@ let ocaml_tests = [
   ] ;
   "minor", [
     test_case "an expect statement keeps generated labels" `Quick test_minor_expect_keeps_labels ;
+    test_case "DIV.F by a zero B-number" `Quick test_minor_div_by_zero_b ;
   ] ;
   "interp", [
 
