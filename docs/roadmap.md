@@ -408,7 +408,8 @@ lived only in `_build/bench/`; its procedure is written out in
 **State.** Done (s-7d2612-9b0d20), as the user chose: behaviour specs for `repeat`, `if-else` (both
 branches), `while` with `NE` and `EQ`, indirection through `@`, `<`, `>`, and `SPL`
 (`behtests/repeat_counts.beh` ... `spl_two_processes.beh`), each with one probe mutated to see it
-fail; the `execute` suite stays an assembly check. Was: The mechanism is `tools/behave.py` (cdb probes); the content is three
+fail, and, after the branch review, against the mutants it named (a `while` that never leaves, an
+`SPL` removed): the `while` programs now mark their exit; the `execute` suite stays an assembly check. Was: The mechanism is `tools/behave.py` (cdb probes); the content is three
 specs for working programs. Missing: specs for `repeat`, `if-else`, `while` with `EQ`/`NE`,
 indirection, `SPL`; and folding them into the OCaml suite if wanted.
 

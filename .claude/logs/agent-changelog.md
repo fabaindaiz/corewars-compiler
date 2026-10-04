@@ -37,6 +37,12 @@ the compiler) places #797 of 1107 on Koenigstuhl's 94nop hill, where the top sco
 the gap is strategy, and the two things RED lacks for the top strategies became i-7d2612-e98368 and i-7d2612-e725ef.
 `tools/bench.py` first crashed on an opponent that prints its own listing (fixed: it reads the
 first line of two numbers). The net step through counted inner loops was closed as not pursued.
+**Branch review** (fresh context). Important: the hill placement compared a plain mean with
+Koenigstuhl's recursive scores (biased about +30 points, one way); `--hill` hung on warriors with
+`;break` (pMARS waits in cdb on the inherited stdin); `--emit-beh` for a hill other than 94b wrote a
+spec 94b's settings reject; two specs passed with their construct broken (a `while` whose exit
+loops back, a missing `SPL`): the `while` programs now mark their exit (goldens changed for that
+reason) and the SPL spec probes instruction 2. My hand counts were wrong twice more on the way.
 **Left undone.** Compile-time repetition (the quickscan, the macro layer); i-7d2612-e98368; i-7d2612-e725ef; a Silk-style
 paper; the four process proposals of s-7d2612-3f3b23 (none scheduled).
 

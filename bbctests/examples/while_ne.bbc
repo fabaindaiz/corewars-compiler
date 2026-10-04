@@ -1,21 +1,25 @@
 NAME: a while with NE
-DESCRIPTION: (while (NE x 0) (SUB 1 x)) counts x down to 0 and leaves the loop; see behtests/while_ne.beh
+DESCRIPTION: (while (NE x 0) (SUB 1 x)) counts x down to 0 and leaves the loop, then marks done; see behtests/while_ne.beh
 SRC:
 (let (x 3)
-  (seq
-    (while (NE x 0) (SUB 1 x))
-    (JMP 0)
-    (DAT 0 (store x))))
+  (let (done 0)
+    (seq
+      (while (NE x 0) (SUB 1 x))
+      (MOV 1 done)
+      (JMP 0)
+      (DAT (store done) (store x)))))
 EXPECTED:
 ;redcode-94b
 
-_WHI4 
+_WHI5 
   SNE.B  $_LET1 , #0     
-  JMP    $_WHF4 , #0     
+  JMP    $_WHF5 , #0     
   SUB.AB #1     , $_LET1 
-  JMP    $_WHI4 , #0     
-_WHF4 
+  JMP    $_WHI5 , #0     
+_WHF5 
+  MOV.A  #1     , $_LET2 
   JMP    #0     , #0     
+_LET2 
 _LET1 
   DAT    #0     , #3     
   DAT    $0     , $0     

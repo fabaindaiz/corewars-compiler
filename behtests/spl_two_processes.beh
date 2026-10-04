@@ -1,6 +1,8 @@
 # SPL (1) queues the next cell then the imp; JMP #0 (2); the imp at cell 2 copies itself to 3 (3);
 # JMP (4); the imp at 3 copies itself to 4 (5). Both processes live on.
 golden: bbctests/examples/spl_two_processes.bbc
+# a lone imp (no SPL) would already have copied itself at instruction 2: with SPL it is the JMP's turn
+cell 2 3 DAT.F $0, $0
 cell 3 3 MOV.I $0, $1
 cell 5 4 MOV.I $0, $1
 alive 1000

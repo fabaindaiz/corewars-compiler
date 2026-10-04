@@ -1,21 +1,25 @@
 NAME: a while with EQ
-DESCRIPTION: (while (EQ x 0) (ADD 1 x)) runs once from x = 0 and leaves with x = 1; see behtests/while_eq.beh
+DESCRIPTION: (while (EQ x 0) (ADD 1 x)) runs once from x = 0 and leaves with x = 1, then marks done; see behtests/while_eq.beh
 SRC:
 (let (x 0)
-  (seq
-    (while (EQ x 0) (ADD 1 x))
-    (JMP 0)
-    (DAT 0 (store x))))
+  (let (done 0)
+    (seq
+      (while (EQ x 0) (ADD 1 x))
+      (MOV 1 done)
+      (JMP 0)
+      (DAT (store done) (store x)))))
 EXPECTED:
 ;redcode-94b
 
-_WHI4 
+_WHI5 
   SEQ.B  $_LET1 , #0     
-  JMP    $_WHF4 , #0     
+  JMP    $_WHF5 , #0     
   ADD.AB #1     , $_LET1 
-  JMP    $_WHI4 , #0     
-_WHF4 
+  JMP    $_WHI5 , #0     
+_WHF5 
+  MOV.A  #1     , $_LET2 
   JMP    #0     , #0     
+_LET2 
 _LET1 
   DAT    #0     , #0     
   DAT    $0     , $0     
