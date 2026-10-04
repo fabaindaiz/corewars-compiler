@@ -14,7 +14,8 @@ type imode =
 type mode =
 | MImm          (* Immediate *)
 | MDir          (* Direct *)
-| MInd of imode (* Indirect *)
+| MInd of imode (* Indirect, through the field the variable lives in, or B for a number or label *)
+| MIndA of imode (* Indirect through the A-field: only on a number, label or expression *)
 
 type arg =
 | ANone

@@ -20,6 +20,7 @@ let compile_mode (mode : mode) (dest : place) : rmode =
   | MImm -> RImm
   | MDir -> RDir
   | MInd (m) -> (imode_to_rmode m dest)
+  | MIndA (m) -> (imode_to_rmode m PA)
 
 
 type darg =
@@ -56,7 +57,9 @@ let darg_to_carg (darg : darg) (env : env) : carg =
     | Some _ ->
       (match m with
       | MImm | MDir -> ACVar (m, s)
-      | MInd (_) -> ACPnt (m, s) )
+      | MInd (_) -> ACPnt (m, s)
+      | MIndA (_) ->
+        error (sprintf "`%s` is a let variable: its (store %s) decides which field a pointer through it uses" s s) )
     (* A label the user wrote must be one pMARS reads as a label; the compiler's own start with `_`,
        which user names may not. *)
     | None -> if valid_label s || String.starts_with ~prefix:"_" s then ACLab (m, s) else error (invalid_label s) )
@@ -95,17 +98,17 @@ let carg_to_opmod (carg : carg) (env : env) : opmod =
   | ACRef (m, _) | ACLab (m, _) | ACExp (m, _) ->
     (match m with
     | MImm -> TNum
-    | MDir | MInd (_) -> TCell )
+    | MDir | MInd (_) | MIndA (_) -> TCell )
   | ACVar (m, s) ->
     (match m with
     | MImm | MDir ->
       let p = (translate_penv s penv) in
       (place_to_opmod p)
-    | MInd (_) -> failwith "a direct variable reference with an indirect mode" )
+    | MInd (_) | MIndA (_) -> failwith "a direct variable reference with an indirect mode" )
   | ACPnt (m, _) ->
     (match m with
     | MInd (_) -> TCell
-    | MImm | MDir -> failwith "a pointer reference with a direct mode" )
+    | MImm | MDir | MIndA (_) -> failwith "a pointer reference with a direct mode" )
 
 (* A variable is read through its field; a cell beside a number or a variable is its B-field, the
    ICWS'94 convention (docs/semantics.md, Uses); between two cells, or two numbers, nothing tells

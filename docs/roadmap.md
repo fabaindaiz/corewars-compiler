@@ -260,7 +260,7 @@ lines 165–166) and the epilogue is `DAT.F #0, #0`. A `JMZ`/`JMN` scanner sees 
 **Decide first.** Whether to emit `DAT $0, $0` (the user's question, 2026-10-04).
 
 ### A number cannot take an A-field mode · i-7d2612-e98368
-**State.** Planned (s-7d2612-9b0d20, from `docs/research/2026-10-04-benchmark.md`). RED's modes pick
+**State.** Done (s-7d2612-140ece): `(* x)`, `({ x)`, `(} x)` and `AInd`, `ADec`, `AInc` (d-7d2612-0e831c). Was: RED's modes pick
 the A-field variant (`*`, `{`, `}`) only through a variable stored in an A-field; a number or label
 always gets the B variant (`@`, `<`, `>`). The fast Silk-style paper copies through `}`.
 **Decide first.** A spelling for the A-field modes (`(AInd x)`, `(ADec x)`, `(AInc x)`), or a mode

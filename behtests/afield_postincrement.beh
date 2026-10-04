@@ -1,0 +1,5 @@
+# MOV.I }2, $5: the A-field of cell 2 (1) names cell 3, copied whole into cell 5; then that A-field
+# becomes 2. A B-field pointer (>2) would have read through 7 and left the A-field at 1.
+golden: bbctests/examples/afield_postincrement.bbc
+cell 1 5 DAT.F #9, #9
+cell 1 2 DAT.F #2, #7

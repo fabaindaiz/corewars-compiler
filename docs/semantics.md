@@ -70,6 +70,9 @@ generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of 
   by `Consts.resolve`). An expression names numbers, constants and labels, never a `let` variable
   (checked); without a written mode it is immediate when it names no label, direct otherwise. Its
   value is pMARS's: a label counts from the instruction holding the expression.
+- **A-field modes** (d-7d2612-0e831c). `*`, `{`, `}` (`AInd`, `ADec`, `AInc`) on a number, label or expression
+  go through the A-field of the cell they name; on a let variable they are an error, its `(store x)`
+  deciding the field.
 - **Cells** (d-7d2612-891901). A plain reference (`(Dir -1)`, a label) and the target of an indirect
   use name a cell. With no modifier written, a cell beside a number or a variable is read and
   written at its B-field, the ICWS'94 convention: `(MOV x (Dir -1))` with `x` in A is `MOV.AB`,

@@ -1123,6 +1123,16 @@ let test_review5_header_items () =
        (String.split_on_char '\n' (out_of "(program (strategy one) (strategy two) (MOV 0 1))")))
 
 
+(* Tests for phase 6: A-field modes, the entry point, the macro layer *)
+let test_amodes_on_numbers () =
+  let line needle src = squash (line_with needle (out_of src)) in
+  check Alcotest.string "} on a number" "MOV.I}2,$5" (line "MOV" "(seq (MOV I (} 2) (Dir 5)) (JMP 0))") ;
+  check Alcotest.string "names" "MOV.I{2,*top" (line "MOV" "(seq (label top) (MOV I (ADec 2) (AInd top)) (JMP 0))") ;
+  check Alcotest.string "AInc on an expression" "ADD.AB#1,}top+1" (line "ADD" "(seq (label top) (ADD 1 (AInc (+ top 1))) (JMP 0))") ;
+  check Alcotest.bool "not on a variable" true
+    (contains (error_of "(let (x 3) (seq (MOV 0 (} x)) (DAT 0 (store x))))") "its (store x) decides")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1250,6 +1260,9 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "phase6", [
+    test_case "A-field modes on numbers and labels" `Quick test_amodes_on_numbers ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

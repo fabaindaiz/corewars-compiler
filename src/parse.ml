@@ -64,6 +64,9 @@ let parse_mode (sexp : sexp) : mode =
   | `Atom "Ind" | `Atom "@" -> MInd (MINone)
   | `Atom "Dec" | `Atom "<" -> MInd (MIDec)
   | `Atom "Inc" | `Atom ">" -> MInd (MIInc)
+  | `Atom "AInd" | `Atom "*" -> MIndA (MINone)
+  | `Atom "ADec" | `Atom "{" -> MIndA (MIDec)
+  | `Atom "AInc" | `Atom "}" -> MIndA (MIInc)
   | _ -> fail sexp (sprintf "Not a valid mode: %s" (to_string sexp))
 
 (* An expression for pMARS: numbers, names (labels, constants) and + - * / %, two operands each. *)

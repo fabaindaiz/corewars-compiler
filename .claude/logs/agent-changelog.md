@@ -5,6 +5,16 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-140ece — Phase 6: A-field modes, the entry point and the macro layer
+
+**What.** On branch `feat/phase-6`, from `feat/phase-5` (none merged). The user's decisions: typed
+templates plus `for` for the macro layer, labels fresh per expansion, A-field modes on numbers and
+labels only, `(start label)` for the entry point. Built so far: the A-field modes (d-7d2612-0e831c).
+**Areas.** `src/ast.ml`, `src/parse.ml`, `src/util.ml`, `execs/run_test.ml`, `bbctests/`,
+`behtests/`, `LANGUAGE.md`, `docs/semantics.md`, `docs/decisions.md`, `docs/roadmap.md`.
+**What went wrong.** Nothing yet.
+**Left undone.** The entry point and the macro layer, as the session goes.
+
 ## 2026-10-04 · s-7d2612-9b0d20 — Phase 5: hills, metadata, benchmark, behaviour specs and the documentation review
 
 **What.** On branch `feat/phase-5`, from `feat/phase-4` (neither merged). The user's decisions: the

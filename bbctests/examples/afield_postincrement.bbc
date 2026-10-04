@@ -1,0 +1,16 @@
+NAME: an A-field postincrement on a number
+DESCRIPTION: (} 2) reads through the A-field of the cell two ahead and then increments it; see behtests/afield_postincrement.beh
+SRC:
+(seq
+  (MOV I (} 2) (Dir 5))
+  (JMP 0)
+  (DAT 1 7)
+  (DAT 9 9))
+EXPECTED:
+;redcode-94b
+
+  MOV.I  }2     , $5     
+  JMP    #0     , #0     
+  DAT    #1     , #7     
+  DAT    #9     , #9     
+  DAT    $0     , $0     

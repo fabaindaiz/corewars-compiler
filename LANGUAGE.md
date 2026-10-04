@@ -56,6 +56,7 @@ Addresing modes are used to specify how the argument is used in the instruction.
 - (Ind var) | (@ var) indirect addresing to var
 - (Dec var) | (< var) decrement var and indirect addresing to var
 - (Inc var) | (> var) indirect addresing to var and increment var
+- (AInd var) | (* var), (ADec var) | ({ var), (AInc var) | (} var) the same through the A-field, on a number, a label or an expression only: a let variable's pointer modes follow the field its `(store x)` gives it
 - (store var) | (! var) store var value in this place (field is automatic)
 
 Every `let` variable needs exactly one `(store x)` in its body: the cell holding it is labelled where the store is. Two stores are a compile error; a variable used with no store is a compile error at the use. Names (variables and labels) may not start with `_`: those are reserved for the labels the compiler generates.
