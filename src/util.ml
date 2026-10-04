@@ -57,7 +57,9 @@ let darg_to_carg (darg : darg) (env : env) : carg =
       (match m with
       | MImm | MDir -> ACVar (m, s)
       | MInd (_) -> ACPnt (m, s) )
-    | None -> ACLab (m, s) )
+    (* A label the user wrote must be one pMARS reads as a label; the compiler's own start with `_`,
+       which user names may not. *)
+    | None -> if valid_label s || String.starts_with ~prefix:"_" s then ACLab (m, s) else error (invalid_label s) )
 
 let carg_to_rarg (carg : carg) (env : env) : rarg =
   let _, penv, lenv = env in

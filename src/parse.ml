@@ -47,9 +47,16 @@ let user_name (sexp : sexp) (s : string) : string =
 let pmars_keywords = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
                       "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"; "ORG"; "END"; "PIN"; "EQU"; "FOR"; "ROF"]
 
+(* pMARS predefines these names, case-sensitively (redcode.ref); a label of the same name is rejected. *)
+let pmars_predefined = ["CORESIZE"; "MAXLENGTH"; "MAXPROCESSES"; "MAXCYCLES"; "MINDISTANCE"; "VERSION";
+                        "WARRIORS"; "ROUNDS"; "PSPACESIZE"; "CURLINE"; "READLIMIT"; "WRITELIMIT"]
+
 let label_name (sexp : sexp) (s : string) : string =
   let s = user_name sexp s in
-  if List.mem (String.uppercase_ascii s) pmars_keywords then
+  if List.mem s pmars_predefined then
+    fail sexp (sprintf "`%s` is a pMARS predefined symbol and cannot be a label" s)
+  else if not (valid_label s) then fail sexp (invalid_label s)
+  else if List.mem (String.uppercase_ascii s) pmars_keywords then
     fail sexp (sprintf "`%s` is a pMARS keyword and cannot be a label" s)
   else s
 
@@ -270,12 +277,19 @@ let parse_source (sexp : sexp) : source =
 (* parse a program from a file *)
 let sexp_from_file : string -> CCSexp.sexp =
   fun filename ->
+   Phys.reset locations ;
    match Located.parse_file filename with
    | Ok s -> s
    | Error msg -> error (sprintf "Unable to parse file %s: %s" filename msg)
  
 (* parse a program from a string *)
+(* CCSexp reports "parse error at L:C: ..." with a 0-based column: said as file:line:col like every
+   other error, 1-based. *)
 let sexp_from_string (src : string) : CCSexp.sexp =
+  Phys.reset locations ;
   match Located.parse_string src with
   | Ok s -> s
-  | Error msg -> error msg
+  | Error msg ->
+    (match Scanf.sscanf_opt msg "parse error at %d:%d: %s@\n" (fun l c rest -> (l, c, rest)) with
+    | Some (line, col, rest) -> raise (Error (Some { line; col = col + 1 }, rest))
+    | None -> error msg)

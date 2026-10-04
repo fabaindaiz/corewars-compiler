@@ -115,6 +115,16 @@ exception Error of loc option * string
 
 let error (msg : string) : 'a = raise (Error (None, msg))
 
+(* A label, as LANGUAGE.md states it: a letter, then letters, digits and _. pMARS reads anything
+   else as an expression or rejects it. *)
+let valid_label (s : string) : bool =
+  let letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let rest c = letter c || (c >= '0' && c <= '9') || c = '_' in
+  String.length s > 0 && letter s.[0] && String.for_all rest s
+
+let invalid_label (s : string) : string =
+  Printf.sprintf "`%s` is not a valid label: a letter, then letters, digits and _" s
+
 type tag = int
 
 (* The AST, annotated: the parser builds [loc eexpr] and tagging turns it into [meta eexpr]. *)
@@ -189,3 +199,13 @@ let string_of_arg(a : arg) : string =
   | ARef (_, n) -> Int.to_string n
   | ALab (_, s) -> s
   | AExp (_, e) -> Red.pp_rexpr e
+
+(* Every node's location, by tag: cells and loops carry the tag of the node that emitted them. *)
+let locations (e : meta eexpr) : (tag * loc) list =
+  let rec go (e : meta eexpr) = match e with
+    | EComment _ | EExpect _ -> []
+    | ELabel (_, m) | EPrim2 (_, _, _, _, m) -> [(m.tag, m.loc)]
+    | EFlow1 (_, _, b, m) | ELet (_, _, b, m) -> (m.tag, m.loc) :: go b
+    | EFlow2 (_, _, b1, b2, m) -> (m.tag, m.loc) :: go b1 @ go b2
+    | ESeq (es, m) -> (m.tag, m.loc) :: List.concat_map go es in
+  go e

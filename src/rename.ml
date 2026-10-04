@@ -54,17 +54,21 @@ let stores_in_cond (c : cond) : string list = match c with
 (* After renaming every name is bound once, so counting stores per name checks each let: a let
    variable lives in one cell, so a second (store x) would define its label twice. *)
 let check_single_stores (binders : (string * (string * loc)) list) (e : expr) : unit =
+  (* Each store with the location of the node that holds it, in source order. *)
+  let at loc names = List.map (fun s -> (s, loc)) names in
   let rec stores (e : expr) = match e with
     | EComment _ | ELabel _ | EExpect _ -> []
-    | EPrim2 (_, _, a1, a2, _) -> stores_in_arg a1 @ stores_in_arg a2
-    | EFlow1 (op, c, b, _) -> stores_in_flow op @ stores_in_cond c @ stores b
-    | EFlow2 (_, c, b1, b2, _) -> stores_in_cond c @ stores b1 @ stores b2
-    | ELet (_, a, b, _) -> stores_in_arg a @ stores b
+    | EPrim2 (_, _, a1, a2, loc) -> at loc (stores_in_arg a1 @ stores_in_arg a2)
+    | EFlow1 (op, c, b, loc) -> at loc (stores_in_cond c) @ stores b @ at loc (stores_in_flow op)
+    | EFlow2 (_, c, b1, b2, loc) -> at loc (stores_in_cond c) @ stores b1 @ stores b2
+    | ELet (_, a, b, loc) -> at loc (stores_in_arg a) @ stores b
     | ESeq (es, _) -> List.concat_map stores es in
   let all = stores e in
-  List.iter (fun (unique, (original, loc)) ->
-    if List.length (List.filter (( = ) unique) all) > 1 then
-      raise (Error (Some loc, sprintf "variable `%s` is stored twice; a let variable lives in one cell" original)))
+  List.iter (fun (unique, (original, _)) ->
+    match List.filter (fun (s, _) -> s = unique) all with
+    | _ :: (_, loc) :: _ ->
+      raise (Error (Some loc, sprintf "variable `%s` is stored twice; a let variable lives in one cell" original))
+    | [] | [_] -> ())
     (List.rev binders)
 
 (* The first binder of a name keeps it; later ones become _x#1, _x#2, ...: user names may not start

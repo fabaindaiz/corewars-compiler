@@ -526,7 +526,8 @@ let test_phase1_long_line_is_an_error () =
   let l = String.make 250 'a' in
   let o = drive [("p.src", Printf.sprintf "(seq (label %s) (JMP %s))" l l)] ["p.src"] in
   check Alcotest.(pair string int) "err, code"
-    ("p.src: error: redcode line 5 has 269 characters; pMARS hangs on lines of 256 or more\n", 1) (o.err, o.code)
+    (* said at the JMP whose line it is *)
+    ("p.src:1:265: error: redcode line 5 has 269 characters; pMARS hangs on lines of 256 or more\n", 1) (o.err, o.code)
 
 
 let test_phase1_parse_error_located () =
@@ -558,7 +559,7 @@ let test_phase1_pmars_keyword_label_rejected () =
     (error_of "(seq (label END) (JMP 0))")
 
 let test_phase1_double_store_rejected () =
-  check Alcotest.string "two stores" "p.src:1:1: error: variable `x` is stored twice; a let variable lives in one cell\n"
+  check Alcotest.string "two stores, at the second" "p.src:1:35: error: variable `x` is stored twice; a let variable lives in one cell\n"
     (error_of "(let (x 1) (seq (DAT (store x) 0) (DAT 0 (store x))))")
 
 
@@ -966,6 +967,38 @@ let test_warnings_archetypes_clean () =
     [("imp", 0); ("dwarf", 1); ("stone", 1); ("clear", 0); ("scanner", 1); ("seqscan", 0); ("paper", 1); ("impring", 0)]
 
 
+(* Tests for the smaller gaps of the phase-1 review *)
+let test_gaps_label_names () =
+  check Alcotest.string "a pMARS predefined symbol"
+    "p.src:1:6: error: `CORESIZE` is a pMARS predefined symbol and cannot be a label\n"
+    (error_of "(seq (label CORESIZE) (DAT 0 0))") ;
+  check Alcotest.string "a label's syntax"
+    "p.src:1:6: error: `9x` is not a valid label: a letter, then letters, digits and _\n"
+    (error_of "(seq (label 9x) (DAT 0 0))") ;
+  check Alcotest.string "a reference's syntax"
+    "p.src:1:6: error: `a-b` is not a valid label: a letter, then letters, digits and _\n"
+    (error_of "(seq (JMP a-b) (DAT 0 0))")
+
+let test_gaps_errors_say_where () =
+  check Alcotest.bool "a syntax error: file:line:col, 1-based" true
+    (String.starts_with ~prefix:"p.src:3:11: error:" (error_of "(seq\n  (MOV 0 1)\n  (ADD 1 2")) ;
+  check Alcotest.string "stored twice: at the second store"
+    "p.src:1:35: error: variable `x` is stored twice; a let variable lives in one cell\n"
+    (error_of "(let (x 1) (seq (DAT (store x) 0) (DAT 0 (store x))))") ;
+  check Alcotest.string "a condition's error before its body's"
+    "p.src:1:17: error: (DN x) is only available in do-while\n"
+    (error_of "(let (x 1) (seq (if (DN x) (MOV (store y) 0)) (DAT 0 (store x))))") ;
+  let long = "(seq (JMP " ^ String.make 250 'a' ^ ") (label " ^ String.make 250 'a' ^ ") (DAT 0 0))" in
+  check Alcotest.bool "a long line: at the node that emits it" true
+    (String.starts_with ~prefix:"p.src:1:6: error: redcode line" (error_of long))
+
+let test_gaps_locations_cleared () =
+  ignore (sexp_from_string "(seq (MOV 0 1) (ADD 1 2) (SUB 3 4))") ;
+  ignore (sexp_from_string "(NOP)") ;
+  (* (NOP) is one list and one atom *)
+  check Alcotest.int "only the last parse's nodes" 2 (Phys.length locations)
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -1092,6 +1125,11 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "gaps", [
+    test_case "which names may be labels" `Quick test_gaps_label_names ;
+    test_case "errors say where" `Quick test_gaps_errors_say_where ;
+    test_case "Parse.locations holds one parse" `Quick test_gaps_locations_cleared ;
   ] ;
   "warnings", [
     test_case "a while the policy kept unrotated" `Quick test_warnings_kept_rotation ;

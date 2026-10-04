@@ -40,7 +40,13 @@ measured variant is faster and the policy declined it (`Optimize.measure_all`, `
 Two driver tests changed their expected standard error for a stated reason: prog1's loop moves its
 pointer 4 cells a lap and earns the step warning. My hand-counted column for one warning was wrong
 (45, is 48); computed with a script before running this time, as i-7d2612-340f22 proposes.
-**Left undone.** The smaller pending items.
+The phase-1 review's smaller gaps (i-7d2612-0568a1), all six with a test in the `gaps` group. The
+label check broke 41 tests at first: conditions pass their generated labels (`_IF8`) through the
+same path; the check now applies only to names a user can write (not starting with `_`). Two
+older tests that recorded the gaps (the long-line error without a location, "stored twice" at the
+`let`) changed to the new locations, which is the fix's point.
+**Left undone.** The net step prediction (i-7d2612-fbe7c8), a JSON field for the optimizations,
+compile-error goldens (i-7d2612-70ea22), the scanner's score.
 
 ## 2026-10-04 · s-7d2612-3f3b23 — Closing the phase 2-3 session
 

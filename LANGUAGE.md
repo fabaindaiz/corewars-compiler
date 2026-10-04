@@ -176,7 +176,7 @@ A jump the compiler generated that would land on a `JMP` the compiler generated 
 - (let (id arg) body) introduce a new variable in the scope (no extra instruction)
 
 - (seq instrs) execute a sequence of instructions (no extra instruction)
-- (label text) create a label in the code (no extra instruction). Labels are case-sensitive, `[A-Za-z][A-Za-z0-9_]*`: a name starting with `_` is reserved for the labels the compiler generates (`_LET1`, `_WHI9`, …), and a pMARS keyword (`MOV`, `END`, …) cannot be a label; both are compile errors. A label so long that an emitted line reaches 256 characters is a compile error (pMARS hangs on such lines)
+- (label text) create a label in the code (no extra instruction). Labels are case-sensitive, `[A-Za-z][A-Za-z0-9_]*`: a name starting with `_` is reserved for the labels the compiler generates (`_LET1`, `_WHI9`, …), and a pMARS keyword (`MOV`, `END`, …) or one of pMARS's predefined symbols (`CORESIZE`, `MAXLENGTH`, `CURLINE`, …, case-sensitive) cannot be a label, and a label used or defined must have that form; all are compile errors. A label so long that an emitted line reaches 256 characters is a compile error (pMARS hangs on such lines)
 - (com words ...) a comment line in the output, `; words ...` (no instruction)
 
 Every compiled program ends with an extra `DAT $0, $0`, exactly what pMARS fills empty core with, so no scanner can tell it from an empty cell: a label at the end of a program needs an instruction after it (pMARS discards a trailing label), and a program that runs past its last instruction dies there. It costs one cell of length.

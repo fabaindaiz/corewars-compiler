@@ -174,7 +174,11 @@ operators in RED that translate to different modifiers or sequences. Built in su
 (i-7d2612-7eadd5); at least `prog3.bbc` and `prog5.bbc` change (`ADD.I #1, #1`, `SUB.I`).
 
 ### Smaller gaps from the phase-1 review · i-7d2612-0568a1
-**State.** Planned. Each fails loudly or only in unusual input; none miscompiles silently.
+**State.** Done (s-7d2612-333abd), each with a test in the `gaps` group: predefined symbols and
+names outside `[A-Za-z][A-Za-z0-9_]*` are rejected as labels (generated ones start with `_` and
+pass); a syntax error is `file:line:col:` with a 1-based column; "stored twice" points at the second
+store; a condition is compiled before its body, so the first error in the source is reported; the
+long-line error points at the node that emits the line; `Parse.locations` holds one parse. Was: Each fails loudly or only in unusual input; none miscompiles silently.
 - pMARS's predefined symbols (`CORESIZE`, `MAXLENGTH`, `MAXPROCESSES`, `MAXCYCLES`, `MINDISTANCE`,
   `VERSION`, `WARRIORS`, `ROUNDS`, `PSPACESIZE`, case-sensitive) and `CURLINE` are accepted as labels;
   pMARS then rejects the warrior.

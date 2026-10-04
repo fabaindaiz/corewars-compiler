@@ -8,16 +8,6 @@ type warning = { loc : loc option; message : string }
 (* Which warnings are given: the ones about the policy's objectives (default), all, or none. *)
 type mode = Policy | All | Nothing
 
-(* Cells and loops carry the tag of the node that emitted them; this gives each tag its place. *)
-let locations (e : meta eexpr) : (tag * loc) list =
-  let rec go (e : meta eexpr) = match e with
-    | EComment _ | EExpect _ -> []
-    | ELabel (_, m) | EPrim2 (_, _, _, _, m) -> [(m.tag, m.loc)]
-    | EFlow1 (_, _, b, m) | ELet (_, _, b, m) -> (m.tag, m.loc) :: go b
-    | EFlow2 (_, _, b1, b2, m) -> (m.tag, m.loc) :: go b1 @ go b2
-    | ESeq (es, m) -> (m.tag, m.loc) :: List.concat_map go es in
-  go e
-
 (* The fewest control instructions per iteration a loop construct can spend: a repeat its JMP; a
    loop whose test is a single conditional jump, that jump (a while, once rotated); a comparison,
    the test and a jump. A DZ while has no single post-test. *)
@@ -38,7 +28,7 @@ let minimum (l : Metrics.loop_metrics) : int option =
    control instruction is the price of the fastest program there is, and not worth saying. *)
 let check ~(mode : mode) ~(policy : Metrics.policy) ~(expects : (expectation * tag option) list)
     ~(faster : bool) (m : Metrics.t) (body : meta eexpr) : warning list =
-  let where = locations body in
+  let where = Ast.locations body in
   let at node = Option.bind node (fun t -> List.assoc_opt t where) in
   let wants o = match mode with All -> true | Nothing -> false | Policy -> List.mem o policy in
   let policy_text = String.concat " > " (List.map Metrics.string_of_objective policy) in

@@ -201,7 +201,10 @@ let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted lis
     | If ->
       let gen = emit ~origin:tag ~construct:"if" in
       let fin = (sprintf "_IF%d" tag) in
-      (compile_cond cond Cpre fin env tag "if") @ (compile_expr opts exp env) @ [gen (ILAB (fin))]
+      (* Each part is compiled in source order, so the first error in the source is the one reported. *)
+      let test = (compile_cond cond Cpre fin env tag "if") in
+      let body = (compile_expr opts exp env) in
+      test @ body @ [gen (ILAB (fin))]
     | While ->
       let gen = emit ~origin:tag ~construct:"while" in
       let ini = (sprintf "_WHI%d" tag) in
@@ -213,16 +216,20 @@ let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted lis
         | Cond2 _ -> opts.rotate_binary
         | Cond1 ((Cdz | Cdn), _, _) | Cond0 -> false in
       if rotate then
-        let test = (sprintf "_WHC%d" tag) in
+        let test_label = (sprintf "_WHC%d" tag) in
+        let test = (compile_cond cond Cpos ini env tag "while") in
         let body = (compile_expr opts exp env) in
-        [gen (jump_label test) ; gen (ILAB (ini))] @ body @ [gen (ILAB (test))]
-        @ (compile_cond cond Cpos ini env tag "while") @ [gen (ILAB (fin))]
+        [gen (jump_label test_label) ; gen (ILAB (ini))] @ body @ [gen (ILAB (test_label))] @ test @ [gen (ILAB (fin))]
       else
-      [gen (ILAB (ini))] @ (compile_cond cond Cpre fin env tag "while") @ (compile_expr opts exp env) @ [gen (jump_label ini) ; gen (ILAB (fin))]
+        let test = (compile_cond cond Cpre fin env tag "while") in
+        let body = (compile_expr opts exp env) in
+        [gen (ILAB (ini))] @ test @ body @ [gen (jump_label ini) ; gen (ILAB (fin))]
     | DoWhile ->
       let gen = emit ~origin:tag ~construct:"do-while" in
       let ini = (sprintf "_DWH%d" tag) in
-      [gen (ILAB (ini))] @ (compile_expr opts exp env) @ (compile_cond cond Cpos ini env tag "do-while") )
+      let test = (compile_cond cond Cpos ini env tag "do-while") in
+      let body = (compile_expr opts exp env) in
+      [gen (ILAB (ini))] @ body @ test )
   | EFlow2 (op, cond, exp1, exp2, m) -> at m @@ fun () ->
     let tag = m.tag in
     (match op with
@@ -230,7 +237,10 @@ let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted lis
       let gen = emit ~origin:tag ~construct:"if-else" in
       let mid = (sprintf "_IFM%d" tag) in
       let fin = (sprintf "_IFF%d" tag) in
-      (compile_cond cond Cpre mid env tag "if-else") @ (compile_expr opts exp1 env) @ [gen (jump_label fin) ; gen (ILAB (mid))] @ (compile_expr opts exp2 env) @ [gen (ILAB (fin))] )
+      let test = (compile_cond cond Cpre mid env tag "if-else") in
+      let body1 = (compile_expr opts exp1 env) in
+      let body2 = (compile_expr opts exp2 env) in
+      test @ body1 @ [gen (jump_label fin) ; gen (ILAB (mid))] @ body2 @ [gen (ILAB (fin))] )
   | ELet (id, arg, body, m) -> at m @@ fun () ->
     let tag = m.tag in
     let label = (sprintf "_LET%d" tag) in
@@ -350,12 +360,20 @@ let max_line = 256
 
 (* Constants are EQU lines before the code: pMARS substitutes an EQU only after its definition. *)
 let compile_prog ?opts ?(consts = []) (e : expr) : string =
-  let instrs = List.map (fun (x : emitted) -> x.instr) (compile_body ?opts ~consts:(List.map fst consts) e) in
+  let names = List.map fst consts in
+  let body = compile_body ?opts ~consts:names e in
+  let instrs = List.map (fun (x : emitted) -> x.instr) body in
   let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr v)) consts) in
   let text = (prelude) ^ equs ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
-  List.iteri (fun i line ->
-    let n = String.length line in
-    if n >= max_line then
-      error (sprintf "redcode line %d has %d characters; pMARS hangs on lines of %d or more" (i + 1) n max_line))
-    (String.split_on_char '\n' text) ;
-  text
+  let too_long line = String.length line >= max_line in
+  let lines = String.split_on_char '\n' text in
+  match List.find_index too_long lines with
+  | None -> text
+  | Some i ->
+    (* Said at the node whose instruction or label makes the line, when one does. *)
+    let where = locations (tag_expr (Rename.uniquify (Consts.resolve names e))) in
+    let culprit = List.find_opt (fun (x : emitted) ->
+        List.exists too_long (String.split_on_char '\n' (pp_instrs [x.instr]))) body in
+    let loc = Option.bind culprit (fun (x : emitted) -> Option.bind x.origin (fun t -> List.assoc_opt t where)) in
+    raise (Error (loc, sprintf "redcode line %d has %d characters; pMARS hangs on lines of %d or more"
+                         (i + 1) (String.length (List.nth lines i)) max_line))
