@@ -27,6 +27,7 @@ meaning each pass must preserve is in `docs/semantics.md`; settled choices are i
 ```
 RED text ──CCSexp──▶ sexp ──Parse.parse_source──▶ Ast.source ──Ast.tag_expr──▶ tag eexpr
    ──Compile.compile_expr (Analyse, Lib, Util)──▶ Compile.emitted list ──Red.pp_instrs──▶ redcode text
+     (once per set of Compile.options; Optimize.choose keeps the variant the policy prefers)
                                                        └──Layout.build──▶ Layout.program ──Metrics.measure──▶ Metrics.t
                                                                                           └──Expect.check──▶ pass / fail
 ```
@@ -43,13 +44,14 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | `src/util.ml` | operand lowering through three small IRs: `darg` (number or label) → `carg` (constant, label, variable or pointer) → `Red.rarg`; and modifier choice `opmod` → `Red.rmod` | `Red.rarg`, `Red.rmod` |
 | `src/compile.ml` | control flow and conditions to labels and jumps, each instruction annotated with its origin tag, generating construct and stored variables; `thread_jumps` aims a generated jump that lands on a generated `JMP` at that `JMP`'s target; `compile_prog` adds the header and the epilogue `DAT` | `Compile.emitted list`, then text |
 | `src/layout.ml` | positions: labels resolved to offsets, cells with roles and variables, successors, loops, label and line-length diagnostics | `Layout.program` |
+| `src/optimize.ml` | measure and choose (d-7d2612-6b110b): compiles the program once per combination of `Compile.options`, measures each and keeps the one the policy prefers, ties to the fewest transformations; the driver and the `compare` suite compile through it | `Compile.options`, the chosen `emitted list` and its `Metrics.t` |
 | `src/metrics.ml` | static metrics, step and counter predictions, the optimization policy, text and JSON reports | `Metrics.t` |
 | `src/expect.ml` | collects `(expect ...)` with their enclosing loop, checks the static ones, writes the execution ones as a behaviour spec | `Expect.outcome`, `.beh` text |
 | `src/driver.ml` | the command line as a function: arguments in; standard output, standard error, files to write and exit code out; an `Ast.Error` becomes `file:line:col: error: ...` and exit 1, a `Failure` an internal error and exit 2 | `Driver.output` |
 | `src/red.ml` | the Redcode target: opcodes, modes, modifiers, and the pretty-printer that fixes the column padding | text |
 
 **Dependency direction:** `red` ← `ast` ← `rename` ← `lib` ← `util` ← `analyse` ← `compile` ← `layout` ← `metrics`
-← `expect` ← `driver`; `parse` depends only on `ast`. `execs/run_compile.ml` only performs what
+← `optimize` ← `expect` ← `driver`; `parse` depends only on `ast`. `execs/run_compile.ml` only performs what
 `Driver.run` returns. dune rejects cycles, so the direction cannot invert silently; a new module states where it
 sits in this chain.
 
@@ -65,6 +67,7 @@ Every label the compiler invents is a prefix plus the tag of the node that produ
 | `_IF` | `if` without else: end label |
 | `_IFM`, `_IFF` | `if` with else: else-branch label, end label |
 | `_WHI`, `_WHF` | `while`: loop head, end label |
+| `_WHC` | rotated `while`: the test after the body (d-7d2612-a773b1) |
 | `_DWH` | `do-while`: loop head |
 
 User names may not start with `_`, so no user label can take one of these (d-7d2612-bd5def).

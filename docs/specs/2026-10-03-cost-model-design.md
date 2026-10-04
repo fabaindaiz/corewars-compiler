@@ -209,6 +209,7 @@ length 4/100   code 3  data 0  epilogue 1  unreachable 0   nonzero 3  nonblank 3
 loop 0..2 (LET1, user code, node 8)   cycles/iter 3   overhead 0   exit —
   predicted: step 4 → period 2000 iterations, does not visit every cell (6000 cycles per period)
 policy: speed > size
+optimizations: none
 ```
 
 **Files.** `src/layout.ml` (IR), `src/metrics.ml` (metrics, predictions, policy), `src/expect.ml`

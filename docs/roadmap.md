@@ -242,7 +242,11 @@ dev branch's lambdas, i-7d2612-ec4d2d).
 Transformations that change emitted code to improve the policy's metric, each measured with `--report` before and after. Speed first: one instruction per iteration is worth about five times eight cells.
 
 ### Loop rotation: the condition at the end of the loop · i-7d2612-3ca4c2
-**State.** Planned (phase 3).
+**State.** Done (s-7d2612-f082c8). The user decided: unary always, binary when the policy picks it
+(d-7d2612-a773b1), chosen by measuring each variant (d-7d2612-6b110b,
+`docs/specs/2026-10-04-optimizer-design.md`). A unary `while` around one instruction now runs 2
+cycles per iteration instead of 3 (`behtests/while_jn_rotated.beh`); no existing golden changed
+(prog8's `LT` is binary, never better rotated). Before:
 `while` tests at the top and jumps back from the bottom: two control instructions per iteration.
 With the test moved to the bottom and one jump into it before the first iteration, a unary
 condition costs one (`JMN head, x`). Measured: `while (JN x)` around one instruction runs 3 cycles per

@@ -154,7 +154,7 @@ Control flows are used to specify the execution order of the instructions. Use c
 - (repeat body) repeat body forever (one extra instruction)
 - (if cond then) execute body if cond is true (no extra instruction + cond)
 
-- (while cond body) repeat body while cond is true (one extra instruction + cond)
+- (while cond body) repeat body while cond is true (one extra instruction + cond). With a `JZ` or `JN` condition and the default policy the test goes after the body and one `JMP` enters it: per iteration only the test runs (one control instruction instead of two), at one more cycle before the first iteration; a policy that puts `boot` first keeps the test at the top
 - (do-while cond body) repeat body while cond is true (no extra instruction + cond)
 
 - (if cond then else) execute then if cond is true, otherwise execute else (one extra instruction + cond)
@@ -208,4 +208,4 @@ Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` w
 - (dead N) no process is left after N executed instructions
 - (cell ADDR "TEXT" N) after N instructions, cell ADDR holds the instruction TEXT
 
-`run_compile.exe --report` prints the measured metrics and predictions on standard error; `--report=json` prints them as JSON instead of the redcode. Any compile error prints `file:line:column: error: ...` on standard error and exits with code 1; an internal compiler error exits with code 2. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).
+`run_compile.exe --report` prints the measured metrics and predictions on standard error, with the optimizations the policy chose (`optimizations: rotate-unary`, or `none`); `--report=json` prints them as JSON instead of the redcode. Any compile error prints `file:line:column: error: ...` on standard error and exits with code 1; an internal compiler error exits with code 2. Definitions: [docs/specs/2026-10-03-cost-model-design.md](docs/specs/2026-10-03-cost-model-design.md).

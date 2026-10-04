@@ -64,15 +64,17 @@ and compile_file ~read f report optimize warn emit_beh : output =
   let policy = List.map (fun n -> match Metrics.objective_of_string n with
     | Some o -> o
     | None -> stop (sprintf "unknown objective `%s`: one of speed, size, stealth, boot" n)) names in
-  let measured = lazy (Metrics.measure (Layout.of_expr src.body)) in
-  let metrics () = Lazy.force measured in
+  (* The policy picks the transformations (Optimize.choose): what is printed, measured and checked
+     is the chosen variant. *)
+  let opts, _, chosen = Optimize.choose policy src.body in
+  let metrics () = chosen in
   let expects = List.map (fun x -> (x, None)) src.expects @ Expect.collect (Ast.tag_expr src.body) in
   let failures = List.filter_map (fun x -> match Expect.check (metrics ()) x with
     | Some (Expect.Fail msg) -> Some msg
     | Some Expect.Pass | None -> None) expects in
   if failures <> [] && not warn then stop (String.concat "\n" failures) ;
   let warnings = String.concat "" (List.map (sprintf "warning: %s\n") failures) in
-  let redcode = Compile.compile_prog src.body ^ "\n" in
+  let redcode = Compile.compile_prog ~opts src.body ^ "\n" in
   let files = match emit_beh with
     | None -> []
     | Some path ->
@@ -85,8 +87,8 @@ and compile_file ~read f report optimize warn emit_beh : output =
   match report with
   | Json -> { out = Metrics.to_json ~policy (metrics ()) ^ "\n"; err = warnings; code = 0; files }
   | Text ->
-    let r = sprintf "%spolicy: %s\n" (Metrics.to_text ~maxlength (metrics ()))
-        (String.concat " > " (List.map Metrics.string_of_objective policy)) in
+    let r = sprintf "%spolicy: %s\noptimizations: %s\n" (Metrics.to_text ~maxlength (metrics ()))
+        (String.concat " > " (List.map Metrics.string_of_objective policy)) (Optimize.describe opts) in
     { out = redcode; err = warnings ^ r; code = 0; files }
   | No_report -> { out = redcode; err = warnings; code = 0; files }
 

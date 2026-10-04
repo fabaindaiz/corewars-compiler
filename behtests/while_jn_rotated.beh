@@ -1,0 +1,7 @@
+# Rotated: JMP to the test (1), JMN (2), then SUB and JMN three times (8) with x = 0 after the third
+# SUB (7); the last JMN falls through onto x's DAT (9): dead after 9 instructions. Unrotated (JMZ,
+# SUB, JMP per lap, then JMZ out to the DAT) it would still be running after 9 and die after 11.
+golden: bbctests/examples/while_jn_rotated.bbc
+cell 7 3 DAT.F #0, #0
+alive 8
+dead 9

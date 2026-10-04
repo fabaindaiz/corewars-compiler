@@ -5,6 +5,29 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-f082c8 — Phase 3: the optimizer under the policy
+
+**What.** On branch `feat/phase-3`, stacked on `feat/phase-2` (neither merged). The user's decisions:
+rotate a unary `while`, a binary one only if the policy picks it; variables in a loop's `JMP` only
+when written explicitly, `(repeat body (store p))`; optimizations chosen by measuring each variant
+under the policy. Built so far: `Compile.options`, `Optimize.choose` (the whole program compiled
+once per option set, measured, the policy's preference kept, ties to the fewest transformations),
+the driver and the `compare` suite compiling through it, `--report` naming the optimizations
+applied, and `while` rotation (label `_WHC`). Design: `docs/specs/2026-10-04-optimizer-design.md`.
+**Areas.** `src/compile.ml`, `src/optimize.ml` (new), `src/driver.ml`, `src/dune`, `execs/run_test.ml`,
+`bbctests/examples/while_jn_rotated.bbc`, `behtests/while_jn_rotated.beh`, `LANGUAGE.md`,
+`docs/semantics.md`, `docs/architecture.md`, `docs/decisions.md`, `docs/roadmap.md`, `docs/specs/`.
+**Architecture.** ✅ Complies: a new module, placed in the dependency chain in
+`docs/architecture.md`; no existing golden changed.
+**What went wrong.** The phase-2 review arrived mid-way: the work in progress was saved as a patch
+outside the repository, the files restored from `HEAD` (a `git checkout --` was refused by a
+permission rule), the review's findings fixed on `feat/phase-2`, and the patch re-applied with two
+additive conflicts in `execs/run_test.ml`, resolved by keeping both sides (the first resolution
+dropped a `] ;`, caught by the build). The rotated `while` spec's hand count was wrong first (dies
+after 9, not 8: the entry `JMP` goes to the test, not the body).
+**Left undone.** `(repeat body arg)` and the remaining peephole rewrites (a `JMP` to the next cell,
+an empty `if`); a `--report=json` field for the optimizations applied.
+
 ## 2026-10-04 · s-7d2612-14641b — Phase 2: the archetypes measured against hand-written redcode
 
 **What.** On branch `feat/phase-2`. Wrote six classic archetypes twice, by hand and in RED

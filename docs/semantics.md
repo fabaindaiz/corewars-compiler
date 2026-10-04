@@ -112,6 +112,7 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 | `(if c e)` | `⟦c⟧pre→_IFn; ⟦e⟧; _IFn:` |
 | `(if c e₁ e₂)` | `⟦c⟧pre→_IFMn; ⟦e₁⟧; JMP _IFFn; _IFMn: ⟦e₂⟧; _IFFn:` |
 | `(while c e)` | `_WHIn: ⟦c⟧pre→_WHFn; ⟦e⟧; JMP _WHIn; _WHFn:` |
+| `(while c e)`, rotated | `JMP _WHCn; _WHIn: ⟦e⟧; _WHCn: ⟦c⟧post→_WHIn; _WHFn:` (when the policy picks it; never for `DZ`) |
 | `(do-while c e)` | `_DWHn: ⟦e⟧; ⟦c⟧post→_DWHn` |
 
 | Condition | pre (jump when false) | post (jump when true) |
@@ -130,6 +131,12 @@ the always-skipping `SNE #0, #1` keeps `.AB`. `GT` is emitted as `SLT y, x`, so 
 `BA` is swapped there: `(GT AB x y)` compares `x`'s A-field with `y`'s B-field, as in every other
 comparison. Without one, the test takes the modifier an
 instruction would (§3; d-7d2612-8f9340).
+
+**Rotation** (d-7d2612-a773b1). `(while c e)` ≡ `(if c (do-while c e))`: the rotated layout jumps
+to the test, which loops back while `c` holds. The compiler emits it when the policy prefers it
+(measure and choose, d-7d2612-6b110b): with a unary condition it saves a control instruction per
+iteration for one more boot cycle; with a binary one it saves nothing per iteration, so today's
+objectives never pick it.
 
 `SEQ`/`SNE`/`SLT` skip the next instruction when their test holds; `SLT` is strict `<`. A post-condition
 `GT`/`LT` cannot skip on false with `SLT`, so `SNE #0, #1` (always skips) sits between the test and the

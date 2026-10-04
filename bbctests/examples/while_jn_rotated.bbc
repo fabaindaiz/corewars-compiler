@@ -1,0 +1,19 @@
+NAME: a unary while, rotated
+DESCRIPTION: the default policy (speed, size) rotates a while with a unary condition: one JMP into the test, which loops back in one instruction; see behtests/while_jn_rotated.beh
+SRC:
+(let (x 3)
+  (seq
+    (while (JN x) (SUB 1 x))
+    (DAT 0 (store x))))
+EXPECTED:
+;redcode-94b
+
+  JMP    $_WHC4 , #0     
+_WHI4 
+  SUB.AB #1     , $_LET1 
+_WHC4 
+  JMN.B  $_WHI4 , $_LET1 
+_WHF4 
+_LET1 
+  DAT    #0     , #3     
+  DAT    $0     , $0     

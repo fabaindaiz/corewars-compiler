@@ -171,7 +171,13 @@ let compile_prim2 (op : prim2) : opcode =
 let at (m : meta) (f : unit -> 'a) : 'a =
   try f () with Error (None, msg) -> raise (Error (Some m.loc, msg))
 
-let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
+(* The optional transformations the policy chooses between (Optimize.choose); no_opts emits the
+   code every construct had before any of them existed. *)
+type options = { rotate_unary : bool; rotate_binary : bool }
+
+let no_opts = { rotate_unary = false; rotate_binary = false }
+
+let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted list =
   match e with
   | EComment (s) -> [emit (ICOM (s))]
   | ELabel (l, m) -> [emit ~origin:m.tag (ILAB (l))]
@@ -187,20 +193,32 @@ let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
     | Repeat ->
       let gen = emit ~origin:tag ~construct:"repeat" in
       let ini = (sprintf "_REP%d" tag) in
-      [gen (ILAB (ini))] @ (compile_expr exp env) @ [gen (jump_label ini)]
+      [gen (ILAB (ini))] @ (compile_expr opts exp env) @ [gen (jump_label ini)]
     | If ->
       let gen = emit ~origin:tag ~construct:"if" in
       let fin = (sprintf "_IF%d" tag) in
-      (compile_cond cond Cpre fin env tag "if") @ (compile_expr exp env) @ [gen (ILAB (fin))]
+      (compile_cond cond Cpre fin env tag "if") @ (compile_expr opts exp env) @ [gen (ILAB (fin))]
     | While ->
       let gen = emit ~origin:tag ~construct:"while" in
       let ini = (sprintf "_WHI%d" tag) in
       let fin = (sprintf "_WHF%d" tag) in
-      [gen (ILAB (ini))] @ (compile_cond cond Cpre fin env tag "while") @ (compile_expr exp env) @ [gen (jump_label ini) ; gen (ILAB (fin))]
+      (* Rotated, the test sits after the body and one JMP enters it: while c e is if c (do-while c e).
+         A unary test then loops in one instruction instead of two; DZ has no single post-test. *)
+      let rotate = match cond with
+        | Cond1 ((Cjz | Cjn), _, _) -> opts.rotate_unary
+        | Cond2 _ -> opts.rotate_binary
+        | Cond1 ((Cdz | Cdn), _, _) | Cond0 -> false in
+      if rotate then
+        let test = (sprintf "_WHC%d" tag) in
+        let body = (compile_expr opts exp env) in
+        [gen (jump_label test) ; gen (ILAB (ini))] @ body @ [gen (ILAB (test))]
+        @ (compile_cond cond Cpos ini env tag "while") @ [gen (ILAB (fin))]
+      else
+      [gen (ILAB (ini))] @ (compile_cond cond Cpre fin env tag "while") @ (compile_expr opts exp env) @ [gen (jump_label ini) ; gen (ILAB (fin))]
     | DoWhile ->
       let gen = emit ~origin:tag ~construct:"do-while" in
       let ini = (sprintf "_DWH%d" tag) in
-      [gen (ILAB (ini))] @ (compile_expr exp env) @ (compile_cond cond Cpos ini env tag "do-while") )
+      [gen (ILAB (ini))] @ (compile_expr opts exp env) @ (compile_cond cond Cpos ini env tag "do-while") )
   | EFlow2 (op, cond, exp1, exp2, m) -> at m @@ fun () ->
     let tag = m.tag in
     (match op with
@@ -208,14 +226,14 @@ let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
       let gen = emit ~origin:tag ~construct:"if-else" in
       let mid = (sprintf "_IFM%d" tag) in
       let fin = (sprintf "_IFF%d" tag) in
-      (compile_cond cond Cpre mid env tag "if-else") @ (compile_expr exp1 env) @ [gen (jump_label fin) ; gen (ILAB (mid))] @ (compile_expr exp2 env) @ [gen (ILAB (fin))] )
+      (compile_cond cond Cpre mid env tag "if-else") @ (compile_expr opts exp1 env) @ [gen (jump_label fin) ; gen (ILAB (mid))] @ (compile_expr opts exp2 env) @ [gen (ILAB (fin))] )
   | ELet (id, arg, body, m) -> at m @@ fun () ->
     let tag = m.tag in
     let label = (sprintf "_LET%d" tag) in
     let env' = (analyse_let id arg body label env) in
-    (compile_expr body env')
+    (compile_expr opts body env')
   | ESeq (exps, _) ->
-    List.fold_left (fun res exp -> res @ (compile_expr exp env)) [] exps
+    List.fold_left (fun res exp -> res @ (compile_expr opts exp env)) [] exps
   | EExpect _ -> []
 
 (* A generated jump whose target cell holds a generated JMP goes straight to that JMP's target: the
@@ -261,8 +279,8 @@ let thread_jumps (body : emitted list) : emitted list =
       { e with instr = INSTR (op, md, RLab (RDir, final [l] l), b) }
     | { instr = INSTR _ | ILAB _ | ICOM _; _ } -> e) body
 
-let compile_body (e : expr) : emitted list =
-  thread_jumps (compile_expr (tag_expr (Rename.uniquify e)) empty_env)
+let compile_body ?(opts = no_opts) (e : expr) : emitted list =
+  thread_jumps (compile_expr opts (tag_expr (Rename.uniquify e)) empty_env)
 
 
 let prelude = "
@@ -277,8 +295,8 @@ let epilogue = [INSTR (IDAT, RN, RRef (RDir, 0), RRef (RDir, 0))]
    in an instruction line hung it, 200 did not). *)
 let max_line = 256
 
-let compile_prog (e : expr) : string =
-  let instrs = List.map (fun (x : emitted) -> x.instr) (compile_body e) in
+let compile_prog ?opts (e : expr) : string =
+  let instrs = List.map (fun (x : emitted) -> x.instr) (compile_body ?opts e) in
   let text = (prelude) ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
   List.iteri (fun i line ->
     let n = String.length line in

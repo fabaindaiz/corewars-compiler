@@ -82,7 +82,7 @@ let test_emit_prog1_stores () =
 
 let test_emit_text_unchanged () =
   List.iter (fun path ->
-    let body = compile_body (expr_of path) in
+    let body = Cored.Optimize.compile_body Cored.Metrics.default_policy (expr_of path) in
     let text = prelude ^ pp_instrs (List.map (fun (x : emitted) -> x.instr) body) ^ pp_instrs epilogue in
     check Alcotest.string path (String.trim (golden_expected path)) (String.trim text))
     (golden_files ())
@@ -746,6 +746,56 @@ let test_review2_unary_arity_message () =
     (error_of "(if (JZ F F x) (NOP))")
 
 
+(* Tests for phase 3: the optimizer under the policy *)
+module O = Cored.Optimize
+
+let body_of (src : string) : expr = parse_exp (sexp_from_string src)
+
+let chosen ?(policy = M.default_policy) (src : string) : instruction list =
+  List.map (fun (e : emitted) -> e.instr) (O.compile_body policy (body_of src))
+
+let forced (opts : options) (src : string) : instruction list =
+  List.map (fun (e : emitted) -> e.instr) (compile_body ~opts (body_of src))
+
+let opcodes (is : instruction list) : opcode list =
+  List.filter_map (fun i -> match i with INSTR (o, _, _, _) -> Some o | ICOM _ | ILAB _ -> None) is
+
+let ops = Alcotest.list (testable (fun f o -> Format.pp_print_string f (pp_opcode o)) (=))
+
+let countdown = "(let (x 3) (seq (while (JN x) (SUB 1 x)) (DAT 0 (store x))))"
+
+let test_phase3_unary_while_rotated () =
+  let is = chosen countdown in
+  check ops "layout" [IJMP; ISUB; IJMN; IDAT] (opcodes is) ;
+  check strings "the test loops to the body" [first_label "_WHI" is] (targets IJMN is) ;
+  check strings "the entry jumps to the test" [first_label "_WHC" is] (targets IJMP is)
+
+let test_phase3_rotation_by_policy () =
+  let loop policy = List.hd (M.measure (L.build (O.compile_body policy (body_of countdown)))).loops in
+  check range "speed first: rotated" (r 2 2) (loop M.default_policy).cycles ;
+  check range "boot first: not rotated" (r 3 3) (loop [M.Boot; M.Speed]).cycles
+
+let test_phase3_dz_while_not_rotated () =
+  check ops "layout" [IDJN; INOP; IJMP; IDAT]
+    (opcodes (chosen "(let (x 3) (seq (while (DZ x) (NOP)) (DAT 0 (store x))))"))
+
+let binary = "(let (x 3) (seq (while (NE x 0) (SUB 1 x)) (DAT 0 (store x))))"
+
+let test_phase3_binary_while_by_policy () =
+  check ops "never better: kept" [ISNE; IJMP; ISUB; IJMP; IDAT] (opcodes (chosen binary)) ;
+  check ops "forced: rotated" [IJMP; ISUB; ISEQ; IJMP; IDAT]
+    (opcodes (forced { no_opts with rotate_binary = true } binary))
+
+
+let test_phase3_driver_uses_the_choice () =
+  let o = drive [("p.src", countdown)] ["--report"; "p.src"] in
+  check Alcotest.bool "rotated" true (contains o.out "_WHC") ;
+  check Alcotest.bool "the report says so" true (contains o.err "optimizations: rotate-unary") ;
+  let o = drive [("p.src", "(program (optimize boot speed) " ^ countdown ^ ")")] ["--report"; "p.src"] in
+  check Alcotest.bool "boot first: not rotated" false (contains o.out "_WHC") ;
+  check Alcotest.bool "the report says so" true (contains o.err "optimizations: none")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -868,6 +918,13 @@ let ocaml_tests = [
     test_case "a generated label does not name data" `Quick test_review2_generated_label_is_not_a_name ;
     test_case "a unary cond with too many arguments" `Quick test_review2_unary_arity_message ;
   ] ;
+  "phase3", [
+    test_case "a unary while is rotated" `Quick test_phase3_unary_while_rotated ;
+    test_case "rotation follows the policy" `Quick test_phase3_rotation_by_policy ;
+    test_case "a DZ while is not rotated" `Quick test_phase3_dz_while_not_rotated ;
+    test_case "a binary while: only if the policy picks it" `Quick test_phase3_binary_while_by_policy ;
+    test_case "the command line uses the choice" `Quick test_phase3_driver_uses_the_choice ;
+  ] ;
   "interp", [
 
   ] ;
@@ -880,7 +937,8 @@ let ocaml_tests = [
 let () =
   
   let compiler : compiler =
-    SCompiler ( fun _ s -> (compile_prog (parse_exp (sexp_from_string s))) ) in
+    (* A golden is what run_compile.exe prints: the default policy's choice (Optimize.choose). *)
+    SCompiler ( fun _ s -> (Cored.Optimize.compile_prog Cored.Metrics.default_policy (parse_exp (sexp_from_string s))) ) in
   
   let bbc_tests =
     let name : string = "compare" in
