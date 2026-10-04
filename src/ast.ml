@@ -75,8 +75,9 @@ type prim2 =
 | Ldp
 
 
+(* A repeat's arg is the B operand of its JMP back, which JMP ignores: data, or a (store x). *)
 type flow1 =
-| Repeat
+| Repeat of arg
 | If
 | While
 | DoWhile

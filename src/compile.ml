@@ -190,10 +190,14 @@ let rec compile_expr (opts : options) (e : meta eexpr) (env : env) : emitted lis
   | EFlow1 (op, cond, exp, m) -> at m @@ fun () ->
     let tag = m.tag in
     (match op with
-    | Repeat ->
+    | Repeat data ->
       let gen = emit ~origin:tag ~construct:"repeat" in
       let ini = (sprintf "_REP%d" tag) in
-      [gen (ILAB (ini))] @ (compile_expr opts exp env) @ [gen (jump_label ini)]
+      let body = (compile_expr opts exp env) in
+      (* The data is the JMP's B operand; a (store x) there makes the JMP x's cell. *)
+      let _, rdata = (compile_arg data env) in
+      [gen (ILAB (ini))] @ body @ List.map gen (compile_label data env)
+      @ [emit ~origin:tag ~construct:"repeat" ~stores:(stores_of ANone data) (INSTR (IJMP, RN, RLab (RDir, ini), rdata))]
     | If ->
       let gen = emit ~origin:tag ~construct:"if" in
       let fin = (sprintf "_IF%d" tag) in

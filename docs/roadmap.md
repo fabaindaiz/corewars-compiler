@@ -28,7 +28,7 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 | Archetype | Cycles/iter RED / hand | Cells RED / hand | Score RED / hand | Gap |
 |---|---|---|---|---|
 | imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT`, kept by decision (d-7d2612-1c1c67) |
-| scanner | 2 / 2 per empty cell (was 3) | 7 / 6 | 54, 58 / 56, 57 (was 42) | closed by jump threading (d-7d2612-3f3f32) |
+| scanner | 2 / 2 per empty cell (was 3) | 6 / 6 (was 7) | 63, 61 / 56, 57 (was 42) | cycles closed by jump threading (d-7d2612-3f3f32); the pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3) |
 | SEQ scanner | 3 / 3 per pair of empty cells | 9 / 7 | 37, 37 / 36, 37 | expressible with `(NE I ...)` (d-7d2612-8f9340); +1 cell for the pointers, +1 epilogue |
 | imp spiral, quickscan | — | — | — | need label arithmetic or constants (i-7d2612-a3f2b6) and compile-time repetition (i-7d2612-8e9549) |
 
@@ -259,7 +259,10 @@ rotated shape.
 too, for the shorter boot, or only unary ones?
 
 ### Variables in fields of existing instructions, not in separate DAT cells · i-7d2612-400784
-**State.** Planned (phase 3).
+**State.** Half done (s-7d2612-f082c8): the user chose the explicit form, `(repeat body (store p))`
+puts `p` in the `repeat`'s `JMP` (d-7d2612-d9e5d3); the scanner archetype is 6 cells, the
+hand-written count. Still possible later: the same for `while`'s back jump and other ignored
+fields. Before:
 A `let` whose `(store x)` sits in a `DAT` of its own costs a cell and, when the `DAT` is on the path,
 a `JMP` around it (prog7, prog8: `JMP $2` then `DAT`): one more cell and one more cycle of boot.
 The variable can live in a field the program never reads as code — an instruction field the
@@ -269,8 +272,7 @@ Not the epilogue `DAT` itself: every archetype is one cell longer than its hand-
 it, and the user decided to keep it (d-7d2612-1c1c67).
 **Collides with.** d-7d2612-6a1527 (goldens change); i-7d2612-ce4c3b (placement analysis must be right
 first).
-**Decide first.** Whether the compiler may move a `(store x)` the user wrote, or only suggest it
-(a phase-4 warning).
+**Decided** (2026-10-04, user): it may not move one; the user writes where it goes.
 
 ### Peephole cleanup of jumps · i-7d2612-ec59a0
 **State.** Half done (s-7d2612-14641b): jumps to jumps are threaded, pulled forward into phase 2 by

@@ -39,9 +39,14 @@ code), and `archetypes/NAME.src`, the same warrior in RED. The RED versions are 
 | dwarf | `repeat` (`ADD`, `MOV I` through `@`) | 3 | 3 | 4 | 5 | 46, 46 | 44, 48 |
 | stone | `SPL 0` before the dwarf, step 3044 | 3 | 3 | 5 | 6 | 77, 80 | 80, 80 |
 | core-clear | `repeat` (`MOV I` through `>`) | 2 | 2 | 4 | 5 | 45, 46 | 42, 42 |
-| scanner | `repeat` (`ADD`, `if (JN @p)` bomb) | 2 (empty cell) | **3** (empty cell); 2 threaded | 6 | 7 | 56, 57 | **42, 42**; 54, 58 compiled with threading |
+| scanner | `repeat` (`ADD`, `if (JN @p)` bomb) | 2 (empty cell) | **3** (empty cell); 2 threaded | 6 | 7; 6 with `p` in the `repeat`'s `JMP` | 56, 57 | **42, 42**; 54, 58 compiled with threading; 63, 61 with `p` in the `JMP` |
 | paper | `repeat` (reset, `do-while (JN n)` copy, `SPL @d`, `ADD`) | 6 + 2 per cell | 6 + 2 per cell | 7 | 8 | 78, 80 | 80, 79 |
 | SEQ scanner | `repeat` (`ADD F` to two pointers, `if (NE I @a @b)` bomb) | 3 (pair of empty cells) | not expressible; 3 with `(NE I ...)` | 7 | 9 | 36, 37 | 37, 37 |
+
+The scanner's last figures are from phase 3 (the same day): `(repeat body (store p))` keeps its
+pointer in the `repeat`'s `JMP` (d-7d2612-d9e5d3), 6 cells like the hand-written one; it then scored
+63 and 61, above the hand-written 56 and 57. Why it scores higher was not investigated; the two
+layouts differ (the hand-written pointer is a `DAT` of its own, RED's lives in the loop's `JMP`).
 
 The SEQ scanner row was measured after conditions gained a modifier the same day (gap 5); its two
 extra cells are the pointer cell (the hand-written one keeps its pointers in the `SNE.I` itself)

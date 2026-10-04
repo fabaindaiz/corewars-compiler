@@ -29,7 +29,9 @@ let rec analyse_store_expr (e : meta eexpr) (id : string) (penv : penv) : penv =
   | EPrim2 (_, _, a1, a2, _) ->
     let env' = (analyse_store_arg a1 id PA penv) in
     (analyse_store_arg a2 id PB env')
-  | EFlow1 (_, cond, exp, _) ->
+  | EFlow1 (op, cond, exp, _) ->
+    (* A repeat's arg is the B operand of its JMP. *)
+    let penv = match op with Repeat a -> (analyse_store_arg a id PB penv) | If | While | DoWhile -> penv in
     let env' = (analyse_store_cond cond id penv) in
     (analyse_store_expr exp id env')
   | EFlow2 (_, cond, exp1, exp2, _) ->

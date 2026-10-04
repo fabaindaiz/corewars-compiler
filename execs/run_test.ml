@@ -796,6 +796,24 @@ let test_phase3_driver_uses_the_choice () =
   check Alcotest.bool "the report says so" true (contains o.err "optimizations: none")
 
 
+let last_instr (is : instruction list) : instruction =
+  List.hd (List.rev (List.filter (fun i -> match i with INSTR _ -> true | ICOM _ | ILAB _ -> false) is))
+
+let instr_t = testable (fun f i -> Format.pp_print_string f (String.trim (pp_instrs [i]))) (=)
+
+let test_phase3_repeat_data () =
+  let is = chosen "(let (p 20) (repeat (seq (ADD 10 p) (MOV 0 (Ind p))) (store p)))" in
+  let rep = first_label "_REP" is in
+  check instr_t "p lives in the JMP's B-field" (INSTR (IJMP, RN, RLab (RDir, rep), RRef (RImm, 20))) (last_instr is) ;
+  check Alcotest.bool "labelled as p's cell" true (List.mem (ILAB "_LET1") is) ;
+  check rmods "ADD to p's B-field" [RAB] (modifiers IADD "(let (p 20) (repeat (seq (ADD 10 p) (MOV 0 (Ind p))) (store p)))") ;
+  check instr_t "plain data" (INSTR (IJMP, RN, RLab (RDir, "_REP1"), RRef (RImm, 7))) (last_instr (chosen "(repeat (NOP) 7)"))
+
+let test_phase3_repeat_data_store_once () =
+  check Alcotest.bool "stored twice is an error" true
+    (contains (error_of "(let (p 1) (seq (repeat (NOP) (store p)) (DAT 0 (store p))))") "stored twice")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -924,6 +942,8 @@ let ocaml_tests = [
     test_case "a DZ while is not rotated" `Quick test_phase3_dz_while_not_rotated ;
     test_case "a binary while: only if the policy picks it" `Quick test_phase3_binary_while_by_policy ;
     test_case "the command line uses the choice" `Quick test_phase3_driver_uses_the_choice ;
+    test_case "(repeat body arg): data in the loop's JMP" `Quick test_phase3_repeat_data ;
+    test_case "(repeat body (store p)) counts as p's store" `Quick test_phase3_repeat_data_store_once ;
   ] ;
   "interp", [
 

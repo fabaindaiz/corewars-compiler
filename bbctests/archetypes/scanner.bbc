@@ -1,5 +1,5 @@
 NAME: a scanner in RED
-DESCRIPTION: steps p by 10 and bombs a non-zero cell; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_scanner.beh
+DESCRIPTION: steps p, kept in the repeat's JMP, by 10 and bombs a non-zero cell; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_scanner.beh
 SRC:
 (let (p 20)
   (seq
@@ -7,8 +7,8 @@ SRC:
       (seq
         (ADD 10 p)
         (if (JN (Ind p))
-          (MOV I bomb (Ind p)))))
-    (DAT 0 (store p))
+          (MOV I bomb (Ind p))))
+      (store p))
     (label bomb)
     (DAT 0 0)))
 EXPECTED:
@@ -19,9 +19,8 @@ _REP4
   JMZ.B  $_REP4 , @_LET1 
   MOV.I  $bomb  , @_LET1 
 _IF9  
-  JMP    $_REP4 , #0     
 _LET1 
-  DAT    #0     , #20    
+  JMP    $_REP4 , #20    
 bomb  
   DAT    #0     , #0     
   DAT    $0     , $0     

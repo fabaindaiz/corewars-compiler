@@ -35,7 +35,7 @@ Abstract syntax, as `src/ast.ml` represents it (`LANGUAGE.md` has the concrete f
 
 ```
 e ::= (label l) | (com …) | (OP [mod] a a)                          primitives
-    | (repeat e) | (if c e) | (if c e e) | (while c e) | (do-while c e)   control flow
+    | (repeat e [a]) | (if c e) | (if c e e) | (while c e) | (do-while c e)   control flow
     | (let (x a) e) | (seq e …)                                       binding, sequence
 c ::= (JZ [mod] a) | (JN [mod] a) | (DZ [mod] a) | (DN [mod] a)       unary conditions
     | (EQ [mod] a a) | (NE [mod] a a) | (GT [mod] a a) | (LT [mod] a a)   binary conditions
@@ -109,6 +109,7 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 | Construct | Emitted |
 |---|---|
 | `(repeat e)` | `_REPn: ⟦e⟧; JMP _REPn` |
+| `(repeat e a)` | `_REPn: ⟦e⟧; JMP _REPn, a` (a `(store x)` in `a` labels the `JMP` `_LETm`: x's place is its B-field; d-7d2612-d9e5d3) |
 | `(if c e)` | `⟦c⟧pre→_IFn; ⟦e⟧; _IFn:` |
 | `(if c e₁ e₂)` | `⟦c⟧pre→_IFMn; ⟦e₁⟧; JMP _IFFn; _IFMn: ⟦e₂⟧; _IFFn:` |
 | `(while c e)` | `_WHIn: ⟦c⟧pre→_WHFn; ⟦e⟧; JMP _WHIn; _WHFn:` |

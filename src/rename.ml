@@ -33,9 +33,18 @@ let rename_cond (env : renames) (c : cond) : cond =
   | Cond1 (op, m, a) -> Cond1 (op, m, rename_arg env a)
   | Cond2 (op, m, a1, a2) -> Cond2 (op, m, rename_arg env a1, rename_arg env a2)
 
+let rename_flow (env : renames) (op : flow1) : flow1 =
+  match op with
+  | Repeat a -> Repeat (rename_arg env a)
+  | If | While | DoWhile -> op
+
 let stores_in_arg (a : arg) : string list = match a with
   | AStore s -> [s]
   | ANone | ANum _ | AId _ | ARef _ | ALab _ -> []
+
+let stores_in_flow (op : flow1) : string list = match op with
+  | Repeat a -> stores_in_arg a
+  | If | While | DoWhile -> []
 
 let stores_in_cond (c : cond) : string list = match c with
   | Cond0 -> []
@@ -48,7 +57,7 @@ let check_single_stores (binders : (string * (string * loc)) list) (e : expr) : 
   let rec stores (e : expr) = match e with
     | EComment _ | ELabel _ | EExpect _ -> []
     | EPrim2 (_, _, a1, a2, _) -> stores_in_arg a1 @ stores_in_arg a2
-    | EFlow1 (_, c, b, _) -> stores_in_cond c @ stores b
+    | EFlow1 (op, c, b, _) -> stores_in_flow op @ stores_in_cond c @ stores b
     | EFlow2 (_, c, b1, b2, _) -> stores_in_cond c @ stores b1 @ stores b2
     | ELet (_, a, b, _) -> stores_in_arg a @ stores b
     | ESeq (es, _) -> List.concat_map stores es in
@@ -69,7 +78,7 @@ let uniquify (e : expr) : expr =
   let rec go env (e : expr) : expr = match e with
     | EComment _ | ELabel _ | EExpect _ -> e
     | EPrim2 (op, m, a1, a2, loc) -> EPrim2 (op, m, rename_arg env a1, rename_arg env a2, loc)
-    | EFlow1 (op, c, body, loc) -> EFlow1 (op, rename_cond env c, go env body, loc)
+    | EFlow1 (op, c, body, loc) -> EFlow1 (rename_flow env op, rename_cond env c, go env body, loc)
     | EFlow2 (op, c, b1, b2, loc) -> EFlow2 (op, rename_cond env c, go env b1, go env b2, loc)
     | ELet (x, a, body, loc) ->
       let a' = rename_arg env a in

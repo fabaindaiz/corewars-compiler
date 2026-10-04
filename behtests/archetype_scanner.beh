@@ -1,5 +1,6 @@
 # On empty core the scan never finds a target: an empty cell costs ADD and JMZ, which jumps straight
-# back to the ADD, so after three instructions p (cell 4) has grown by 10 twice.
+# back to the ADD, so after three instructions p has grown by 10 twice. p lives in the B-field of
+# the repeat's own JMP (cell 3), as in the hand-written scanner's layout.
 golden: bbctests/archetypes/scanner.bbc
-cell 3 4 DAT.F #0, #40
+cell 3 3 JMP.B $-3, #40
 alive 1000

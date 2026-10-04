@@ -169,7 +169,7 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "JMP" -> EPrim2 (Jmp, MN, parse_arg e, ANone, loc)
     | `Atom "SPL" -> EPrim2 (Spl, MN, parse_arg e, ANone, loc)
     | `Atom "NOP" -> EPrim2 (Nop, MN, parse_arg e, ANone, loc)
-    | `Atom "repeat" -> EFlow1 (Repeat, Cond0, parse_exp e, loc)
+    | `Atom "repeat" -> EFlow1 (Repeat ANone, Cond0, parse_exp e, loc)
     | `Atom "expect" -> EExpect (parse_expectation e, loc)
     | _ -> fail sexp (sprintf "Not a valid unary expr: %s" (to_string sexp)) )
   | `List [eop; e1; e2] ->
@@ -192,6 +192,7 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "SLT" -> EPrim2 (Slt, MDef, parse_arg e1, parse_arg e2, loc)
     | `Atom "STP" -> EPrim2 (Stp, MDef, parse_arg e1, parse_arg e2, loc)
     | `Atom "LDP" -> EPrim2 (Ldp, MDef, parse_arg e1, parse_arg e2, loc)
+    | `Atom "repeat" -> EFlow1 (Repeat (parse_arg e2), Cond0, parse_exp e1, loc)
     | `Atom "if" -> EFlow1 (If, parse_cond e1, parse_exp e2, loc)
     | `Atom "while" -> EFlow1 (While, parse_cond e1, parse_exp e2, loc)
     | `Atom "do-while" -> EFlow1 (DoWhile, parse_cond e1, parse_exp e2, loc)

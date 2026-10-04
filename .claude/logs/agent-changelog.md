@@ -25,8 +25,11 @@ permission rule), the review's findings fixed on `feat/phase-2`, and the patch r
 additive conflicts in `execs/run_test.ml`, resolved by keeping both sides (the first resolution
 dropped a `] ;`, caught by the build). The rotated `while` spec's hand count was wrong first (dies
 after 9, not 8: the entry `JMP` goes to the test, not the body).
-**Left undone.** `(repeat body arg)` and the remaining peephole rewrites (a `JMP` to the next cell,
-an empty `if`); a `--report=json` field for the optimizations applied.
+Then `(repeat body arg)` (d-7d2612-d9e5d3): the scanner archetype keeps `p` in its `repeat`'s
+`JMP`, 6 cells like the hand-written one; its golden and spec changed for that reason (the source
+changed), and it scored 63 and 61 against the hand-written 56 and 57, not investigated further.
+**Left undone.** A `--report=json` field for the optimizations applied; data in a `while`'s back
+jump; the scanner's score above the hand-written one is unexplained.
 
 ## 2026-10-04 · s-7d2612-14641b — Phase 2: the archetypes measured against hand-written redcode
 
