@@ -166,32 +166,32 @@ let rec compile_expr (e : meta eexpr) (env : env) : emitted list =
     (match op with
     | Repeat ->
       let gen = emit ~origin:tag ~construct:"repeat" in
-      let ini = (sprintf "REP%d" tag) in
+      let ini = (sprintf "_REP%d" tag) in
       [gen (ILAB (ini))] @ (compile_expr exp env) @ [gen (jump_label ini)]
     | If ->
       let gen = emit ~origin:tag ~construct:"if" in
-      let fin = (sprintf "IF%d" tag) in
+      let fin = (sprintf "_IF%d" tag) in
       (compile_cond cond Cpre fin env tag "if") @ (compile_expr exp env) @ [gen (ILAB (fin))]
     | While ->
       let gen = emit ~origin:tag ~construct:"while" in
-      let ini = (sprintf "WHI%d" tag) in
-      let fin = (sprintf "WHF%d" tag) in
+      let ini = (sprintf "_WHI%d" tag) in
+      let fin = (sprintf "_WHF%d" tag) in
       [gen (ILAB (ini))] @ (compile_cond cond Cpre fin env tag "while") @ (compile_expr exp env) @ [gen (jump_label ini) ; gen (ILAB (fin))]
     | DoWhile ->
       let gen = emit ~origin:tag ~construct:"do-while" in
-      let ini = (sprintf "DWH%d" tag) in
+      let ini = (sprintf "_DWH%d" tag) in
       [gen (ILAB (ini))] @ (compile_expr exp env) @ (compile_cond cond Cpos ini env tag "do-while") )
   | EFlow2 (op, cond, exp1, exp2, m) -> at m @@ fun () ->
     let tag = m.tag in
     (match op with
     | IfElse ->
       let gen = emit ~origin:tag ~construct:"if-else" in
-      let mid = (sprintf "IFM%d" tag) in
-      let fin = (sprintf "IFF%d" tag) in
+      let mid = (sprintf "_IFM%d" tag) in
+      let fin = (sprintf "_IFF%d" tag) in
       (compile_cond cond Cpre mid env tag "if-else") @ (compile_expr exp1 env) @ [gen (jump_label fin) ; gen (ILAB (mid))] @ (compile_expr exp2 env) @ [gen (ILAB (fin))] )
   | ELet (id, arg, body, m) -> at m @@ fun () ->
     let tag = m.tag in
-    let label = (sprintf "LET%d" tag) in
+    let label = (sprintf "_LET%d" tag) in
     let env' = (analyse_let id arg body label env) in
     (compile_expr body env')
   | ESeq (exps, _) ->

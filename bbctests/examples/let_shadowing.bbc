@@ -12,9 +12,9 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $3     , #0     
-LET1  
+_LET1 
   DAT    #1     , #0     
-LET8  
+_LET8 
   DAT    #0     , #2     
-  ADD.A  #4     , $LET1  
+  ADD.A  #4     , $_LET1 
   DAT    #0     , #0     

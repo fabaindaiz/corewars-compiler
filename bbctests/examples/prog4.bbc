@@ -19,18 +19,18 @@ SRC:
 EXPECTED:
 ;redcode-94b
 
-  JMP    @LET4  , #0     
+  JMP    @_LET4 , #0     
 dest2 
-LET3  
-  JMP    *LET1  , $dest3 
+_LET3 
+  JMP    *_LET1 , $dest3 
 dest3 
-LET4  
-  JMP    @LET2  , $dest4 
-LET1  
-LET2  
+_LET4 
+  JMP    @_LET2 , $dest4 
+_LET1 
+_LET2 
   DAT    $dest1 , $dest2 
 dest4 
-  JMP    @LET3  , #0     
+  JMP    @_LET3 , #0     
 dest1 
   MOV.I  $0     , $1     
   DAT    #0     , #0

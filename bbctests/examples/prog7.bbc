@@ -11,9 +11,9 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-LET1  
+_LET1 
   DAT    #0     , #10    
-DWH8  
-  MOV.I  $-1    , >LET1  
-  DJN.B  $DWH8  , #100   
+_DWH8 
+  MOV.I  $-1    , >_LET1 
+  DJN.B  $_DWH8 , #100   
   DAT    #0     , #0

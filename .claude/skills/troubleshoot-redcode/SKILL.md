@@ -14,8 +14,6 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 | Symptom | Known cause | Record |
 |---|---|---|
 | `SLT`/`ADD` on two plain references acts on both fields | fallback modifier `.I` instead of the ICWS'94 default | i-7d2612-96f7b1 |
-| a jump to a user label lands on a data cell; pMARS warns "redefinition of label" | user label named like a generated one (`LET1`, `IF3`, …); pMARS keeps the first | i-7d2612-425c66 |
-| pMARS "Undefined label 'LETn'" | the `let` variable has no `(store x)` | i-7d2612-425c66 |
 | `file:line:col: error: ...` from `run_compile.exe`, exit 1 | a compile error in the RED program at that place | d-7d2612-8bba52 |
 | `internal error: ...`, exit 2 | a compiler bug, not the program's: record it (a characterization golden, a known-failing spec) | d-7d2612-8bba52 |
 | pMARS hangs while assembling hand-made redcode | a line of 256+ characters (a long label); the compiler refuses to emit one (`error: redcode line N has M characters`) | i-7d2612-174acf |

@@ -67,7 +67,7 @@ let place : place testable =
 let test_emit_prog8_back_jump_is_while () =
   let e = expr_of (example "prog8") in
   let back = List.find (fun (x : emitted) -> match x.instr with
-      | INSTR (IJMP, _, RLab (_, l), _) -> String.starts_with ~prefix:"WHI" l
+      | INSTR (IJMP, _, RLab (_, l), _) -> String.starts_with ~prefix:"_WHI" l
       | INSTR _ | ICOM _ | ILAB _ -> false) (compile_body e) in
   check Alcotest.(option string) "construct" (Some "while") back.construct ;
   check Alcotest.(option int) "origin" (while_tag (tag_expr e)) back.origin
@@ -111,7 +111,7 @@ let layout_of (path : string) : L.program = L.of_expr (expr_of path)
 let test_layout_prog8_cells () =
   let p = layout_of (example "prog8") in
   check Alcotest.int "cells" 7 (Array.length p.cells) ;
-  check Alcotest.(list string) "labels" ["LET1"; "LET2"] p.cells.(1).labels ;
+  check Alcotest.(list string) "labels" ["_LET1"; "_LET2"] p.cells.(1).labels ;
   check Alcotest.(list (pair string field)) "vars" [("x", L.FA); ("y", L.FB)] p.cells.(1).vars ;
   check Alcotest.bool "epilogue" true (p.cells.(6).role = L.Epilogue)
 
@@ -133,7 +133,7 @@ let test_layout_prog8_loop () =
 let test_layout_offsets_normalised () =
   let p = layout_of (example "prog1") in
   check Alcotest.int "value" 7998 p.cells.(2).a.value ;
-  check Alcotest.(option string) "label" (Some "LET1") p.cells.(2).a.label
+  check Alcotest.(option string) "label" (Some "_LET1") p.cells.(2).a.label
 
 let test_layout_prog4_dynamic () =
   let p = layout_of (example "prog4") in
@@ -154,8 +154,8 @@ let test_layout_long_line () =
   check Alcotest.bool "Long_line 0" true (List.mem (L.Long_line 0) p.diagnostics)
 
 let test_layout_duplicate_label () =
-  let p = L.of_expr (expr_of "bbctests/known-bugs/label_collision.bbc") in
-  check Alcotest.(list diagnostic) "diagnostics" [L.Duplicate_label ("LET1", 1, 2)] p.diagnostics
+  let p = layout_of_src "(seq (label a) (JMP 0) (label a) (JMP 0))" in
+  check Alcotest.(list diagnostic) "diagnostics" [L.Duplicate_label ("a", 0, 1)] p.diagnostics
 
 
 (* Tests for the metrics *)
@@ -503,7 +503,7 @@ let test_phase1_initializer_resolved_where_bound () =
   let labels = List.filter_map (fun (e : emitted) -> match e.instr with
     | INSTR (IDAT, _, _, RLab (_, l)) -> Some l | INSTR _ | ICOM _ | ILAB _ -> None)
     (compile_body (parse_exp (sexp_from_string src))) in
-  check Alcotest.(list string) "y refers to the outer x" ["LET1"] labels
+  check Alcotest.(list string) "y refers to the outer x" ["_LET1"] labels
 
 
 let opcodes (src : string) : opcode list =
@@ -557,6 +557,12 @@ let test_phase1_pmars_keyword_label_rejected () =
 let test_phase1_double_store_rejected () =
   check Alcotest.string "two stores" "p.src:1:1: error: variable `x` is stored twice; a let variable lives in one cell\n"
     (error_of "(let (x 1) (seq (DAT (store x) 0) (DAT 0 (store x))))")
+
+
+let test_phase1_generated_labels_prefixed () =
+  let labels = List.filter_map (fun i -> match i with ILAB l -> Some l | ICOM _ | INSTR _ -> None)
+      (instrs_of (example "prog8")) in
+  check Alcotest.(list string) "prog8's labels" ["_LET1"; "_LET2"; "_WHI9"; "_WHF9"] labels
 
 
 (* OCaml tests: extend with your own tests *)
@@ -651,6 +657,7 @@ let ocaml_tests = [
     test_case "names starting with _ are reserved" `Quick test_phase1_reserved_prefix_rejected ;
     test_case "a pMARS keyword is not a label" `Quick test_phase1_pmars_keyword_label_rejected ;
     test_case "a variable is stored once" `Quick test_phase1_double_store_rejected ;
+    test_case "generated labels start with _" `Quick test_phase1_generated_labels_prefixed ;
     test_case "tags are numbered as before" `Quick test_phase1_tags_unchanged_by_locations ;
   ] ;
   "interp", [

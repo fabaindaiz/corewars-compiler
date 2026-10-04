@@ -57,15 +57,16 @@ Every label the compiler invents is a prefix plus the tag of the node that produ
 
 | Prefix | Produced by |
 |---|---|
-| `LET` | `let`: labels the cell that holds the variable (where `(store x)` sits) |
-| `REP` | `repeat`: loop head |
-| `IF` | `if` without else: end label |
-| `IFM`, `IFF` | `if` with else: else-branch label, end label |
-| `WHI`, `WHF` | `while`: loop head, end label |
-| `DWH` | `do-while`: loop head |
+| `_LET` | `let`: labels the cell that holds the variable (where `(store x)` sits) |
+| `_REP` | `repeat`: loop head |
+| `_IF` | `if` without else: end label |
+| `_IFM`, `_IFF` | `if` with else: else-branch label, end label |
+| `_WHI`, `_WHF` | `while`: loop head, end label |
+| `_DWH` | `do-while`: loop head |
 
-User labels share this namespace today (i-7d2612-425c66). Changing the tag numbering or a prefix
-changes every golden that contains one: that is a change to the output contract, not a refactor.
+User names may not start with `_`, so no user label can take one of these (d-7d2612-bd5def).
+Changing the tag numbering or a prefix changes every golden that contains one: that is a change to
+the output contract, not a refactor.
 
 ## Tests and where a new one goes
 

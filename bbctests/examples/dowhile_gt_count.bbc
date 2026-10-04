@@ -12,12 +12,12 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-LET1  
-LET2  
+_LET1 
+_LET2 
   DAT    #5     , #3     
-DWH9  
-  SUB.A  #1     , $LET1  
-  SLT.BA $LET2  , $LET1  
+_DWH9 
+  SUB.A  #1     , $_LET1 
+  SLT.BA $_LET2 , $_LET1 
   SNE.AB #0     , #1     
-  JMP    $DWH9  , #0     
+  JMP    $_DWH9 , #0     
   DAT    #0     , #0     

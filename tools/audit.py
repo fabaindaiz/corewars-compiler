@@ -206,7 +206,7 @@ def _():
 
 @check("label-prefixes-documented")  # docs/architecture.md lists every generated label prefix
 def _():
-    prefixes = set(re.findall(r'sprintf "([A-Z]+)%d"', read("src/compile.ml")))
+    prefixes = set(re.findall(r'sprintf "(_?[A-Z]+)%d"', read("src/compile.ml")))
     table = read("docs/architecture.md").split("## Generated labels", 1)[-1].split("\n## ", 1)[0]
     return [f"generated label prefix `{p}` (src/compile.ml) is not in docs/architecture.md" for p in sorted(prefixes)
             if f"`{p}`" not in table]

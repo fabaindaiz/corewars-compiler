@@ -33,7 +33,7 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next:** phase 1 ends with the two golden migrations: the reserved label prefix `_` (i-7d2612-425c66), then the ICWS'94 default modifiers (i-7d2612-96f7b1).
+**Next:** phase 1 ends with the ICWS'94 default modifiers (i-7d2612-96f7b1), the second golden migration.
 
 ## Phase 1 — Correctness, before the output changes
 
@@ -95,9 +95,11 @@ Measured on pMARS 0.9.4: a 245-character label hung, 200 worked. RED passes user
 **Decided** (2026-10-04, user): a check on emitted line length.
 
 ### User labels can collide with generated labels, and store-once is unchecked · i-7d2612-425c66
-**State.** Half done (s-7d2612-2c7e4d): the parser rejects user names starting with `_` and labels
-that are pMARS keywords, and two stores of one variable are an error; the prefix migration is next.
-Known-failing: `behtests/label_collision.beh`.
+**State.** Done (s-7d2612-2c7e4d). Generated labels start with `_` (`_LET1`, `_WHI9`, …) and the
+parser rejects user names starting with `_` and labels that are pMARS keywords; two stores of one
+variable are an error, and a use with no store is an error at the use. Every golden with a generated
+label changed once (15 of them), each checked mechanically to differ only by the renamed labels;
+`behtests/label_collision.beh` passes and its golden moved to `bbctests/examples/`.
 A user `(label LET1)` shares the namespace of generated labels; pMARS keeps the first definition
 and only warns. Unchecked as well: a `let` whose variable has no `(store x)` (its `LET` label is
 never defined) or two (defined twice), a user label that is a pMARS reserved word (`END`, `MOV`).

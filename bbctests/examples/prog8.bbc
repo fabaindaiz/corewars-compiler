@@ -13,13 +13,13 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-LET1  
-LET2  
+_LET1 
+_LET2 
   DAT    #100   , #10    
-WHI9  
-  SLT.BA $LET2  , $LET1  
-  JMP    $WHF9  , #0     
-  MOV.I  $LET1  , {LET1  
-  JMP    $WHI9  , #0     
-WHF9  
+_WHI9 
+  SLT.BA $_LET2 , $_LET1 
+  JMP    $_WHF9 , #0     
+  MOV.I  $_LET1 , {_LET1 
+  JMP    $_WHI9 , #0     
+_WHF9 
   DAT    #0     , #0

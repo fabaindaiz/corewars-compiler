@@ -1,5 +1,5 @@
-NAME: known bug: user label named like a generated label
-DESCRIPTION: characterization of current output (i-7d2612-425c66); pMARS keeps the first LET1, see behtests/label_collision.beh
+NAME: user label named like an old generated label
+DESCRIPTION: the user's (label LET1) is distinct from the generated _LET1; fixed in i-7d2612-425c66, see behtests/label_collision.beh
 SRC:
 (let (x 7)
   (seq
@@ -11,7 +11,7 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $LET1  , #0     
-LET1  
+_LET1 
   DAT    #7     , #0     
 LET1  
   JMP    $0     , #0     

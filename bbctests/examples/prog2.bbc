@@ -19,16 +19,16 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-LET1  
-LET2  
+_LET1 
+_LET2 
   DAT    #1     , #2     
-  ADD.AB $LET1  , $LET2  
-  ADD.B  $LET2  , $LET2  
-  ADD.BA $LET2  , $LET1  
-  MOV.A  $LET1  , $LET3  
-  MOV.AB $LET3  , $LET4  
-LET3  
+  ADD.AB $_LET1 , $_LET2 
+  ADD.B  $_LET2 , $_LET2 
+  ADD.BA $_LET2 , $_LET1 
+  MOV.A  $_LET1 , $_LET3 
+  MOV.AB $_LET3 , $_LET4 
+_LET3 
   DAT    #0     , #0     
-LET4  
+_LET4 
   DAT    #0     , #0     
   DAT    #0     , #0

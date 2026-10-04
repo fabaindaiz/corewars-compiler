@@ -1,5 +1,4 @@
-# The user's (label LET1) marks a `JMP 0`; jumping to it loops forever. Today the generated LET1
-# (x's cell) is defined first, pMARS keeps it, and the jump lands on a DAT.
-golden: bbctests/known-bugs/label_collision.bbc
-known-failing: i-7d2612-425c66
+# The user's (label LET1) marks a `JMP 0`; jumping to it loops forever. Generated labels start
+# with `_` (x's cell is _LET1), so the two no longer collide.
+golden: bbctests/examples/label_collision.bbc
 alive 50

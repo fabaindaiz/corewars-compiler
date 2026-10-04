@@ -11,9 +11,9 @@ EXPECTED:
 ;redcode-94b
 
   JMP    $2     , #0     
-LET1  
+_LET1 
   DAT    #0     , #5     
-  JMN.A  $IF8   , $LET1  
+  JMN.A  $_IF8  , $_LET1 
   JMP    $0     , #0     
-IF8   
+_IF8  
   DAT    #0     , #0     

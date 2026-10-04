@@ -43,24 +43,24 @@ a ::= n | id | (mode n) | (mode id) | (store x) | none                operands
 ```
 
 `Ast.tag_expr` numbers every node in pre-order; the number `n` of a node names the labels it
-generates (`LETn`, `REPn`, `IFn`, …), which makes the output a function of the program alone
+generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of the program alone
 (d-7d2612-123e41).
 
 ## 3. Statics: what a well-formed program is
 
 - **Scope.** `(let (x a) e)` binds `x` in `e`. An inner `let` of the same name shadows the outer one.
   An identifier that is not a bound variable is a label (resolved by pMARS).
-- **Places.** A variable does not denote a value but a **place**: `ℓ(x) = (LETn, f)`, the cell
-  labelled `LETn` (n is the `let`'s tag) and the field `f ∈ {A, B}` in which `(store x)` occurs. The
+- **Places.** A variable does not denote a value but a **place**: `ℓ(x) = (_LETn, f)`, the cell
+  labelled `_LETn` (n is the `let`'s tag) and the field `f ∈ {A, B}` in which `(store x)` occurs. The
   instruction containing `(store x)` is emitted with `a` in that field, so at load time the place
   holds `a`.
 - **Store once.** In `(let (x a) e)`, `e` contains **exactly one** `(store x)` that is not under a
   `let` that shadows `x`. Checked: two stores are an error (`Rename.check_single_stores`), and a
   use with no store is an error at the use (`Lib.translate_penv`). Shadowing is resolved before compilation: `Rename.uniquify` gives every binder
   a unique name, so an initializer means the variable visible where its `let` binds it.
-- **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `LETn`, through the modifier
+- **Uses.** A bare or `$` use of `x` reads or writes the field `f` of `_LETn`, through the modifier
   that selects `f`. An indirect use (`@`, `<`, `>`) goes through that field (`*`, `{`, `}` when
-  `f = A`). `#x` is the offset to `LETn`, not its value.
+  `f = A`). `#x` is the offset to `_LETn`, not its value.
 - **Condition placement.** `DZ` is only valid as a pre-condition (`if`, `while`); `DN` only as a
   post-condition (`do-while`). Checked: `compile_cond1` rejects the others.
 - **Labels.** Generated labels and user labels must be distinct, and no label may be a pMARS
@@ -105,11 +105,11 @@ to `t` when `c` is **false**; `⟦c⟧post→t` jumps to `t` when `c` is **true*
 
 | Construct | Emitted |
 |---|---|
-| `(repeat e)` | `REPn: ⟦e⟧; JMP REPn` |
-| `(if c e)` | `⟦c⟧pre→IFn; ⟦e⟧; IFn:` |
-| `(if c e₁ e₂)` | `⟦c⟧pre→IFMn; ⟦e₁⟧; JMP IFFn; IFMn: ⟦e₂⟧; IFFn:` |
-| `(while c e)` | `WHIn: ⟦c⟧pre→WHFn; ⟦e⟧; JMP WHIn; WHFn:` |
-| `(do-while c e)` | `DWHn: ⟦e⟧; ⟦c⟧post→DWHn` |
+| `(repeat e)` | `_REPn: ⟦e⟧; JMP _REPn` |
+| `(if c e)` | `⟦c⟧pre→_IFn; ⟦e⟧; _IFn:` |
+| `(if c e₁ e₂)` | `⟦c⟧pre→_IFMn; ⟦e₁⟧; JMP _IFFn; _IFMn: ⟦e₂⟧; _IFFn:` |
+| `(while c e)` | `_WHIn: ⟦c⟧pre→_WHFn; ⟦e⟧; JMP _WHIn; _WHFn:` |
+| `(do-while c e)` | `_DWHn: ⟦e⟧; ⟦c⟧post→_DWHn` |
 
 | Condition | pre (jump when false) | post (jump when true) |
 |---|---|---|
@@ -131,7 +131,7 @@ jump: true skips it and jumps back, false runs it and skips the jump (i-7d2612-f
 **The statement**, in the shape CompCert uses: for every program `P` in the structured fragment
 that the compiler accepts, run as one process with no other warrior writing into it, there is a
 relation `~` between RED configurations and core states such that the initial states are related,
-`σ(x) = core[LETn].f` for every variable, and every RED step `⟨e, σ⟩ → ⟨e′, σ′⟩` is matched by one
+`σ(x) = core[_LETn].f` for every variable, and every RED step `⟨e, σ⟩ → ⟨e′, σ′⟩` is matched by one
 or more ICWS'94 steps that end in a related state. Reaching `skip` is matched by the process dying
 on the epilogue `DAT`. Because MARS is deterministic (FIFO queues, fixed `SPL` order), a forward
 simulation suffices.
@@ -176,7 +176,8 @@ where a behaviour spec exists (prog7's counter: 202 instructions, both predicted
   same redcode up to label names.
 - **Capture-avoiding substitution, hygiene.** Substituting a term must not let its free names be
   captured by a binder at the destination. Hygiene is the same demand on names a tool generates:
-  `IF3` or `LET1` must not capture, or be captured by, a user's label (Kohlbecker et al., 1986).
+  `_IF3` or `_LET1` must not capture, or be captured by, a user's label (Kohlbecker et al., 1986);
+  here the `_` prefix, which user names may not use, guarantees it.
 - **Environment and store.** The environment maps names to places (`aenv`, `penv`, `lenv` in
   `src/lib.ml`); the store maps places to values (the core).
 - **Small-step and big-step semantics.** A relation between successive configurations (structural
