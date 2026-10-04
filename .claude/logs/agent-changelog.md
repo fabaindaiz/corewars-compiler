@@ -5,6 +5,34 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-04 · s-7d2612-14641b — Phase 2: the archetypes measured against hand-written redcode
+
+**What.** On branch `feat/phase-2`. Wrote six classic archetypes twice, by hand and in RED
+(`archetypes/`): imp, dwarf, stone, core-clear, a `JMZ` scanner, a paper. Added their goldens
+(`bbctests/archetypes/`) and behaviour specs (`behtests/archetype_*.beh`, probes computed by hand
+first, one mutated to see it fail). Measured cycles, cells and the Wilkies score for both forms;
+results and method in `docs/research/2026-10-04-archetypes.md`. The audit's `doc-paths-exist`
+now checks paths under `archetypes/` (its own commit; mutated to see it fail).
+**Areas.** `tools/audit.py`, `archetypes/`, `bbctests/archetypes/`, `behtests/`, `docs/research/`, `docs/roadmap.md`,
+`docs/architecture.md`, `AGENTS.md`.
+**Why.** Phase 2 of the roadmap (i-7d2612-34b61d): the archetypes decide what the operator design
+must add.
+**Architecture.** ✅ Complies: no compiler code changed; no existing golden changed.
+**Found.** Five archetypes match the hand-written cycles; every one pays one cell for the epilogue.
+The scanner loses one cycle per empty cell to a jump to a jump: 42 against 56 points, and 55 with
+that jump threaded by hand (i-7d2612-ec59a0). A SEQ scanner cannot be written: an indirect use
+takes its modifier from the pointer's field (`SNE.AB *a, @b`) and conditions take no modifier
+(new i-7d2612-2581ff). Two metric gaps: a labelled bomb `DAT` counts as unreachable code
+(i-7d2612-cf8fdb), and a pointer moved in two nested loops gets two step predictions instead of
+its net step (i-7d2612-fbe7c8).
+**What went wrong.** A first SEQ-scanner attempt used the label `cmp`, a pMARS keyword: the parser
+rejected it, as designed. The Wilkies score of one warrior varies by up to 4 points between runs at
+500 rounds, so single runs would have shown gaps that are noise; every score here is two runs.
+**Left undone.** Imp spiral and quickscan (need label arithmetic or constants and compile-time
+repetition), Mice's copy-by-index and a Silk-style paper; the benchmark is a script described in the
+research note, not a check (i-7d2612-f27a91). The decisions the gaps raise are put to the user, not
+taken.
+
 ## 2026-10-04 · s-7d2612-2c7e4d — Phase 1: correctness before the output changes
 
 **What.** On branch `fix/phase-1`. Fixed i-7d2612-3744e5: a unary condition takes its modifier from

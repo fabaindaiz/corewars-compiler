@@ -22,6 +22,16 @@ iteration second, the rest after. Measured on 2026-10-04 with `run_compile.exe -
 | `while (JN x)` around one instruction | 3 | 2 (`JMZ`, `JMP`) | 2 (`JMN` at the bottom) | +50 % per iteration (i-7d2612-3ca4c2) |
 | a variable in its own `DAT` | boot +1 | — | the value in an unused field | +2 cells, +1 cycle (i-7d2612-400784) |
 
+The archetypes themselves, RED against hand-written (`docs/research/2026-10-04-archetypes.md`;
+Wilkies score, 500 rounds, two runs; noise about 4 points):
+
+| Archetype | Cycles/iter RED / hand | Cells RED / hand | Score RED / hand | Gap |
+|---|---|---|---|---|
+| imp, dwarf, stone, core-clear, paper | equal | +1 each | within noise | the epilogue `DAT` (i-7d2612-400784) |
+| scanner | 3 / 2 per empty cell | 7 / 6 | 42 / 56 | a jump to a jump (i-7d2612-ec59a0); threaded by hand, 55 |
+| SEQ scanner | — | — | — | not expressible (i-7d2612-2581ff) |
+| imp spiral, quickscan | — | — | — | need label arithmetic or constants (i-7d2612-a3f2b6) and compile-time repetition (i-7d2612-8e9549) |
+
 ## Where we are
 
 As of 2026-10-04 (s-7d2612-2206a5, s-7d2612-0cb4a2). `main` measures what it compiles: the cost model
@@ -33,11 +43,15 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check; phase 1 has since fixed six of them (see below).
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
+**Phase 2 has started** (s-7d2612-14641b): six archetypes are written in RED and measured against
+hand-written forms; five match it in cycles, the scanner loses one cycle per probe to a jump to a
+jump, and every one pays one cell for the epilogue. The decisions they raise are in phase 2 below. **Next:** the user's
+decisions on those, then the operator design (i-7d2612-7eadd5).
+
 **Phase 1 is complete** (s-7d2612-2c7e4d): the recorded correctness defects are fixed, errors carry
 `file:line:col`, and generated labels are reserved. Its branch review found one more, recorded with a
 known-failing spec for phase 2's operator design (i-7d2612-9efd00), and five smaller gaps, listed
-under phase 1 below. **Next:** phase 2, the
-classic archetypes written in RED as the acceptance suite (i-7d2612-34b61d).
+under phase 1 below.
 
 ## Phase 1 — Correctness, before the output changes
 
@@ -165,7 +179,14 @@ operators in RED that translate to different modifiers or sequences. Built in su
 Write the classic warriors in RED and measure each against its hand-written form. What they cannot express decides the compound operators and the constants; the ones that work become the snippet catalogue.
 
 ### Classic warriors re-expressed in RED as end-to-end tests · i-7d2612-34b61d
-**State.** Planned. Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
+**State.** Half done (s-7d2612-14641b). Six archetypes — imp, dwarf, stone, core-clear, a `JMZ`
+scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
+(`bbctests/archetypes/`), behaviour specs (`behtests/archetype_*.beh`) and the measurements in
+`docs/research/2026-10-04-archetypes.md`. **Still missing:** a SEQ scanner (not expressible,
+i-7d2612-2581ff), an imp spiral and a quickscan (label arithmetic and repetition), Mice's
+copy-by-index (its pointer precedes its code; RED has no `ORG`), Silk-style paper; and the
+benchmark comparison as a check rather than a script in `_build/` (i-7d2612-f27a91).
+Originally planned: Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
 a Silk-style paper: each exercises a different construct (`docs/references.md`, *Corpora*).
 **Collides with.** i-7d2612-96f7b1 and i-7d2612-3744e5 for any warrior that needs them.
 **Why it is the north star's measure** (d-7d2612-e006c2). Each archetype gets a hand-written counterpart and a row in the gap table above: cycles per iteration, length and benchmark score, compiled against hand-written. What the archetypes cannot express is what the language lacks.
@@ -176,6 +197,18 @@ i-7d2612-425c66.
 **Collides with.** d-7d2612-5b410d ends here: C changes emitted code, so every changed golden needs
 its behavioural reason (d-7d2612-6a1527), measured with the cost model.
 **Decide first.** The reserved prefix; which compound operators exist and what each emits.
+
+### The modifier an indirect use reads in its target · i-7d2612-2581ff
+**State.** Planned (s-7d2612-14641b). `docs/semantics.md` §3 says which field of a variable an
+indirect use goes *through* (`@` or `*`), not which field of the target cell it reads. Today the
+modifier follows the pointers' fields: `(NE (Ind a) (Ind b))` with `a`, `b` in one `DAT` compiles
+to `SNE.AB *a, @b` (A-field of one target against the B-field of the other), and
+`(MOV b (Ind b))` to `MOV.B`, which writes one field of the target. A SEQ scanner needs `SNE.I`, a
+bomber needs `MOV.I`; conditions take no modifier, so a SEQ scanner cannot be written.
+**Collides with.** i-7d2612-9efd00 (the same rule for a variable next to a plain reference); every
+golden that moves or compares through a pointer without a modifier.
+**Decide first.** Whether an indirect use reads the whole target (`.I`) by default, whether
+conditions accept a modifier, or a compound operator for the scan.
 
 ### Constants as named EQU · i-7d2612-a3f2b6
 **State.** Planned. Constant optimizers (optiMAX, mopt) tune `EQU` constants; RED inlines them.
@@ -213,6 +246,8 @@ A `let` whose `(store x)` sits in a `DAT` of its own costs a cell and, when the 
 a `JMP` around it (prog7, prog8: `JMP $2` then `DAT`): one more cell and one more cycle of boot.
 The variable can live in a field the program never reads as code — the epilogue `DAT`, or an
 instruction field the opcode ignores.
+Also the epilogue `DAT` itself: every archetype is one cell longer than its hand-written form for
+it, and none of the six can fall off its end (s-7d2612-14641b).
 **Collides with.** d-7d2612-6a1527 (goldens change); i-7d2612-ce4c3b (placement analysis must be right
 first).
 **Decide first.** Whether the compiler may move a `(store x)` the user wrote, or only suggest it
@@ -222,6 +257,9 @@ first).
 **State.** Planned (phase 3).
 Jumps to jumps, a `JMP` to the next cell, an `if` whose body is empty: local rewrites over the
 emitted sequence, each kept only when `--report` shows the policy's metric improving.
+**Measured** (s-7d2612-14641b): the RED scanner's `if` inside a `repeat` jumps to the `repeat`'s
+`JMP` on every empty cell, 3 cycles against 2 by hand; threading that one jump by hand took its
+benchmark score from 42 to 55 (hand-written: 56). The largest gap the archetypes show.
 **Collides with.** Goldens that contain such sequences.
 **Decide first.** Nothing beyond the policy.
 
@@ -236,6 +274,19 @@ with CORESIZE leaves cells unvisited, unreachable cells.
 **What is already in its favour.** i-7d2612-aeab0f gives every number and the construct that
 produced each cell.
 **Decide first.** Which warnings are on by default, and whether a policy changes them.
+
+### Unreachable counts a labelled data DAT as dead code · i-7d2612-cf8fdb
+**State.** Planned (s-7d2612-14641b). A bomb written `(label bomb) (DAT 0 0)` is never executed,
+by design, and `--report` counts it as unreachable code: only a `let` variable's cell counts as
+data. An unreachable-cell warning would fire on every bomber (core-clear and scanner archetypes).
+**Decide first.** Whether a labelled `DAT` the program never reaches is data, or RED gets a way to
+declare data that is not a variable.
+
+### A loop's pointer step is predicted per instruction, not per iteration · i-7d2612-fbe7c8
+**State.** Planned (s-7d2612-14641b). The paper archetype's outer loop moves `d` by `ADD #2365` and
+by `<d` seven times in its inner loop: 2358 cells per lap. `--report` predicts two steps for the
+outer loop, 2365 and −1, neither of which is what `d` does. The prediction should sum a pointer's
+changes over one iteration, inner loops included when their trip count is known.
 
 ## Phase 5 — The real world: hills and benchmarks
 

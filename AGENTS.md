@@ -161,6 +161,7 @@ the way and what was left undone, not only what worked.
 | Why is it done this way? Was this already decided? | `docs/decisions.md` |
 | What is planned, what is broken, what collides with what? | `docs/roadmap.md` |
 | What does the outside world (ICWS'94, pMARS, hills, literature) say? | `docs/references.md` |
+| How close is RED to hand-written redcode? What was measured, and how? | `docs/research/` (dated notes; the archetypes: `docs/research/2026-10-04-archetypes.md`) |
 | How do I install the toolchain and run the tests? | `REFERENCE.md` |
 | How do I run a warrior and watch it execute? | `.claude/skills/run-warrior/SKILL.md` |
 | A warrior misbehaves or pMARS rejects it — what is known? | `.claude/skills/troubleshoot-redcode/SKILL.md` |
