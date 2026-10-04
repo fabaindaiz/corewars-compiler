@@ -358,12 +358,14 @@ let epilogue = [INSTR (IDAT, RN, RRef (RDir, 0), RRef (RDir, 0))]
    in an instruction line hung it, 200 did not). *)
 let max_line = 256
 
-(* Constants are EQU lines before the code: pMARS substitutes an EQU only after its definition. *)
+(* Constants are EQU lines before the code: pMARS substitutes an EQU only after its definition, and
+   substitutes its text before evaluating, so a value that is an operation keeps its parentheses
+   (a EQU 1+2 used as a*3 would be 1+2*3). *)
 let compile_prog ?opts ?(consts = []) (e : expr) : string =
   let names = List.map fst consts in
   let body = compile_body ?opts ~consts:names e in
   let instrs = List.map (fun (x : emitted) -> x.instr) body in
-  let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr v)) consts) in
+  let equs = String.concat "" (List.map (fun (n, v) -> sprintf "%s EQU %s\n" n (pp_rexpr_operand v)) consts) in
   let text = (prelude) ^ equs ^ (pp_instrs instrs) ^ (pp_instrs epilogue) in
   let too_long line = String.length line >= max_line in
   let lines = String.split_on_char '\n' text in

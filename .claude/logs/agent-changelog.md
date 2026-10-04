@@ -55,6 +55,10 @@ anywhere; recorded in `docs/architecture.md`.
 The scanner's score above the hand-written one, explained by measurement: a hand-written scanner
 with RED's layout (its pointer in the `JMP`) scores 61 and 61, as RED does; per opponent the
 results move in both directions. It is the layout, not the compilation.
+**Branch review** (fresh context, before closing). Critical: a constant whose value is an operation
+was emitted without parentheses (`a EQU 1+2`), and pMARS, which substitutes an EQU's text before
+evaluating, computed `a*3` as 7; now `a EQU (1+2)`, with golden and spec `const_expressions` (its
+probes first assumed cdb shows negatives as 7997; it shows -3).
 **Left undone.** Summing through inner loops with known trip counts (i-7d2612-fbe7c8); the
 quickscan (waits for the macro layer, by decision); a spiral with several processes per point.
 

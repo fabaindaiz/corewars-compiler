@@ -1,0 +1,25 @@
+NAME: constants defined by expressions
+DESCRIPTION: pMARS substitutes an EQU's text before evaluating, so a constant's value must keep its own parentheses: a = 1+2 used as a*3 is 9, not 7; see behtests/const_expressions.beh
+SRC:
+(program
+  (const a (+ 1 2))
+  (const b (* a 3))
+  (const n -5)
+  (const m (- 0 n))
+  (seq
+    (JMP 0)
+    (DAT (* a 3) b)
+    (DAT (- 10 a) (- 0 a))
+    (DAT 0 (- 1 m))))
+EXPECTED:
+;redcode-94b
+a EQU (1+2)
+b EQU (a*3)
+n EQU (-5)
+m EQU (0-n)
+
+  JMP    #0     , #0     
+  DAT    #a*3   , #b     
+  DAT    #10-a  , #0-a   
+  DAT    #0     , #1-m   
+  DAT    $0     , $0     
