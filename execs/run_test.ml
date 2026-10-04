@@ -142,7 +142,9 @@ let test_layout_prog4_dynamic () =
 let test_layout_undefined_label () =
   let p = layout_of_src "(JMP nowhere)" in
   check Alcotest.(list diagnostic) "diagnostics" [L.Undefined_label "nowhere"] p.diagnostics ;
-  check Alcotest.(list edge) "jump" [L.Dynamic] p.succ.(0)
+  check Alcotest.(list edge) "jump" [L.Dynamic] p.succ.(0) ;
+  check Alcotest.(option string) "operand keeps its label" (Some "nowhere") p.cells.(0).a.label ;
+  check Alcotest.int "operand value" 0 p.cells.(0).a.value
 
 let test_layout_long_line () =
   let l = String.make 250 'a' in
