@@ -152,6 +152,11 @@ let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
   | Seq (exprs) ->
     let rec tag_seq (exprs : expr list) (cur : tag) : tag eexpr list * tag =
       (match exprs with
+      | Expect (x) :: tail ->
+        (* An expectation emits nothing and takes no tag of its own, so adding one never
+           renumbers the labels generated after it. *)
+        let (tag_tail, next_tag) = tag_seq tail cur in
+        EExpect (x, cur) :: tag_tail, next_tag
       | head :: tail ->
         let (tag_head, next_tag1) = tag_expr_help head (cur + 1) in
         let (tag_tail, next_tag2) = tag_seq tail next_tag1 in
@@ -160,7 +165,7 @@ let rec tag_expr_help (e : expr) (cur : tag) : (tag eexpr * tag) =
     let (tag_e, next_tag) = tag_seq exprs (cur + 1) in
     (ESeq (tag_e, cur), next_tag)
   | Expect (x) ->
-    (EExpect (x, cur), cur + 1)
+    (EExpect (x, cur), cur)
 
 let tag_expr (e : expr) : tag eexpr =
   let (tagged, _) = tag_expr_help e 1 in tagged

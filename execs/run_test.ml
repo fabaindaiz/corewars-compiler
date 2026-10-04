@@ -381,6 +381,15 @@ let test_review_diagnostics_reported () =
   check Alcotest.bool "json" true (contains (M.to_json m) "\"diagnostics\":[\"undefined label")
 
 
+(* Tests for the deferred minor findings *)
+let test_minor_expect_keeps_labels () =
+  let src = golden_src (example "prog8") in
+  let w = "(while" in
+  let with_expect = between src "" w ^ "(expect (cycles <= 9)) " ^ w ^ between src w "\000" in
+  check Alcotest.string "same redcode"
+    (compile_prog (expr_of (example "prog8"))) (compile_prog (parse_exp (sexp_from_string with_expect)))
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -440,6 +449,9 @@ let ocaml_tests = [
     test_case "dies_after only for the first loop" `Quick test_review_dies_after_second_loop ;
     test_case "covers-core respects loop bounds" `Quick test_review_covers_core_bounded ;
     test_case "diagnostics are reported" `Quick test_review_diagnostics_reported ;
+  ] ;
+  "minor", [
+    test_case "an expect statement keeps generated labels" `Quick test_minor_expect_keeps_labels ;
   ] ;
   "interp", [
 
