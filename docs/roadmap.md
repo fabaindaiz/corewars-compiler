@@ -9,9 +9,22 @@ is ever deleted. Finishing an item edits its entry in the same change. New items
 The core invariant every item is priced against: **a RED program compiles to redcode whose
 execution in the core follows the program's meaning** (`docs/semantics.md`).
 
+## The north star
+
+**Every classic archetype — imp, dwarf, stone, scanner, paper, quickscan, core-clear — written in
+RED compiles with near-zero overhead against its hand-written redcode** (d-7d2612-e006c2). It orders
+everything below: what keeps an archetype from being written comes first, what adds cycles per
+iteration second, the rest after. Measured on 2026-10-04 with `run_compile.exe --report`:
+
+| RED construct | Cycles/iter | Control | Hand-written | Gap |
+|---|---|---|---|---|
+| `repeat` bomber (`SUB`, `MOV @`) | 3 | 1 (`JMP`) | 3 (a Dwarf) | none |
+| `while (JN x)` around one instruction | 3 | 2 (`JMZ`, `JMP`) | 2 (`JMN` at the bottom) | +50 % per iteration (i-7d2612-3ca4c2) |
+| a variable in its own `DAT` | boot +1 | — | the value in an unused field | +2 cells, +1 cycle (i-7d2612-400784) |
+
 ## Where we are
 
-As of 2026-10-03 (s-7d2612-2206a5). `main` measures what it compiles: the cost model
+As of 2026-10-04 (s-7d2612-2206a5, s-7d2612-0cb4a2). `main` measures what it compiles: the cost model
 (i-7d2612-aeab0f) is merged, with the review's findings fixed. `run_compile.exe --report` shows the
 metrics and predictions, `(expect ...)` checks them or exports them to pMARS, and the command line
 is `Cored.Driver`, tested in-process. The gate runs locally with an opam switch in `_opam/`:
@@ -20,10 +33,26 @@ to end in pMARS, the audit and seven behaviour specs. **Seven defects are record
 with a failing check (four behaviour specs, one audit check); i-7d2612-888db5 is half done.
 `origin/dev` holds a half-done restructure that defines a different language (i-7d2612-ec4d2d).
 
-**Next, by cost to the invariant and verifiability:** the correctness fixes with known-failing specs; then subproject B (warnings, i-7d2612-90d6e1), which
-needs the cost model, and C (i-7d2612-7eadd5), which carries three decisions already taken.
+**Next:** phase 1, starting with the two ready fixes (i-7d2612-3744e5, i-7d2612-ce4c3b); their specs already fail.
 
-## Correctness — recorded defects
+## Phase 1 — Correctness, before the output changes
+
+Everything later changes emitted code, so first the code must mean what RED says. Ready items first; the two golden migrations (prefix, defaults) last, one commit each, with their behavioural reason.
+
+### Unary conditions always use the .B modifier · i-7d2612-3744e5
+**State.** Planned. Known-failing: `behtests/cond1_afield.beh`.
+In `compile_cond` the label operand of `Cond1` is a reference, so `opmod_to_rmod` falls through to
+the `.B` default: a variable stored in an A-field is tested on the B-field of its cell.
+**Collides with.** Goldens whose unary condition reads a B-field variable must not change.
+**Decide first.** Nothing: the field is known from `penv`.
+
+### An inner let leaks its store placement into an outer variable of the same name · i-7d2612-ce4c3b
+**State.** Planned. Known-failing: `behtests/let_shadowing.beh`.
+`Analyse.analyse_store_expr` walks into a nested `ELet` that rebinds the same name, so the inner
+`(store x)` sets the outer `x`'s field. Related, not yet measured: `replace_store` resolves an
+initializer in the environment of the store site, so `(let (x 1) (let (y x) (let (x 2) … (store y))))`
+captures the inner `x`.
+**Decide first.** Stop the walk at a shadowing `let`, or uniquify names before analysis.
 
 ### do-while with GT or LT loops at equality · i-7d2612-fffa6c
 **State.** Planned. Known-failing: `behtests/dowhile_gt_equal.beh`, golden
@@ -36,12 +65,33 @@ needs the cost model, and C (i-7d2612-7eadd5), which carries three decisions alr
 with `GT`/`LT`, the same cycles per iteration — plus a performance warning from subproject B where
 a construct costs extra. Built in subproject C (i-7d2612-7eadd5).
 
-### Unary conditions always use the .B modifier · i-7d2612-3744e5
-**State.** Planned. Known-failing: `behtests/cond1_afield.beh`.
-In `compile_cond` the label operand of `Cond1` is a reference, so `opmod_to_rmod` falls through to
-the `.B` default: a variable stored in an A-field is tested on the B-field of its cell.
-**Collides with.** Goldens whose unary condition reads a B-field variable must not change.
-**Decide first.** Nothing: the field is known from `penv`.
+### Four distinct CTError exceptions, none caught · i-7d2612-888db5
+**State.** Half done. Known-failing check: `tools/audit.py` `single-error-type`.
+`lib`, `util`, `parse` and `compile` each declare `exception CTError of string`; they are four
+exceptions. **Done:** `Cored.Driver` catches all four by name, so the CLI prints `error: ...` and
+exits 1 (d-7d2612-8bba52). **Still missing:** one exception type, locations, and keeping internal
+errors ("please report this bug" in `util.ml`) apart from user errors.
+**Decide first.** One user-error exception (with a location, i-7d2612-1703ff) plus `failwith`-style
+internal errors, converted to a message and exit code in the driver.
+
+### Source locations in compile errors · i-7d2612-1703ff
+**State.** Planned. Needs a position-aware s-expression reader and one annotated AST type.
+**Why it is in phase 1.** Every warning of phase 4 must say where in the source it applies.
+
+### Lines of 256 characters or more hang pMARS · i-7d2612-174acf
+**State.** Planned. No spec (a probe would hang the gate).
+Measured on pMARS 0.9.4: a 245-character label hung, 200 worked. RED passes user labels through.
+**Decide first.** A maximum label length in the parser, or a check on emitted line length.
+
+### User labels can collide with generated labels, and store-once is unchecked · i-7d2612-425c66
+**State.** Planned. Known-failing: `behtests/label_collision.beh`.
+A user `(label LET1)` shares the namespace of generated labels; pMARS keeps the first definition
+and only warns. Unchecked as well: a `let` whose variable has no `(store x)` (its `LET` label is
+never defined) or two (defined twice), a user label that is a pMARS reserved word (`END`, `MOV`).
+**Collides with.** d-7d2612-123e41 (label names are part of every golden).
+**Decided** (2026-10-03, user): generated labels take a reserved prefix that the parser forbids in
+user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every golden changes once.
+Built in subproject C (i-7d2612-7eadd5).
 
 ### Fallback modifier .I differs from the ICWS'94 defaults · i-7d2612-96f7b1
 **State.** Planned. No spec yet.
@@ -55,54 +105,97 @@ which the default also gives); any golden with `ADD`/`SLT` on two references.
 operators in RED that translate to different modifiers or sequences. Built in subproject C
 (i-7d2612-7eadd5); at least `prog3.bbc` and `prog5.bbc` change (`ADD.I #1, #1`, `SUB.I`).
 
-### User labels can collide with generated labels, and store-once is unchecked · i-7d2612-425c66
-**State.** Planned. Known-failing: `behtests/label_collision.beh`.
-A user `(label LET1)` shares the namespace of generated labels; pMARS keeps the first definition
-and only warns. Unchecked as well: a `let` whose variable has no `(store x)` (its `LET` label is
-never defined) or two (defined twice), a user label that is a pMARS reserved word (`END`, `MOV`).
-**Collides with.** d-7d2612-123e41 (label names are part of every golden).
-**Decided** (2026-10-03, user): generated labels take a reserved prefix that the parser forbids in
-user labels (pMARS labels are `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive). Every golden changes once.
-Built in subproject C (i-7d2612-7eadd5).
+## Phase 2 — Expressiveness: the archetypes as the acceptance suite
 
-### An inner let leaks its store placement into an outer variable of the same name · i-7d2612-ce4c3b
-**State.** Planned. Known-failing: `behtests/let_shadowing.beh`.
-`Analyse.analyse_store_expr` walks into a nested `ELet` that rebinds the same name, so the inner
-`(store x)` sets the outer `x`'s field. Related, not yet measured: `replace_store` resolves an
-initializer in the environment of the store site, so `(let (x 1) (let (y x) (let (x 2) … (store y))))`
-captures the inner `x`.
-**Decide first.** Stop the walk at a shadowing `let`, or uniquify names before analysis.
+Write the classic warriors in RED and measure each against its hand-written form. What they cannot express decides the compound operators and the constants; the ones that work become the snippet catalogue.
 
-### Four distinct CTError exceptions, none caught · i-7d2612-888db5
-**State.** Half done. Known-failing check: `tools/audit.py` `single-error-type`.
-`lib`, `util`, `parse` and `compile` each declare `exception CTError of string`; they are four
-exceptions. **Done:** `Cored.Driver` catches all four by name, so the CLI prints `error: ...` and
-exits 1 (d-7d2612-8bba52). **Still missing:** one exception type, locations, and keeping internal
-errors ("please report this bug" in `util.ml`) apart from user errors.
-**Decide first.** One user-error exception (with a location, i-7d2612-1703ff) plus `failwith`-style
-internal errors, converted to a message and exit code in the driver.
+### Classic warriors re-expressed in RED as end-to-end tests · i-7d2612-34b61d
+**State.** Planned. Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
+a Silk-style paper: each exercises a different construct (`docs/references.md`, *Corpora*).
+**Collides with.** i-7d2612-96f7b1 and i-7d2612-3744e5 for any warrior that needs them.
+**Why it is the north star's measure** (d-7d2612-e006c2). Each archetype gets a hand-written counterpart and a row in the gap table above: cycles per iteration, length and benchmark score, compiled against hand-written. What the archetypes cannot express is what the language lacks.
 
-### Lines of 256 characters or more hang pMARS · i-7d2612-174acf
-**State.** Planned. No spec (a probe would hang the gate).
-Measured on pMARS 0.9.4: a 245-character label hung, 200 worked. RED passes user labels through.
-**Decide first.** A maximum label length in the parser, or a check on emitted line length.
+### Operators, default modifiers, reserved label prefix and the do-while layout (subproject C) · i-7d2612-7eadd5
+**State.** Planned. Carries the decisions recorded in i-7d2612-fffa6c, i-7d2612-96f7b1 and
+i-7d2612-425c66.
+**Collides with.** d-7d2612-5b410d ends here: C changes emitted code, so every changed golden needs
+its behavioural reason (d-7d2612-6a1527), measured with the cost model.
+**Decide first.** The reserved prefix; which compound operators exist and what each emits.
 
-## Testing
-
-### The execute suite only assembles warriors · i-7d2612-05c64d
-**State.** Half done. The mechanism is `tools/behave.py` (cdb probes); the content is three
-specs for working programs. Missing: specs for `repeat`, `if-else`, `while` with `EQ`/`NE`,
-indirection, `SPL`; and folding them into the OCaml suite if wanted.
+### Constants as named EQU · i-7d2612-a3f2b6
+**State.** Planned. Constant optimizers (optiMAX, mopt) tune `EQU` constants; RED inlines them.
 
 ### Compile-error tests · i-7d2612-70ea22
 **State.** Half done. The command line's error path is tested through `Cored.Driver`
 (`test_driver_compile_error_is_clean`, `test_driver_missing_file`). Still no golden uses bbctester's
 `STATUS: CT error`.
 
-### Classic warriors re-expressed in RED as end-to-end tests · i-7d2612-34b61d
-**State.** Planned. Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
-a Silk-style paper: each exercises a different construct (`docs/references.md`, *Corpora*).
-**Collides with.** i-7d2612-96f7b1 and i-7d2612-3744e5 for any warrior that needs them.
+### Snippets: named RED fragments with verified metrics and specs · i-7d2612-8e9549
+**State.** Planned. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
+metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (subproject C or the
+dev branch's lambdas, i-7d2612-ec4d2d).
+
+## Phase 3 — The optimizer, under the policy
+
+Transformations that change emitted code to improve the policy's metric, each measured with `--report` before and after. Speed first: one instruction per iteration is worth about five times eight cells.
+
+### Loop rotation: the condition at the end of the loop · i-7d2612-3ca4c2
+**State.** Planned (phase 3).
+`while` tests at the top and jumps back from the bottom: two control instructions per iteration.
+With the test moved to the bottom and one jump into it before the first iteration, a unary
+condition costs one (`JMN head, x`). Measured: `while (JN x)` around one instruction runs 3 cycles per
+iteration today; rotated, 2 — the difference that cost about 20 benchmark points in the Dwarf
+experiment (`docs/specs/2026-10-03-cost-model-design.md`).
+**Collides with.** Every golden with a `while` (prog8): each changes once, with this reason.
+**What is already in its favour.** `--report` measures the gain; the `do-while` layout already is the
+rotated shape.
+**Decide first.** Binary conditions keep two instructions either way (`SLT` plus a jump); rotate them
+too, for the shorter boot, or only unary ones?
+
+### Variables in fields of existing instructions, not in separate DAT cells · i-7d2612-400784
+**State.** Planned (phase 3).
+A `let` whose `(store x)` sits in a `DAT` of its own costs a cell and, when the `DAT` is on the path,
+a `JMP` around it (prog7, prog8: `JMP $2` then `DAT`): one more cell and one more cycle of boot.
+The variable can live in a field the program never reads as code — the epilogue `DAT`, or an
+instruction field the opcode ignores.
+**Collides with.** d-7d2612-6a1527 (goldens change); i-7d2612-ce4c3b (placement analysis must be right
+first).
+**Decide first.** Whether the compiler may move a `(store x)` the user wrote, or only suggest it
+(a phase-4 warning).
+
+### Peephole cleanup of jumps · i-7d2612-ec59a0
+**State.** Planned (phase 3).
+Jumps to jumps, a `JMP` to the next cell, an `if` whose body is empty: local rewrites over the
+emitted sequence, each kept only when `--report` shows the policy's metric improving.
+**Collides with.** Goldens that contain such sequences.
+**Decide first.** Nothing beyond the policy.
+
+## Phase 4 — Warnings
+
+Once errors have locations and the optimizer knows what it can do, the warnings can say where a cost is and what would remove it.
+
+### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
+**State.** Planned. Warnings for possible slowdowns and possible optimizations, from the metrics:
+an extra instruction per iteration, compiler overhead above a construct's minimum, a step whose gcd
+with CORESIZE leaves cells unvisited, unreachable cells.
+**What is already in its favour.** i-7d2612-aeab0f gives every number and the construct that
+produced each cell.
+**Decide first.** Which warnings are on by default, and whether a policy changes them.
+
+## Phase 5 — The real world: hills and benchmarks
+
+A warrior that can be submitted: other hills than 94b, the header lines KotH expects, and the benchmark as a regression signal.
+
+### Multiple hill targets · i-7d2612-217183
+**State.** Planned; the stated direction (d-7d2612-6d88cd). A target parameter (94b, 94nop, tiny,
+nano, lp) selecting the header `;redcode-<hill>`, MAXLENGTH, CORESIZE for constants, and whether
+`LDP`/`STP` are allowed (94nop has no p-space).
+**Collides with.** Every golden's header; the `execute` suite's config path.
+**Decide first.** Is the target a CLI flag, a header form in RED, or both?
+
+### Warrior header metadata · i-7d2612-b682d5
+**State.** Planned. Emit `;name`, `;author`, `;strategy` and `;assert` (pMARS warns on every
+compiled warrior: "Missing ';assert'"; KotH replies the same).
 
 ### Benchmark score as a regression signal · i-7d2612-f27a91
 **State.** Planned. `pmars -b -r 200 -F 4000 warrior bench/*.red` against the Wilkies set gives a
@@ -110,11 +203,38 @@ deterministic score in about a second (measured: prog1 55, a classic Dwarf 49, I
 **Decide first.** The benchmark has no licence statement: fetch at test time into `_build/`, never
 vendor.
 
+### The execute suite only assembles warriors · i-7d2612-05c64d
+**State.** Half done. The mechanism is `tools/behave.py` (cdb probes); the content is three
+specs for working programs. Missing: specs for `repeat`, `if-else`, `while` with `EQ`/`NE`,
+indirection, `SPL`; and folding them into the OCaml suite if wanted.
+
+## Phase 6 — Foundations and research
+
+The compiler-correctness statement made executable, a kind system, and the macro layer.
+
 ### A RED reference interpreter for differential testing · i-7d2612-56302d
 **State.** Planned. Run RED source and compiled redcode on the same initial core and compare cells
 (translation validation, `docs/semantics.md`). Later, QCheck-generated programs.
 
-## Toolchain
+### A static kind check for RED · i-7d2612-f2f7c5
+**State.** Planned. Kinds `Num`, `Lab`, `Place` (`docs/semantics.md`, *Statics*): jump targets are
+labels, `#x` is an explicit offset, every let variable is stored exactly once. Subsumes the
+store-once half of i-7d2612-425c66.
+
+### The new compiler structure on the dev branch · i-7d2612-ec4d2d
+**State.** Planned (phase 6); a half-done start on `origin/dev` (2025-09-09), not merged. Moves to `lib/{common,core,parsing,surface}`
+and `bin/`, adds an opam file, disables `execs/`.
+**Collides with.** d-7d2612-123e41 (it adds a global `gensym`); RED itself (its surface language is
+a simply typed lambda calculus, not RED); every test (none run on the branch). Known defects there:
+`List.hd` on an empty `seq` in `typecheck.ml`, unbound names raise `failwith`.
+**Decided** (2026-10-04, user; d-7d2612-5de7a6): its typed lambda calculus becomes RED's
+compile-time macro layer — functions that are inlined into RED before code generation, terminating
+because λ→ is strongly normalising — rebuilt on today's `main` rather than merged. It is the reuse
+mechanism snippets wait for (i-7d2612-8e9549). Its global `gensym` is not kept (d-7d2612-123e41).
+
+## Alongside — toolchain and documentation
+
+Cheap items taken when a phase touches them; none blocks a phase.
 
 ### dune runtest runs no tests · i-7d2612-47d3ea
 **State.** Planned. There is no `(test)` stanza; `make tests` is the only entry. Adding one changes
@@ -126,25 +246,30 @@ how CI and editors run the suite.
 CI clones and `dune install`s it into setup-ocaml's local switch (works since s-7d2612-cc9344). An opam file with `pin-depends`, or a
 vendored submodule with `(vendored_dirs ...)`, would make it one command.
 
-### The Docker image cannot run the vendored pmars or build the tests · i-7d2612-202da9
-**State.** Planned. `ocaml/opam:ubuntu-20.04` ships glibc 2.31; `pmars/pmars` needs 2.34 and
-`libX11.so.6`. The image also installs neither bbctester nor its dependencies, and pins OCaml 5.0.0
-while this machine has 5.5.1. Not verified by running Docker.
-
-### pMARS 0.9.5 · i-7d2612-494e75
-**State.** Planned. Released 2026-01-03 with overflow and bounds fixes; builds on macOS without the
-`round` rename. **Collides with** d-7d2612-3d04ba (the vendored binary and zip are 0.9.4).
-
-### Adopt ocamlformat · i-7d2612-2a14f2
-**State.** Planned. Needs a pinned `.ocamlformat` (`version=`), one formatting commit with nothing
-else in it (d-7d2612-8cdc44), then `dune build @fmt` in the gate.
-
 ### The cored profile in dune-workspace is never selected · i-7d2612-ceee87
 **State.** Planned. `(env (cored ...))` applies only under `--profile cored`, which nothing passes;
 builds use the `dev` profile, where unused opens and values are errors. Decide whether warnings are
 errors, then make the file say so.
 
-## Cost model and optimization
+### RED tutorial · i-7d2612-e8f3f0
+**State.** Planned. `TUTORIAL.md` is a title only. Programming games that teach assembly (TIS-100,
+EXAPUNKS) teach through small constrained goals with cycle and size counts; a tutorial built from
+the classic-warriors item (i-7d2612-34b61d) would reuse those programs.
+
+### pMARS 0.9.5 · i-7d2612-494e75
+**State.** Planned. Released 2026-01-03 with overflow and bounds fixes; builds on macOS without the
+`round` rename. **Collides with** d-7d2612-3d04ba (the vendored binary and zip are 0.9.4).
+
+### The Docker image cannot run the vendored pmars or build the tests · i-7d2612-202da9
+**State.** Planned. `ocaml/opam:ubuntu-20.04` ships glibc 2.31; `pmars/pmars` needs 2.34 and
+`libX11.so.6`. The image also installs neither bbctester nor its dependencies, and pins OCaml 5.0.0
+while this machine has 5.5.1. Not verified by running Docker.
+
+### Adopt ocamlformat · i-7d2612-2a14f2
+**State.** Planned. Needs a pinned `.ocamlformat` (`version=`), one formatting commit with nothing
+else in it (d-7d2612-8cdc44), then `dune build @fmt` in the gate.
+
+## Done
 
 ### Cost model, ordered IR and expectations (subproject A) · i-7d2612-aeab0f
 **State.** Done, merged into `main` (s-7d2612-a654a5, s-7d2612-2206a5). Spec
@@ -159,66 +284,6 @@ zero B-number under `.F`/`.X`/`.I`, `--emit-beh` checks, probe counts from 1, `(
 objective, `unreachable` qualified when jumps are dynamic, JSON escaping with policy and coresize,
 clean compile errors, and the CLI under test (`Cored.Driver`); `Stdlib.Arg` declined
 (d-7d2612-7edd7d).
-
-### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
-**State.** Planned. Warnings for possible slowdowns and possible optimizations, from the metrics:
-an extra instruction per iteration, compiler overhead above a construct's minimum, a step whose gcd
-with CORESIZE leaves cells unvisited, unreachable cells.
-**What is already in its favour.** i-7d2612-aeab0f gives every number and the construct that
-produced each cell.
-**Decide first.** Which warnings are on by default, and whether a policy changes them.
-
-### Operators, default modifiers, reserved label prefix and the do-while layout (subproject C) · i-7d2612-7eadd5
-**State.** Planned. Carries the decisions recorded in i-7d2612-fffa6c, i-7d2612-96f7b1 and
-i-7d2612-425c66.
-**Collides with.** d-7d2612-5b410d ends here: C changes emitted code, so every changed golden needs
-its behavioural reason (d-7d2612-6a1527), measured with the cost model.
-**Decide first.** The reserved prefix; which compound operators exist and what each emits.
-
-### Snippets: named RED fragments with verified metrics and specs · i-7d2612-8e9549
-**State.** Planned. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
-metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (subproject C or the
-dev branch's lambdas, i-7d2612-ec4d2d).
-
-## Language and output
-
-### Multiple hill targets · i-7d2612-217183
-**State.** Planned; the stated direction (d-7d2612-6d88cd). A target parameter (94b, 94nop, tiny,
-nano, lp) selecting the header `;redcode-<hill>`, MAXLENGTH, CORESIZE for constants, and whether
-`LDP`/`STP` are allowed (94nop has no p-space).
-**Collides with.** Every golden's header; the `execute` suite's config path.
-**Decide first.** Is the target a CLI flag, a header form in RED, or both?
-
-### Warrior header metadata · i-7d2612-b682d5
-**State.** Planned. Emit `;name`, `;author`, `;strategy` and `;assert` (pMARS warns on every
-compiled warrior: "Missing ';assert'"; KotH replies the same).
-
-### A static kind check for RED · i-7d2612-f2f7c5
-**State.** Planned. Kinds `Num`, `Lab`, `Place` (`docs/semantics.md`, *Statics*): jump targets are
-labels, `#x` is an explicit offset, every let variable is stored exactly once. Subsumes the
-store-once half of i-7d2612-425c66.
-
-### Constants as named EQU · i-7d2612-a3f2b6
-**State.** Planned. Constant optimizers (optiMAX, mopt) tune `EQU` constants; RED inlines them.
-
-### Source locations in compile errors · i-7d2612-1703ff
-**State.** Planned. Needs a position-aware s-expression reader and one annotated AST type.
-
-### The new compiler structure on the dev branch · i-7d2612-ec4d2d
-**State.** Half done, on `origin/dev` (2025-09-09), not merged. Moves to `lib/{common,core,parsing,surface}`
-and `bin/`, adds an opam file, disables `execs/`.
-**Collides with.** d-7d2612-123e41 (it adds a global `gensym`); RED itself (its surface language is
-a simply typed lambda calculus, not RED); every test (none run on the branch). Known defects there:
-`List.hd` on an empty `seq` in `typecheck.ml`, unbound names raise `failwith`.
-**Decide first.** Is the lambda-calculus surface a new front end that lowers to RED, or a
-replacement? That answer decides whether this branch is merged, rebased, or restarted.
-
-## Documentation
-
-### RED tutorial · i-7d2612-e8f3f0
-**State.** Planned. `TUTORIAL.md` is a title only. Programming games that teach assembly (TIS-100,
-EXAPUNKS) teach through small constrained goals with cycle and size counts; a tutorial built from
-the classic-warriors item (i-7d2612-34b61d) would reuse those programs.
 
 ## Process and tooling
 
@@ -266,3 +331,7 @@ longer warriors.
 | i-7d2612-90d6e1 warnings | No — it reports |
 | i-7d2612-7eadd5 subproject C | Yes — it changes emitted code; each change needs a behaviour spec |
 | i-7d2612-8e9549 snippets | No |
+| i-7d2612-3ca4c2 loop rotation | Yes — it changes every `while`; a behaviour spec per layout |
+| i-7d2612-400784 variables in fields | Yes — a moved variable must keep its value and field |
+| i-7d2612-ec59a0 peephole | Yes — each rewrite needs the behaviour specs green |
+| i-7d2612-276a54 line endings | No |

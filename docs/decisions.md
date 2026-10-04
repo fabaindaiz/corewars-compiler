@@ -8,6 +8,13 @@ that marks the old one as replaced.
 New rows get an id from `python3 .agents/tools/bundle.py id d "<the decision>"`, frozen once
 written.
 
+## Direction
+
+| Id | Decision | Why | Enforced in |
+|---|---|---|---|
+| d-7d2612-e006c2 | The north star: every classic archetype (imp, dwarf, stone, scanner, paper, quickscan, core-clear) written in RED compiles with near-zero overhead against its hand-written redcode; the roadmap's phases are ordered by it | The README's purpose made measurable: no other maintained higher-level-to-Redcode compiler exists to compare with, and speed dominates the score (one instruction per iteration ≈ 20 benchmark points, eight cells ≈ 4) | the gap table in `docs/roadmap.md`; the archetype suite (i-7d2612-34b61d) once it exists |
+| d-7d2612-5de7a6 | The dev branch's typed lambda calculus becomes RED's compile-time macro layer, rebuilt on `main`: functions inlined into RED before code generation | Snippets need a reuse mechanism; λ→ is strongly normalising, so every expansion terminates; the branch as it stands defines a different language and a global `gensym` | — (planned, i-7d2612-ec4d2d) |
+
 ## Code generation
 
 | Id | Decision | Why | Enforced in |
