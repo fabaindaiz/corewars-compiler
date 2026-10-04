@@ -176,6 +176,8 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
     List.exists (fun j -> let w = p.cells.(j) in
       writes w.op && ((j = t && f = FB && w.b.mode = RDir)
                       || (base_field w.b.mode = Some f && target w = t))) body in
+  (* Every change to a pointer field in the loop: an ADD/SUB of a constant to it, or a write through
+     it that moves it (< or >). *)
   let by_add = List.filter_map (fun i -> let c = p.cells.(i) in
       let field = match c.md with
         | RA | RBA -> Some FA | RB | RAB -> Some FB | RN | RF | RX | RI -> None in
@@ -184,20 +186,31 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
       let amount = match c.md with
         | RA | RAB -> c.a.value | RB | RBA -> c.b.value | RN | RF | RX | RI -> 0 in
       match field with
-      | Some f when (c.op = IADD || c.op = ISUB) && c.a.mode = RImm && c.b.mode = RDir && every i
+      | Some f when (c.op = IADD || c.op = ISUB) && c.a.mode = RImm && c.b.mode = RDir
                     && norm p.coresize amount <> 0 && target c < n && destination (target c) f ->
-        let k = if c.op = IADD then amount else - amount in
-        Some (step_of p lm ~cell:(target c) ~field:f ~k)
+        Some ((target c, f), (if c.op = IADD then amount else - amount), i)
       | Some _ | None -> None) body in
   let by_mode = List.filter_map (fun j -> let w = p.cells.(j) in
       let k = match w.b.mode with
         | RBInc | RAInc -> Some 1 | RBDec | RADec -> Some (-1)
         | RImm | RDir | RAInd | RBInd -> None in
       match k, base_field w.b.mode with
-      | Some k, Some f when writes w.op && every j && target w < n ->
-        Some (step_of p lm ~cell:(target w) ~field:f ~k)
+      | Some k, Some f when writes w.op && target w < n -> Some ((target w, f), k, j)
       | (Some _ | None), (Some _ | None) -> None) body in
-  by_add @ by_mode
+  (* A pointer's step is its net change over one lap: the sum of its changes, when each happens once
+     on every lap. A change on some laps only, or inside an inner loop whose trip count is not known
+     here, leaves the step unknown, and nothing is predicted rather than a wrong number. *)
+  let inner = List.concat_map (fun (l' : Layout.loop) ->
+      if l'.header <> lm.loop.header && List.mem l'.header body && List.for_all (fun i -> List.mem i body) l'.body
+      then l'.body else []) p.loops in
+  let changes = by_add @ by_mode in
+  let pointers = List.fold_left (fun acc (ptr, _, _) -> if List.mem ptr acc then acc else acc @ [ptr]) [] changes in
+  List.filter_map (fun ((cell, field) as ptr) ->
+    let mine = List.filter (fun (q, _, _) -> q = ptr) changes in
+    let k = List.fold_left (fun acc (_, k, _) -> acc + k) 0 mine in
+    if List.for_all (fun (_, _, i) -> every i && not (List.mem i inner)) mine && norm p.coresize k <> 0
+    then Some (step_of p lm ~cell ~field ~k)
+    else None) pointers
 
 let counter (p : program) (entry : range option) (lm : loop_metrics) : prediction option =
   let s = p.cells.(closing_source lm.loop) in

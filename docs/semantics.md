@@ -209,7 +209,7 @@ What the compiler measures on its own output (`src/metrics.ml`; definitions and 
 | `boot` | cycles before the first loop starts |
 | `cycles/iter` | instructions per loop iteration |
 | `overhead/iter` | of those, the jumps and skips a control construct added |
-| step prediction | a pointer that advances `k` per iteration visits `CORESIZE / gcd(k, CORESIZE)` cells |
+| step prediction | a pointer that advances `k` per iteration (the sum of its changes over one lap; none when one happens on some laps only or inside an inner loop) visits `CORESIZE / gcd(k, CORESIZE)` cells |
 | counter prediction | a `DJN` from `n` runs `n` iterations (`0` runs `CORESIZE`) |
 
 These measure the static program: self-modifying code and indirect jumps are not followed, and a

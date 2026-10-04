@@ -960,11 +960,12 @@ let test_warnings_dead_code () =
 let test_warnings_archetypes_clean () =
   (* the archetypes are tight: under the default policy only steps that leave cells unvisited,
      which they do not state, are worth saying: the dwarf's and stone's mod 4, the scanner's 10
-     (800 cells), the paper's copy pointer *)
+     (800 cells); the paper's copy pointer has no known step per lap (its inner loop's trip count is
+     not known), so nothing is said about it *)
   List.iter (fun (name, n) ->
     let src = read_file ("archetypes/" ^ name ^ ".src") in
     check Alcotest.int name n (List.length (warnings_in (err_of src))))
-    [("imp", 0); ("dwarf", 1); ("stone", 1); ("clear", 0); ("scanner", 1); ("seqscan", 0); ("paper", 1); ("impring", 0)]
+    [("imp", 0); ("dwarf", 1); ("stone", 1); ("clear", 0); ("scanner", 1); ("seqscan", 0); ("paper", 0); ("impring", 0)]
 
 
 (* Tests for the smaller gaps of the phase-1 review *)
@@ -997,6 +998,24 @@ let test_gaps_locations_cleared () =
   ignore (sexp_from_string "(NOP)") ;
   (* (NOP) is one list and one atom *)
   check Alcotest.int "only the last parse's nodes" 2 (Phys.length locations)
+
+
+(* A pointer's step is its net change over one lap *)
+let steps_of_loop (m : M.t) (construct : string) : (int * int) list =
+  let l = List.find (fun (l : M.loop_metrics) -> l.construct = Some construct) m.loops in
+  List.filter_map (fun (p : M.prediction) -> match p with
+    | Step s when s.loop = l.loop.header -> Some (s.cell, s.k)
+    | Step _ | Counter _ -> None) m.predictions
+
+let test_net_step () =
+  (* the paper: d (cell 6) moves -1 seven times in the inner do-while, then +2365 in the outer
+     repeat; the inner loop's trip count is not known, so the outer loop predicts nothing for d *)
+  let m = metrics_of "bbctests/archetypes/paper.bbc" in
+  check Alcotest.(list (pair int int)) "outer: nothing for d" [] (List.filter (fun (c, _) -> c = 6) (steps_of_loop m "repeat")) ;
+  check Alcotest.(list (pair int int)) "inner: -1 on d" [(6, 7999)] (List.filter (fun (c, _) -> c = 6) (steps_of_loop m "do-while")) ;
+  (* two changes to one pointer on every lap add up *)
+  let m = M.measure (layout_of_src "(let (p 0) (seq (repeat (seq (ADD 3 p) (MOV 0 (Ind p)) (ADD 5 p))) (DAT 0 (store p))))") in
+  check Alcotest.(list (pair int int)) "3 + 5" [(4, 8)] (steps_of_loop m "repeat")
 
 
 (* OCaml tests: extend with your own tests *)
@@ -1125,6 +1144,9 @@ let ocaml_tests = [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
     test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
     test_case "peephole keeps cells that numeric offsets count" `Quick test_review3_peephole_keeps_numeric_spans ;
+  ] ;
+  "netstep", [
+    test_case "a pointer's step is its net change per lap" `Quick test_net_step ;
   ] ;
   "gaps", [
     test_case "which names may be labels" `Quick test_gaps_label_names ;

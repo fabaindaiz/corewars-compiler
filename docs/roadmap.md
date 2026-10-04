@@ -328,7 +328,10 @@ data. An unreachable-cell warning would fire on every bomber (core-clear and sca
 declare data that is not a variable.
 
 ### A loop's pointer step is predicted per instruction, not per iteration · i-7d2612-fbe7c8
-**State.** Planned (s-7d2612-14641b). The paper archetype's outer loop moves `d` by `ADD #2365` and
+**State.** Half done (s-7d2612-333abd): a pointer's step is now the sum of its changes over one lap
+(`test_net_step`), and nothing is predicted when a change is on some laps only or inside an inner
+loop; the paper's outer loop predicts nothing for `d` instead of two wrong steps. Still missing:
+summing inside inner loops whose trip count is known (a `DJN` counter). Was: The paper archetype's outer loop moves `d` by `ADD #2365` and
 by `<d` seven times in its inner loop: 2358 cells per lap. `--report` predicts two steps for the
 outer loop, 2365 and −1, neither of which is what `d` does. The prediction should sum a pointer's
 changes over one iteration, inner loops included when their trip count is known.
