@@ -1,8 +1,8 @@
 {
   "clear (RED)": {
-    "koenigstuhl": 15.9,
+    "koenigstuhl": 18.8,
     "koenigstuhl_opponents": 20,
-    "wilkies": 42.1,
+    "wilkies": 46.6,
     "wilkies_opponents": 12
   },
   "clear (hand)": {
@@ -69,6 +69,18 @@
     "koenigstuhl": 71.2,
     "koenigstuhl_opponents": 20,
     "wilkies": 81.0,
+    "wilkies_opponents": 12
+  },
+  "quickscan (RED)": {
+    "koenigstuhl": 25.8,
+    "koenigstuhl_opponents": 20,
+    "wilkies": 33.6,
+    "wilkies_opponents": 12
+  },
+  "quickscan (hand)": {
+    "koenigstuhl": 25.8,
+    "koenigstuhl_opponents": 20,
+    "wilkies": 33.6,
     "wilkies_opponents": 12
   },
   "scanner (RED)": {

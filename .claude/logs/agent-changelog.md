@@ -53,7 +53,9 @@ compile and layout rows, LANGUAGE's fusion cost) corrected.
 variable, though the design names the capture case; the guards keyed on the `_` prefix predate
 templates, and adding `_X` did not revisit them. Both are the same miss: a new name class not
 checked against every place that classifies names.
-**Left undone.** The bench baseline (`tools/bench_baseline.json`) with the quickscan; the snippets
+The bench baseline now holds the quickscan and the core-clear's new scores; no other archetype
+moved after the review's fixes (`make bench`, fixed seed).
+**Left undone.** The snippets
 catalogue (i-7d2612-8e9549); a Silk-style paper and Mice; unary skip fusion (i-7d2612-40b941); the
 pMARS trap's cause (i-7d2612-0cb9e9).
 
