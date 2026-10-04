@@ -8,16 +8,20 @@ rest on. URLs were checked on 2026-10-02.
 
 ## The target: ICWS'94 and pMARS
 
-- **[ICWS'94 draft standard](https://corewar.co.uk/standards/icws94.txt)** — the only normative
-  definition of Redcode semantics, with a reference simulator in C.
+- **[ICWS'94 draft standard](https://corewar.co.uk/standards/icws94.txt)** — the de-facto
+  definition of Redcode semantics: an annotated draft (version 3.3, 1995) never ratified, its to-do
+  list still open, with a benchmark interpreter in ANSI C. pMARS is the practical reference.
 
   **What it confirms:** pre-condition layouts (`JMN` for `JZ`, `DJN` for `DZ`, `SLT a2, a1` for
   `GT`); the default `ORG 0` start, so emitting no `ORG`/`END` is correct; core values are stored in
   `0..CORESIZE-1`, so comparisons are unsigned.
 
-  **What we do differently, on purpose:** nothing. **Applied since phase 1:** the A.2.1.1 default
-  table where no variable decides the modifier (`Red.default_modifier`, i-7d2612-96f7b1), and a strict
-  post-condition `SLT` layout (i-7d2612-fffa6c).
+  **What we do differently, on purpose:** nothing. **Applied since phase 1:** the A.2.1.2 default
+  table (the default ICWS'88 conversion; A.2.1.1 is the ICWS'86 one) where no variable decides the
+  modifier, as pMARS implements it (`Red.default_modifier`, i-7d2612-96f7b1), and a strict
+  post-condition `SLT` layout (i-7d2612-fffa6c). Two pMARS differences from the draft's table: `NOP`
+  is `.F` (the draft gives `.B`), and the `LDP`/`STP` defaults (`.AB`/`.B`) are pMARS's own, the
+  draft not covering p-space.
 
   **Not applied yet:** `DIV`/`MOD` by zero kills the process; `SLT.I` behaves as `SLT.F`.
 
@@ -41,24 +45,28 @@ rest on. URLs were checked on 2026-10-02.
   Produced: d-7d2612-3d04ba, `tools/behave.py`.
 
 - **[pMARS at koth.org](http://www.koth.org/pmars/)** — the maintained home. 0.9.5 (2026-01-03) adds
-  overflow and bounds fixes and builds on macOS unpatched. The vendored zip's SHA-256 matches
-  koth.org's 0.9.4. Debian/Ubuntu 24.04 package 0.9.4; Ubuntu 20.04/22.04 package 0.9.2, which has no
-  `-A`. Produced: i-7d2612-494e75, i-7d2612-202da9.
+  overflow and bounds fixes and builds on macOS without source patches (the Makefile's X11 flags
+  removed). The vendored zip's SHA-256 matches koth.org's 0.9.4. Packages (2026-10-04): Debian trixie
+  and Ubuntu 24.04/25.10 0.9.4; Debian testing/sid and Ubuntu 26.04 0.9.5; Debian bookworm and Ubuntu
+  20.04/22.04 0.9.2, which has no `-A`. Produced: i-7d2612-494e75, i-7d2612-202da9.
 
 - **pMARS cdb debugger** (`doc/primer.cdb`, `doc/pmars.txt`) *(measured)*. Commands piped to
   `pmars -e -b` give a deterministic trace: `skip K` executes K+1 instructions, `calc CYCLE` prints
-  the remaining cycles, `list A` disassembles a cell, `pqueue` lists processes. `list` paginates
-  after about 40 lines and swallows the commands after it. **What we do with it:** the behaviour
+  the remaining cycles (divided among the warriors left, whatever their processes), `list A`
+  disassembles a cell, `pqueue` switches `list` to the process queue (`registers` also shows it).
+  `list` pages every 23 lines (`TEXTLINES`, `cdb.c`) and swallows the commands after it. **What we do with it:** the behaviour
   specs (d-7d2612-b92028); the `run-warrior` skill.
 
 ## Hills and community
 
-- **[koth.org](http://www.koth.org/koth.html)** (http only) — the 94nop hill is the most active
-  (battles on 2026-10-02); hills 88, 94, 94nop, 94x, icws, 94m, 94xm; submission by mail with a
-  `;redcode-94nop` header; IRC replaced by a Slack. **Confirms** 94nop as the natural second target;
-  **not applied:** multi-target output (i-7d2612-217183).
+- **[koth.org](http://www.koth.org/koth.html)** (http only) — the 94nop hill is the most recently
+  active (last battle 2026-10-03; the others September or older); p-space is disallowed there, and
+  pMARS's `config/94nop.opt` runs it with `-S 1`; hills 88, 94, 94nop, 94x, icws, 94m, 94xm; submission by mail with a
+  `;redcode-94nop` header; IRC replaced by a Slack. **Applied:** `(hill 94nop)` and the hills' settings in
+  `src/hill.ml` (d-7d2612-65fa08).
 - **[SAL hills](https://sal.discontinuity.info)** — 94b (beginners: core 8000, length 100,
-  p-space 500), tiny (800/20), nano (80/5), lp, mp. The `;redcode-<key>` header selects the hill.
+  p-space 500, 250 rounds), tiny (800/20), nano (80/5), lp, mp. Down on 2026-10-04 (HTTP 500, "Can't
+  connect to KOTH server"); settings checked on the Wayback snapshot of 2025-08-18. The `;redcode-<key>` header selects the hill.
   **Confirms** d-7d2612-6d88cd; small-core hills are the hardest test of compiled-code size.
 - **[corewar.co.uk](https://corewar.co.uk)** — news, guides, the evolvers list, tournament results
   (bot-gated; Wayback snapshots used). Chat: Discord, Libera `#corewars`.
@@ -66,10 +74,10 @@ rest on. URLs were checked on 2026-10-02.
   warriors with source (updated 2026-07). A corpus, not fixtures: authors keep their rights.
 - **Digital Red Queen** ([arXiv 2601.03335](https://arxiv.org/abs/2601.03335),
   [SakanaAI/drq](https://github.com/SakanaAI/drq)) — LLM-evolved Redcode; ships a Python 3 MARS with
-  a step API. **Not applied:** a second simulator for differential tests (i-7d2612-56302d).
+  a step API, a fork under CC BY-NC-SA 3.0 (`corewar/LICENSE`) inside an Apache-2.0 repository. **Not applied:** a second simulator for differential tests (i-7d2612-56302d).
 - **[rmars](https://github.com/clrsrc/rmars)** — Rust reimplementation of pMARS 0.9.6-dev claiming
   identical results, with Python and wasm bindings. A candidate second oracle.
-- **Avoid:** corewar.io (the domain redirects elsewhere; docs live at corewar-docs.readthedocs.io),
+- **Avoid:** corewar.io (parked: it redirects to advertising; docs live at corewar-docs.readthedocs.io),
   vyznev.net (redirect loop; the beginners' guide is mirrored at corewar.co.uk/karonen/guide.htm),
   halite.io (gone).
 
@@ -80,10 +88,10 @@ rest on. URLs were checked on 2026-10-02.
   when the code changes)*. No licence statement: fetch, never vendor. Produced: i-7d2612-f27a91.
 - **[n1LS/redcode-warriors](https://github.com/n1LS/redcode-warriors)** — 567 warriors, 565 assemble
   under 94b *(measured)*; no licence. A corpus for parser and assembler sweeps only.
-- **pMARS's own `warriors/`** (in the zip; GPL-2+) — `validate.red` is an ICWS compliance test and
-  may be used as a fixture.
-- **A lone warrior always "survives" in battle mode** *(measured)*: pMARS's score cannot tell a dead
-  warrior from a live one with one warrior loaded. Battle against a `JMP 0` "duck", or use cdb.
+- **pMARS's own `warriors/`** (in the zip; GPL-2+) — `validate.red` tests compliance with ICWS'88 and
+  compatibility with KotH (its header); the `.red` files carry no notice of their own.
+- **A lone warrior scores 0 whether it dies or not** *(measured)*: the default score formula,
+  (W*W-1)/S, is 0 for one warrior, so a battle cannot tell a dead warrior from a live one. Battle against a `JMP 0` "duck", or use cdb.
 - **Prior art:** no maintained compiler from a higher-level language to Redcode was found besides
   this one. samurai/redcomp (Python 2, 2012) is a toy; evolvers (CCAI, µGP, YabEvolver, DRQ) generate
   Redcode text; optiMAX and mopt tune constants (i-7d2612-a3f2b6). 42-school "corewar" is a different
@@ -170,7 +178,7 @@ shaped it:
 | If you are about to touch… | Read | And watch out for |
 |---|---|---|
 | `compile_cond`, `compile_cond2`, any loop layout | ICWS'94 `SLT`/`JMZ`/`DJN`; `docs/semantics.md` *Dynamics* | strict `<`, unsigned values; i-7d2612-fffa6c |
-| `opmod_to_rmod`, modifiers | ICWS'94 A.2.1.1 | variables' fields first, then `Red.default_modifier`; `.I` turns `SLT` into "both fields" |
+| `opmod_to_rmod`, modifiers | ICWS'94 A.2.1.2 (as pMARS implements it) | variables' fields first, then `Red.default_modifier`; `.I` turns `SLT` into "both fields" |
 | label generation, `tag_expr` | CC5116 notes; `docs/architecture.md` *Generated labels* | every golden contains the numbering; user-label collisions |
 | `analyse.ml`, `lib.ml`, `rename.ml` environments | Siek (uniquify); `docs/semantics.md` *Statics* | names are unique after `Rename.uniquify`; analysis may rely on it |
 | errors | RWO error handling | raise `Ast.error`, never a new exception; internal states are `failwith` |

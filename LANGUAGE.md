@@ -113,7 +113,7 @@ A useful case where to declare them explicitly is when you want to target the en
 - X both fields to the opposite fields
 - I the whole instruction
 
-A plain reference (a label, `(Dir -1)`) or a pointer's target `(Ind p)` names a cell. Beside a number or a variable, a cell is its B-field: with `x` in an A-field, `(MOV x (Dir -1))` is `MOV.AB` (x's value into the cell's B-field), and `(ADD 1 (Ind p))` is `ADD.AB` whichever field `p` lives in. A bomber that copies a whole cell still writes `(MOV I bomb (Ind p))`: a bare variable is its value. When nothing tells a field apart (two cells, or two numbers), the instruction takes the ICWS'94 default, exactly what pMARS gives the same instruction written by hand: `MOV`/`SEQ`/`SNE` `.AB` with an immediate A, `.B` with only an immediate B, `.I` otherwise; arithmetic the same with `.F` instead of `.I`; `SLT`/`LDP`/`STP` `.AB` with an immediate A, `.B` otherwise; jumps `.B`. So `(ADD 1 1)` is `ADD.AB #1, #1`.
+A plain reference (a label, `(Dir -1)`) or a pointer's target `(Ind p)` names a cell. Beside a number or a variable, a cell is its B-field: with `x` in an A-field, `(MOV x (Dir -1))` is `MOV.AB` (x's value into the cell's B-field), and `(ADD 1 (Ind p))` is `ADD.AB` whichever field `p` lives in. A bomber that copies a whole cell still writes `(MOV I bomb (Ind p))`: a bare variable is its value. When nothing tells a field apart (two cells, or two numbers), the instruction takes the ICWS'94 default, exactly what pMARS gives the same instruction written by hand: `MOV`/`SEQ`/`SNE` `.AB` with an immediate A, `.B` with only an immediate B, `.I` otherwise; arithmetic the same with `.F` instead of `.I`; `SLT`/`LDP`/`STP` `.AB` with an immediate A, `.B` otherwise; jumps `.B`; `DAT` and `NOP` `.F` (pMARS; the ICWS'94 draft's table, section A.2.1.2, gives `NOP` `.B`). So `(ADD 1 1)` is `ADD.AB #1, #1`.
 
 ### redcode instructions
 
@@ -122,10 +122,12 @@ Square brackets '[]' indicates that the argument is optional.
 
 #### Misc instructions
 
-- (DAT [arg1] [arg2]) data values (arg1 & arg2 only store data)
-- (NOP [arg1] [arg2]) no operation (arg1 & arg2 only store data)
-- (JMP arg1 [arg2]) jump to arg1 (arg2 only store data)
-- (SPL arg1 [arg2]) split to arg1 (arg2 only store data)
+- (DAT [arg1] [arg2]) data values
+- (NOP [arg1] [arg2]) no operation
+- (JMP arg1 [arg2]) jump to arg1
+- (SPL arg1 [arg2]) split to arg1
+
+The arguments these four do not use still are evaluated: a `<` or `>` in them moves its pointer each time the instruction runs (ICWS'94 evaluates both operands before the opcode).
 
 #### Arithmetic instructions
 

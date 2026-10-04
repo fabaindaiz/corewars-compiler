@@ -34,9 +34,9 @@ printf 'skip 272\nlist 1\ncalc CYCLE\npqueue\nquit\n' | $P -@ pmars/config/94b.o
 | `skip K` | execute **K+1** instructions, then print the next one |
 | `step` | execute one instruction, print the next |
 | `list A` / `list A,B` | disassemble cells A..B (addresses relative to load address 0); a cell equal to empty core, `DAT.F $0, $0`, prints as its address alone |
-| `calc CYCLE` | cycles left (80000 minus instructions executed, with one process) |
+| `calc CYCLE` | cycles left (80000 minus instructions executed, with one warrior and any number of processes) |
 | `registers` | cycle, processes active, process queue |
-| `pqueue` | the process queue (after `SPL`) |
+| `pqueue` | switch `list` to the process queue: `pqueue` then `list 0,N` lists processes, `pqueue off` returns (`registers` also shows the queue) |
 | `write F` … `write` | copy everything printed in between to file F (a trace) |
 | `quit` | stop (exit 4); end of input instead lets the battle finish (exit 0) |
 
@@ -45,13 +45,12 @@ if a process is left. That is exactly how `tools/behave.py` implements `alive N`
 
 ## Gotchas (each measured)
 
-- `list` pages after about 40 lines ("RET for more") and eats the commands after it: list short
-  ranges.
+- `list` pages every 23 lines ("RET for more") and eats the commands after it: list short ranges.
 - When the warrior dies, cdb exits at once and prints the score line; later commands are ignored.
-- Battle mode with one warrior cannot tell dead from alive: the score is the same. To use battles,
-  load a `JMP 0` "duck" as warrior 2 and use `-F 4000` (fixed position; `-f` reseeds whenever the
-  code changes).
-- pMARS warns "Missing ';assert'" for every compiled warrior: harmless today (i-7d2612-b682d5).
+- Battle mode with one warrior cannot tell dead from alive: the score formula gives 0 either way. To use battles,
+  load a `JMP 0` "duck" as warrior 2 and use `-F 4000` (warrior 2 at 4000 in round 1, deterministic positions after;
+  `-f` reseeds whenever the code changes).
+- pMARS warns "Missing ';assert'" for a compiled warrior that names no hill: harmless; `(hill ...)` emits one (d-7d2612-56cfae).
 - A label redefinition is only a warning ("Ignored, redefinition of label") and the first one wins.
 
 ## Score against other warriors

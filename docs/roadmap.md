@@ -166,12 +166,12 @@ warrior). Conditions now label their stores, and a store on the left of `GT` is 
 B-field, since `GT` is emitted as `SLT b, a`. Golden and spec `store_in_condition`.
 
 ### Fallback modifier .I differs from the ICWS'94 defaults · i-7d2612-96f7b1
-**State.** Done (s-7d2612-2c7e4d). `compile_mod` falls back to `Red.default_modifier` (the A.2.1.1
+**State.** Done (s-7d2612-2c7e4d). `compile_mod` falls back to `Red.default_modifier` (the A.2.1.2
 table) instead of `.I`. Two goldens changed, checked line by line (`prog3`, `prog5`: `ADD`/`SUB .I` →
 `.AB`); new golden and spec `add_default_modifier` pin the effect in the core. Compound operators
 remain for phase 2 (i-7d2612-7eadd5).
 Before the fix, when `opmod_to_rmod` could not decide (two references, no variable), the compiler emitted `.I`
-(`SLT.I`, `JMZ.I`, `ADD.I #4, #3`). ICWS'94 A.2.1.1 defaults: `SLT`/`JMZ`/`JMN`/`DJN` to `.B`,
+(`SLT.I`, `JMZ.I`, `ADD.I #4, #3`). ICWS'94 A.2.1.2 defaults: `SLT`/`JMZ`/`JMN`/`DJN` to `.B`,
 `MOV`/`SEQ`/`SNE` to `.I` only when neither operand is immediate, arithmetic with an immediate
 A-operand to `.AB`. `SLT.I` requires both `A<A` and `B<B`.
 **Collides with.** `prog0.bbc` and every golden with a raw-reference `MOV` (they expect `.I`,

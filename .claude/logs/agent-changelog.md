@@ -22,6 +22,11 @@ generating it; replaced before committing.
 Seven behaviour specs for the constructs nothing checked in the core (i-7d2612-05c64d); one hand
 count was wrong first (`while_ne`: the skipped `JMP` costs no instruction, so the third `SUB` is
 the 8th, not the 9th).
+The Core War documentation reviewed against its sources in a fresh context
+(`docs/research/2026-10-04-documentation-review.md`): seventeen claims corrected, among them the
+default-modifier table cited by the wrong ICWS'94 section in four documents (A.2.1.1 is the ICWS'86
+conversion; the table is A.2.1.2), cdb's paging (23 lines, not 40), what `pqueue` and `calc CYCLE`
+do, and the package versions.
 **Left undone.** See below as the session goes.
 
 ## 2026-10-04 · s-7d2612-333abd — Phase 2's operator design and phase 4's warnings

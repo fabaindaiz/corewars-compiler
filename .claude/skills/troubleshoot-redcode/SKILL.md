@@ -25,7 +25,7 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 ## pMARS exit codes
 
 `0` ran (warnings included) · `2` command-line error · `3` assembly error (bad opcode, undefined
-label, longer than MAXLENGTH) · `4` cdb `quit` · `126` from the shell: wrong-platform binary.
+label, longer than MAXLENGTH) or a file it cannot open (pmars.6 says 1; 0.9.4 exits 3) · `4` cdb `quit` · `126` from the shell: wrong-platform binary.
 Assembly messages go to stderr; bbctester ignores stderr, so only the exit code reaches a test.
 
 ## Procedure

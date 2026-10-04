@@ -26,7 +26,7 @@ compiler relies on:
 - **Addresses are relative** to the executing cell. Modes: `#` immediate, `$` direct, `@`/`*`
   B/A-indirect, `<`/`{` predecrement, `>`/`}` postincrement.
 - **Modifiers** (`.A .B .AB .BA .F .X .I`) select which fields an instruction reads and writes.
-  ICWS'94 A.2.1.1 gives the default when none is written.
+  ICWS'94 A.2.1.2 gives the default when none is written.
 - **Loading**: execution starts at the first instruction (`ORG 0` by default).
 
 ## 2. Syntax
