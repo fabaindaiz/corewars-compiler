@@ -1,74 +1,110 @@
 {
   "clear (RED)": {
     "koenigstuhl": 15.9,
-    "wilkies": 42.1
+    "koenigstuhl_opponents": 20,
+    "wilkies": 42.1,
+    "wilkies_opponents": 12
   },
   "clear (hand)": {
     "koenigstuhl": 18.8,
-    "wilkies": 46.6
+    "koenigstuhl_opponents": 20,
+    "wilkies": 46.6,
+    "wilkies_opponents": 12
   },
   "dwarf (RED)": {
     "koenigstuhl": 28.4,
-    "wilkies": 48.6
+    "koenigstuhl_opponents": 20,
+    "wilkies": 48.6,
+    "wilkies_opponents": 12
   },
   "dwarf (hand)": {
     "koenigstuhl": 28.4,
-    "wilkies": 48.6
+    "koenigstuhl_opponents": 20,
+    "wilkies": 48.6,
+    "wilkies_opponents": 12
   },
   "imp (RED)": {
     "koenigstuhl": 43.6,
-    "wilkies": 50.9
+    "koenigstuhl_opponents": 20,
+    "wilkies": 50.9,
+    "wilkies_opponents": 12
   },
   "imp (hand)": {
     "koenigstuhl": 43.6,
-    "wilkies": 50.9
+    "koenigstuhl_opponents": 20,
+    "wilkies": 50.9,
+    "wilkies_opponents": 12
   },
   "impring (RED)": {
     "koenigstuhl": 36.5,
-    "wilkies": 79.4
+    "koenigstuhl_opponents": 20,
+    "wilkies": 79.4,
+    "wilkies_opponents": 12
   },
   "impring (hand)": {
     "koenigstuhl": 36.5,
-    "wilkies": 79.4
+    "koenigstuhl_opponents": 20,
+    "wilkies": 79.4,
+    "wilkies_opponents": 12
   },
   "impspiral (RED)": {
     "koenigstuhl": 40.7,
-    "wilkies": 70.5
+    "koenigstuhl_opponents": 20,
+    "wilkies": 70.5,
+    "wilkies_opponents": 12
   },
   "impspiral (hand)": {
     "koenigstuhl": 40.7,
-    "wilkies": 70.5
+    "koenigstuhl_opponents": 20,
+    "wilkies": 70.5,
+    "wilkies_opponents": 12
   },
   "paper (RED)": {
     "koenigstuhl": 71.2,
-    "wilkies": 81.0
+    "koenigstuhl_opponents": 20,
+    "wilkies": 81.0,
+    "wilkies_opponents": 12
   },
   "paper (hand)": {
     "koenigstuhl": 71.2,
-    "wilkies": 81.0
+    "koenigstuhl_opponents": 20,
+    "wilkies": 81.0,
+    "wilkies_opponents": 12
   },
   "scanner (RED)": {
     "koenigstuhl": 44.5,
-    "wilkies": 62.5
+    "koenigstuhl_opponents": 20,
+    "wilkies": 62.5,
+    "wilkies_opponents": 12
   },
   "scanner (hand)": {
     "koenigstuhl": 42.0,
-    "wilkies": 58.9
+    "koenigstuhl_opponents": 20,
+    "wilkies": 58.9,
+    "wilkies_opponents": 12
   },
   "seqscan (RED)": {
     "koenigstuhl": 24.1,
-    "wilkies": 38.9
+    "koenigstuhl_opponents": 20,
+    "wilkies": 39.0,
+    "wilkies_opponents": 12
   },
   "seqscan (hand)": {
     "koenigstuhl": 21.2,
-    "wilkies": 36.2
+    "koenigstuhl_opponents": 20,
+    "wilkies": 36.2,
+    "wilkies_opponents": 12
   },
   "stone (RED)": {
     "koenigstuhl": 51.8,
-    "wilkies": 80.5
+    "koenigstuhl_opponents": 20,
+    "wilkies": 80.5,
+    "wilkies_opponents": 12
   },
   "stone (hand)": {
     "koenigstuhl": 51.8,
-    "wilkies": 80.5
+    "koenigstuhl_opponents": 20,
+    "wilkies": 80.5,
+    "wilkies_opponents": 12
   }
 }

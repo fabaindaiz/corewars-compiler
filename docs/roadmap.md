@@ -39,7 +39,7 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 **Phase 5 is built** (s-7d2612-9b0d20, branch `feat/phase-5` on `feat/phase-4`, not merged):
 hills by header or flag, metadata as written, `make bench` against Wilkies and Koenigstuhl's top
 20, behaviour specs for every construct, the Core War documentation checked against its sources.
-Measured: RED costs nothing against hand-written archetypes; its best warrior places #797 of 1107
+Measured: RED costs nothing against hand-written archetypes; its best warrior places #899 of 1107
 on Koenigstuhl's 94nop hill, the gap being strategy
 (`docs/research/2026-10-04-benchmark.md`). **Next:** the macro layer (i-7d2612-ec4d2d), which the
 quickscan and the snippets wait for; A-field modes on numbers (i-7d2612-e98368); an entry point

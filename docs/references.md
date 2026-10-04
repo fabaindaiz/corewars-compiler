@@ -73,8 +73,8 @@ rest on. URLs were checked on 2026-10-02.
 - **[Koenigstuhl](https://asdflkj.net/COREWAR/koenigstuhl.html)** — archive hill of published
   warriors with source (updated 2026-07; 1106 on 94nop, ranked by a recursive score at 1000 rounds).
   A corpus, not fixtures: authors keep their rights. **Applied:** `make bench` downloads it into
-  `_build/` and scores against its top 20 (d-7d2612-1d4491); RED's best archetype places #797
-  (`docs/research/2026-10-04-benchmark.md`).
+  `_build/` and scores against its top 20 (d-7d2612-1d4491); RED's best archetype places #899
+  by an estimate of its recursive score (`docs/research/2026-10-04-benchmark.md`).
 - **Digital Red Queen** ([arXiv 2601.03335](https://arxiv.org/abs/2601.03335),
   [SakanaAI/drq](https://github.com/SakanaAI/drq)) — LLM-evolved Redcode; ships a Python 3 MARS with
   a step API, a fork under CC BY-NC-SA 3.0 (`corewar/LICENSE`) inside an Apache-2.0 repository. **Not applied:** a second simulator for differential tests (i-7d2612-56302d).

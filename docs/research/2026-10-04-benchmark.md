@@ -14,9 +14,15 @@ redistribution; their code is not read for ideas here either).
 - **Score.** The mean over the opponents of (3·wins + ties)·100/rounds: 300 beats everything, 100
   ties everything. 500 rounds against Wilkies, 200 against the top 20, 100 against the whole hill,
   all with a fixed seed (`-F 4000`), so a score repeats exactly.
-- **Placement.** Where the mean against the whole hill would sit among the hill's published
-  scores. Approximate: Koenigstuhl's scores are recursive and at 1000 rounds, this one a plain mean
-  at 100.
+- **Placement.** Koenigstuhl ranks by a recursive score (its page): the mean against everyone with
+  weight 1, against the top half with weight 1/2, the top third with 1/3, ..., while the group has
+  more than 50, re-ranking between steps. `tools/bench.py --hill` estimates it from each opponent's
+  result in the published order and places the warrior among the published scores. **Calibrated** on
+  hill entries scored the same way: #750 (Archer II) 101.5 against its published 101.3, #845 (Return
+  of the Boss) 84.6 against 83.2, the top five within 6 points (161.0 against 156.5 for The
+  Collective, 155.0 against 161.4 for Arvon). A plain mean is no placement: it puts a weak warrior
+  about 30 points too high (#845's plain mean is 115.0); the first version of this study did that
+  and placed the best RED warrior at #797 (corrected after the branch review).
 - **Warriors.** The nine archetypes in RED (`archetypes/*.src`) and by hand (`archetypes/*.red`), and
   two compositions written with the compiler for this study (`examples/stone_imp.src`,
   `examples/paper_imp.src`).
@@ -33,29 +39,32 @@ code, the hand-written one before it with `END top`; RED has no `ORG`). The nort
 
 ## The distance to the best: strategy, not compilation
 
-| Warrior | Wilkies | Koenigstuhl top 20 | whole hill | place of 1107 |
+| Warrior | Wilkies | Koenigstuhl top 20 | recursive (estimated) | place of 1107 |
 |---|---|---|---|---|
-| King Cobra (Koenigstuhl #4) | 177.2 | 140.6 | | |
-| The Collective (#5) | 171.5 | 140.9 | | |
-| pst v4 (#3) | 159.6 | 131.1 | | |
-| Arvon (#1) | 158.8 | 131.1 | | |
-| Azathoth (#2) | 155.6 | 129.1 | | |
-| stone and imp ring (RED, composed) | 86.8 | 51.3 | 93.8 | #797 |
-| stone (RED) | 80.5 | 51.8 | 92.8 | #802 |
-| paper and imp ring (RED, composed) | 84.0 | 70.0 | 83.7 | #841 |
-| paper (RED) | 81.0 | 71.2 | 83.3 | #845 |
-| scanner (RED) | 62.5 | 44.5 | 74.5 | #899 |
-| imp spiral (RED) | 70.5 | 40.7 | 69.8 | #918 |
-| imp ring (RED) | 79.4 | 36.5 | 68.2 | #926 |
-| dwarf (RED) | 48.6 | 28.4 | 66.6 | #930 |
-| core-clear (RED) | 42.1 | 15.9 | 61.9 | #939 |
-| imp (RED) | 50.9 | 43.6 | 58.0 | #955 |
-| SEQ scanner (RED) | 38.9 | 24.1 | 55.0 | #968 |
+| The Collective (Koenigstuhl #5) | 171.5 | 141.3 | 161.0 | (#2 by the estimate) |
+| King Cobra (#4) | 177.2 | 140.6 | 158.6 | (#4) |
+| pst v4 (#3) | 159.5 | 131.8 | 160.5 | (#2) |
+| Arvon (#1) | 158.8 | 132.0 | 155.0 | (#8) |
+| Azathoth (#2) | 155.6 | 129.9 | 159.8 | (#3) |
+| stone (RED) | 80.5 | 51.8 | 75.2 | #899 |
+| stone and imp ring (RED, composed) | 86.9 | 51.3 | 73.3 | #905 |
+| paper and imp ring (RED, composed) | 84.0 | 70.0 | 67.5 | #928 |
+| paper (RED) | 81.0 | 71.2 | 67.2 | #929 |
+| scanner (RED) | 62.5 | 44.5 | 65.3 | #933 |
+| imp ring (RED) | 79.4 | 36.5 | 55.1 | #968 |
+| imp (RED) | 50.9 | 43.6 | 53.8 | #971 |
+| imp spiral (RED) | 70.5 | 40.7 | 52.4 | #978 |
+| dwarf (RED) | 48.6 | 28.4 | 50.0 | #990 |
+| SEQ scanner (RED) | 39.0 | 24.1 | 40.4 | #1031 |
+| core-clear (RED) | 42.1 | 15.9 | 36.8 | #1045 |
+
+The top warriors' "top 20" scores leave out the battle against themselves (the first version of this
+table included it).
 
 The hill's scale: #1 161.4, #10 154.3, #20 151.4, #100 145.1, #500 127.1, #750 101.3, #845 83.2,
-#1000 47.6, last 3.8. The best RED warrior sits in the bottom third (#797 of 1107);
-the best published ones score about twice as much against Wilkies and about twice as much against
-each other.
+#1000 47.6, last 3.8. The best RED warrior, the stone, places #899 of 1107 (in the bottom fifth);
+the best published ones score about twice as much against Wilkies and the top 20, and their
+recursive score is about twice the stone's.
 
 The gap is the strategy: the archetypes are the textbook forms of the early 1990s, and the hill's
 top is two decades of refinement (quickscans in front of papers, multi-phase bombers and clears,
@@ -77,8 +86,9 @@ write is what keeps the top strategies out of reach:
 The two compositions took a header each and reused the archetypes' code: `(hill 94nop)` emitted
 the right header and `;assert`, `(name ...)` and `(strategy ...)` the metadata, constants the
 `EQU`s, label arithmetic the ring's launch, and the step warning pointed at the stone's mod-4 step
-until `(expect (step 3044))` stated it. Composing helped against Wilkies (stone 80.5 → 86.8, paper
-81.0 → 84.0), not against the top 20 (51.8 → 51.3, 71.2 → 70.0).
+until `(expect (step 3044))` stated it. Composing helped against Wilkies (stone 80.5 → 86.9, paper
+81.0 → 84.0), not against the top 20 (51.8 → 51.3, 71.2 → 70.0) nor on the whole hill (75.2 → 73.3,
+67.2 → 67.5).
 
 A sweep of the paper's two constants (distance 2000 or 3200, step 1471, 2365, 3039 or 3359), each a
 one-line change to an `EQU`, moved it by at most 5 points against Wilkies and 9 against the top

@@ -33,7 +33,9 @@ An imp spiral archetype (two processes per point, own design), traced in cdb bef
 written; RED and hand-written score alike under the fixed seed.
 The measurement the user asked for (`docs/research/2026-10-04-benchmark.md`): RED and hand-written
 archetypes score alike under a fixed seed; the best RED warrior (a stone and imp ring composed with
-the compiler) places #797 of 1107 on Koenigstuhl's 94nop hill, where the top scores twice as much;
+the compiler) first placed #797 of 1107, a placement the branch review showed biased (a plain mean against
+recursive scores); estimated as Koenigstuhl scores and calibrated on hill entries, the best RED
+warrior, the stone alone, places #899; the top scores twice as much;
 the gap is strategy, and the two things RED lacks for the top strategies became i-7d2612-e98368 and i-7d2612-e725ef.
 `tools/bench.py` first crashed on an opponent that prints its own listing (fixed: it reads the
 first line of two numbers). The net step through counted inner loops was closed as not pursued.
