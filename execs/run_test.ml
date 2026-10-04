@@ -669,7 +669,8 @@ let test_phase2_threaded_loop_is_one_loop () =
   (* the threaded JMZ and the repeat's JMP both close _REP4: one loop, 2 cycles on an empty cell *)
   let m = M.measure (layout_of_src (golden_src "bbctests/archetypes/scanner.bbc")) in
   check Alcotest.int "one loop" 1 (List.length m.loops) ;
-  check range "cycles" (r 2 4) (List.hd m.loops).cycles
+  check range "cycles" (r 2 4) (List.hd m.loops).cycles ;
+  check Alcotest.(option string) "closed by the repeat" (Some "repeat") (List.hd m.loops).construct
 
 let test_phase2_self_loop_terminates () =
   let is = instrs_of_src "(repeat (seq))" in

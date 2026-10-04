@@ -85,9 +85,13 @@ let dag_ranges (p : program) ~(allowed : int -> bool) ~(terminal : int -> bool) 
     | Some _ | None -> ()) !order ;
   best
 
+(* The back edge that closes a loop is its last one: a construct's own jump back ends its body, and a
+   threaded jump from an inner construct (Compile.thread_jumps) sits before it. *)
+let closing_source (l : Layout.loop) : int = List.fold_left (fun m (s, _) -> max m s) min_int l.back_edges
+
 let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let in_body i = List.mem i l.body in
-  let source = fst (List.hd l.back_edges) in
+  let source = closing_source l in
   let c = p.cells.(source) in
   (* A lap: from the header to a source of this loop's back edges; an inner loop counts one pass. *)
   let lap weight =
@@ -182,7 +186,7 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
   by_add @ by_mode
 
 let counter (p : program) (entry : range option) (lm : loop_metrics) : prediction option =
-  let s = p.cells.(fst (List.hd lm.loop.back_edges)) in
+  let s = p.cells.(closing_source lm.loop) in
   let n_of_field (c : cell) = match s.md with
     | RA | RBA -> Some c.a.value | RB | RAB | RN -> Some c.b.value | RF | RX | RI -> None in
   let initial =
