@@ -100,7 +100,8 @@ and compile_file ~read f report optimize warn emit_beh warn_mode hill_flag : out
       let probes = List.filter execution (List.map fst expects) in
       if probes = [] then stop "--emit-beh: the program has no (alive N), (dead N) or (cell ...) expectation to export" ;
       let red = Filename.remove_extension path ^ ".red" in
-      [(red, redcode); (path, Expect.to_beh ~redcode:(Filename.basename red) probes)] in
+      let hill = Option.map (fun (h : Hill.t) -> h.key) hill in
+      [(red, redcode); (path, Expect.to_beh ?hill ~redcode:(Filename.basename red) probes)] in
   match report with
   | Json -> { out = Metrics.to_json ~policy ~optimizations:(Optimize.names opts) (metrics ()) ^ "\n"; err = warnings; code = 0; files }
   | Text ->

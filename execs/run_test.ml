@@ -472,6 +472,12 @@ let test_driver_emit_beh () =
   check Alcotest.string "spec" "# written by run_compile.exe --emit-beh\nredcode: out.red\nalive 201\ndead 202\n"
     (List.assoc "out.beh" o.files)
 
+let test_driver_emit_beh_hill () =
+  (* the spec names the hill, so behave.py runs it under that hill's settings *)
+  let o = drive [("p.src", "(program (hill tiny) (expect (alive 50)) (JMP 0))")] ["--emit-beh"; "out.beh"; "p.src"] in
+  check Alcotest.string "spec" "# written by run_compile.exe --emit-beh\nredcode: out.red\nhill: tiny\nalive 50\n"
+    (List.assoc "out.beh" o.files)
+
 let test_driver_emit_beh_suffix () =
   let o = drive [("p.src", prog7_expect)] ["--emit-beh"; "out.red"; "p.src"] in
   check Alcotest.(triple string int int) "refused" ("--emit-beh FILE must end in .beh\n", 1, 0)
@@ -1172,6 +1178,7 @@ let ocaml_tests = [
     test_case "compile error exits cleanly" `Quick test_driver_compile_error_is_clean ;
     test_case "missing file" `Quick test_driver_missing_file ;
     test_case "--emit-beh" `Quick test_driver_emit_beh ;
+    test_case "--emit-beh names the hill" `Quick test_driver_emit_beh_hill ;
     test_case "--emit-beh needs .beh" `Quick test_driver_emit_beh_suffix ;
     test_case "--emit-beh with nothing to export" `Quick test_driver_emit_beh_nothing ;
   ] ;

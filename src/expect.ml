@@ -91,11 +91,13 @@ let check (m : t) ((x, loop) : expectation * tag option) : outcome option =
   | XAlive _ | XDead _ | XCell _ -> None
 
 (* The execution kinds, as a behaviour spec for tools/behave.py (`redcode:` relative to the spec). *)
-let to_beh ~(redcode : string) (xs : expectation list) : string =
+(* hill: the hill the warrior names, so tools/behave.py runs it under that hill's settings. *)
+let to_beh ?hill ~(redcode : string) (xs : expectation list) : string =
   let probe x = match x with
     | XAlive n -> Some (sprintf "alive %d" n)
     | XDead n -> Some (sprintf "dead %d" n)
     | XCell (a, text, n) -> Some (sprintf "cell %d %d %s" n a text)
     | XLength _ | XCycles _ | XOverhead _ | XBoot _ | XStep _ | XCoversCore -> None in
   String.concat "" (List.map (fun l -> l ^ "\n")
-    ("# written by run_compile.exe --emit-beh" :: ("redcode: " ^ redcode) :: List.filter_map probe xs))
+    ("# written by run_compile.exe --emit-beh" :: ("redcode: " ^ redcode)
+     :: Option.to_list (Option.map (fun h -> "hill: " ^ h) hill) @ List.filter_map probe xs))

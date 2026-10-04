@@ -216,7 +216,7 @@ Checked when compiling (a failure stops the compilation, or is a warning with `-
 
 `length`, `cycles`, `overhead` and `boot` accept both `(m N)` (exactly N) and `(m <= N)`.
 
-Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` writes them as a behaviour spec for `tools/behave.py`, and the redcode beside it as `FILE.red`; it refuses a program with none of these). N is at least 1:
+Checked by running the warrior in pMARS (`run_compile.exe --emit-beh FILE.beh` writes them as a behaviour spec for `tools/behave.py`, and the redcode beside it as `FILE.red`, the spec naming the warrior's hill (`hill: tiny`) so it runs under that hill's settings; it refuses a program with none of these). N is at least 1:
 
 - (alive N) a process is still running after N executed instructions
 - (dead N) no process is left after N executed instructions

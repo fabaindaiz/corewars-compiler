@@ -383,7 +383,9 @@ A warrior that can be submitted: other hills than 94b, the header lines KotH exp
 
 ### Multiple hill targets · i-7d2612-217183
 **State.** Done (s-7d2612-9b0d20): `(hill key)` and `--hill key` (d-7d2612-65fa08) for 94b, 94nop, 94, 94x, tiny and nano.
-Not done: the `execute` suite still assembles everything under 94b. Was: A target parameter (94b, 94nop, tiny,
+`--emit-beh` names the hill in the spec it writes, and `tools/behave.py` runs a spec under
+`pmars/config/<hill>.opt` (`behtests/hill_tiny_imp.beh`). Not done: the `execute` suite still
+assembles everything under 94b. Was: A target parameter (94b, 94nop, tiny,
 nano, lp) selecting the header `;redcode-<hill>`, MAXLENGTH, CORESIZE for constants, and whether
 `LDP`/`STP` are allowed (94nop has no p-space).
 **Collides with.** Every golden's header; the `execute` suite's config path.
