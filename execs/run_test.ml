@@ -404,6 +404,11 @@ let test_minor_optimize_needs_objective () =
     (fun () -> ignore (parse_source (sexp_from_string "(program (optimize) (MOV 0 1))")))
 
 
+let test_minor_unreachable_qualified () =
+  check Alcotest.bool "prog4" true
+    (contains (M.to_text ~maxlength:100 (metrics_of (example "prog4"))) "unreachable 2 (ignoring 4 dynamic jumps)")
+
+
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
   "parse", [
@@ -469,6 +474,7 @@ let ocaml_tests = [
     test_case "DIV.F by a zero B-number" `Quick test_minor_div_by_zero_b ;
     test_case "execution probes need N >= 1" `Quick test_minor_probe_count_positive ;
     test_case "(optimize) needs an objective" `Quick test_minor_optimize_needs_objective ;
+    test_case "unreachable says it ignores dynamic jumps" `Quick test_minor_unreachable_qualified ;
   ] ;
   "interp", [
 

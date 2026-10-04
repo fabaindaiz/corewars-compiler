@@ -290,8 +290,10 @@ let signed (m : t) (k : int) : int = if k > m.coresize / 2 then k - m.coresize e
 let to_text ~(maxlength : int) (m : t) : string =
   let b = Buffer.create 256 in
   let add = Buffer.add_string b in
-  add (sprintf "length %d/%d   code %d  data %d  epilogue %d  unreachable %d   nonzero %d  nonblank %d   boot %s  spl %d\n"
-         m.length maxlength m.code m.data m.epilogue m.unreachable m.nonzero m.nonblank
+  (* Reachability follows no dynamic jump, so with any the counts are a static lower bound. *)
+  let static = if m.dynamic_jumps > 0 then sprintf " (ignoring %d dynamic jumps)" m.dynamic_jumps else "" in
+  add (sprintf "length %d/%d   code %d  data %d  epilogue %d  unreachable %d%s   nonzero %d  nonblank %d   boot %s  spl %d\n"
+         m.length maxlength m.code m.data m.epilogue m.unreachable static m.nonzero m.nonblank
          (match m.boot with Some r -> show_range r | None -> "—") m.spl_sites) ;
   if m.dynamic_jumps > 0 then add (sprintf "dynamic jumps: %d\n" m.dynamic_jumps) ;
   List.iter (fun i -> add (sprintf "kills: cell %d divides by 0\n" i)) m.div_by_zero ;
