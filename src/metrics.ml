@@ -93,6 +93,11 @@ let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let in_body i = List.mem i l.body in
   let source = closing_source l in
   let c = p.cells.(source) in
+  (* The construct the loop belongs to: the owner of the loop head it closes on, else (user code)
+     the cell that closes it. *)
+  let origin, construct = match l.owner with
+    | Some (t, k) -> Some t, Some k
+    | None -> c.origin, c.construct in
   (* A lap: from the header to a source of this loop's back edges; an inner loop counts one pass. *)
   let lap weight =
     let best = dag_ranges p ~allowed:in_body ~terminal:(fun _ -> false) ~weight l.header in
@@ -101,7 +106,7 @@ let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let overhead = lap (fun i -> if p.cells.(i).construct <> None && control p.cells.(i).op then 1 else 0) in
   (* Leaving: from the header to the first cell outside the loop, counting the loop construct's
      own exit jump, which sits outside the natural body. *)
-  let own i = p.cells.(i).origin = c.origin && p.cells.(i).construct <> None && c.construct <> None in
+  let own i = p.cells.(i).origin = origin && p.cells.(i).construct <> None && construct <> None in
   let inside i = in_body i || own i in
   let reach = dag_ranges p ~allowed:inside ~terminal:(fun _ -> false) ~weight:(fun _ -> 1) l.header in
   let exits = List.filter_map (fun i -> match reach.(i) with
@@ -110,7 +115,7 @@ let measure_loop (p : program) (l : Layout.loop) : loop_metrics =
   let exit = Option.map (fun r -> r.min) (range_of exits) in
   let zero = { min = 0; max = 0 } in
   let label = match p.cells.(l.header).labels with x :: _ -> Some x | [] -> None in
-  { loop = l; label; node = c.origin; construct = c.construct;
+  { loop = l; label; node = origin; construct;
     cycles = Option.value cycles ~default:zero; overhead = Option.value overhead ~default:zero; exit }
 
 (* An immediate A operand makes the instruction itself the A-value (ICWS'94), so its own numbers

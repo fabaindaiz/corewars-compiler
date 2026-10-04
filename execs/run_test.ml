@@ -841,6 +841,16 @@ let test_review3_moving_jmp_not_threaded () =
   check strings "JMZ" [List.hd (List.rev (List.filter (String.starts_with ~prefix:"_IF")
     (List.filter_map (fun i -> match i with ILAB l -> Some l | INSTR _ | ICOM _ -> None) is)))] (targets IJMZ is)
 
+let test_review3_rotated_while_is_the_while () =
+  let src = "(let (x 3) (seq (while (JN x) (seq (SUB 1 x) (expect (cycles <= 3)))) (DAT 0 (store x))))" in
+  check Alcotest.(pair string int) "its expectation is checked" ("", 0)
+    (let o = drive [("p.src", src)] ["p.src"] in (o.err, o.code)) ;
+  let loops src = (M.measure (L.build (O.compile_body M.default_policy (body_of src)))).loops in
+  check Alcotest.(list (option string)) "described as the while" [Some "while"]
+    (List.map (fun (l : M.loop_metrics) -> l.construct) (loops src)) ;
+  check Alcotest.int "an if-else body: still one loop" 1
+    (List.length (loops "(let (x 3) (seq (while (JN x) (if (JN x) (SUB 1 x) (SUB 2 x))) (DAT 0 (store x))))"))
+
 
 (* OCaml tests: extend with your own tests *)
 let ocaml_tests = [
@@ -966,6 +976,7 @@ let ocaml_tests = [
   ] ;
   "review3", [
     test_case "a JMP that moves a pointer is not threaded through" `Quick test_review3_moving_jmp_not_threaded ;
+    test_case "a rotated while is described as the while" `Quick test_review3_rotated_while_is_the_while ;
   ] ;
   "phase3", [
     test_case "a unary while is rotated" `Quick test_phase3_unary_while_rotated ;

@@ -35,7 +35,13 @@ type edge =
 | Skip of int
 | Dynamic
 
-type loop = { header : int; body : int list; back_edges : (int * int) list }
+(* owner: the construct whose loop-head label the loop closes on (its tag and name), when there is
+   one; a loop of user code has none. *)
+type loop = { header : int; body : int list; back_edges : (int * int) list; owner : (tag * string) option }
+
+(* The labels a loop construct puts on its head: repeat, while (unrotated: its test; rotated: the
+   test after the body), do-while. *)
+let loop_heads = ["_REP"; "_WHI"; "_WHC"; "_DWH"]
 
 type program = {
   cells : cell array;
@@ -154,18 +160,34 @@ let build ?(coresize = default_coresize) (body : Compile.emitted list) : program
     let rec up i = if not inside.(i) then (inside.(i) <- true ; List.iter up preds.(i)) in
     up s ;
     List.filter (fun i -> inside.(i)) (List.init n Fun.id) in
-  (* Loops that share a header but close through different labels (a do-while whose body starts
-     with another loop: _DWH and _REP on one cell) stay separate: one loop per header and label
-     jumped to. A threaded jump (Compile.thread_jumps) closes the loop whose label it now names; a
-     jump through a number has no label, and is told apart by the construct that emitted it. *)
-  let closing s = match cells.(s).a.label with
-    | Some l -> Either.Left l
-    | None -> Either.Right cells.(s).origin in
-  let keys = List.sort_uniq compare (List.map (fun (s, h) -> (h, closing s)) !backs) in
+  (* Which loop a back edge closes. A jump to a loop-head label closes that construct's loop: loops
+     that share a header (a do-while whose body starts with a repeat: _DWH and _REP on one cell)
+     stay separate, and a threaded jump (Compile.thread_jumps) closes the loop whose head it now
+     names. Any other back edge into a cell holding a loop head closes that loop: a rotated while's
+     body falls into its test, or jumps there through an if-else's end label. Elsewhere (user
+     loops) the label jumped to, or for a jump through a number the construct that emitted it. *)
+  let heads = Hashtbl.create 8 in
+  List.iter (fun (x : Compile.emitted) -> match x.instr, x.origin, x.construct with
+    | ILAB l, Some t, Some k when List.exists (fun p -> String.starts_with ~prefix:p l) loop_heads ->
+      Hashtbl.replace heads l (t, k)
+    | (ILAB _ | ICOM _ | INSTR _), _, _ -> ()) body ;
+  let closing (s, h) =
+    let jumped = match cells.(s).a.label with
+      | Some l when List.mem (Jump h) succ.(s) -> Some l
+      | Some _ | None -> None in
+    match Option.bind jumped (Hashtbl.find_opt heads) with
+    | Some o -> `Owner o
+    | None ->
+      (match List.find_map (Hashtbl.find_opt heads) cells.(h).labels, jumped with
+      | Some o, _ -> `Owner o
+      | None, Some l -> `Label l
+      | None, None -> `Origin cells.(s).origin) in
+  let keys = List.sort_uniq compare (List.map (fun (s, h) -> (h, closing (s, h))) !backs) in
   let loops = List.map (fun (h, k) ->
-    let edges = List.sort compare (List.filter (fun (s, t) -> t = h && closing s = k) !backs) in
+    let edges = List.sort compare (List.filter (fun (s, t) -> t = h && closing (s, t) = k) !backs) in
     let body = List.sort_uniq compare (List.concat_map natural edges) in
-    { header = h; body; back_edges = edges }) keys in
+    let owner = match k with `Owner o -> Some o | `Label _ | `Origin _ -> None in
+    { header = h; body; back_edges = edges; owner }) keys in
   { cells; succ; loops; diagnostics = List.rev !diags; coresize }
 
 let reachable (p : program) : bool array =
