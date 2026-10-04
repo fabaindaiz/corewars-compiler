@@ -13,6 +13,7 @@ meaning each pass must preserve is in `docs/semantics.md`; settled choices are i
 | `execs/run_test.ml` | the test runner: alcotest unit tests, then the bbctester suites `compare` and `execute` |
 | `bbctests/examples/*.bbc` | goldens for working programs |
 | `bbctests/known-bugs/*.bbc` | characterization goldens: the current output of a program that triggers a recorded bug |
+| `bbctests/errors/*.bbc` | goldens for compile errors (`STATUS: CT error`; EXPECTED is a regular expression searched in the error) |
 | `bbctests/archetypes/*.bbc` | goldens for the classic archetypes written in RED (phase 2's acceptance suite) |
 | `behtests/*.beh` | behaviour specs, run by `tools/behave.py` |
 | `examples/*.src` | RED programs to compile by hand (`make compile src=...`) |
@@ -82,6 +83,7 @@ the output contract, not a refactor.
 |---|---|---|
 | the exact redcode a program compiles to | a `.bbc` in `bbctests/examples/` (copy `bbctests/examples/prog2.bbc`) | `make tests F=compare` |
 | what the compiled warrior does in the core | a `.beh` in `behtests/` pointing at a golden (copy `behtests/prog8_while_lt.beh`), or `(expect (alive N))`-style expectations in the RED source exported with `run_compile.exe --emit-beh` (a spec with `redcode:` instead of `golden:`) | `python3 tools/behave.py` |
+| that a program is rejected, and with which message | a `.bbc` in `bbctests/errors/` with `STATUS: CT error` (copy `bbctests/errors/stored_twice.bbc`) | `make tests F=compare` |
 | a bug, before fixing it | a `.bbc` in `bbctests/known-bugs/` with the current output, a `.beh` marked `known-failing: <roadmap id>`, and the roadmap item | both of the above |
 | a function's result | an alcotest case in `execs/run_test.ml` (`ocaml_tests`; groups `parse`, `emit`, `layout`, `metrics`, `policy`, `expect`, `review`, `minor`, `driver`) | `make tests F=metrics` |
 | a metric, prediction or expectation message | an alcotest case with the exact value (copy `test_metrics_prog8`) | `make tests F=metrics` |
@@ -89,7 +91,9 @@ the output contract, not a refactor.
 
 The `.bbc` format (BBCStepTester): `NAME:`, `DESCRIPTION:`, optional `PARAMS:` and `STATUS:`
 (`CT error`, `RT error`), `SRC:`, `EXPECTED:`, optional `END`. No trailing newline after the last
-EXPECTED line. bbctester finds `*.bbc` recursively under `bbctests/`, so every golden runs in both
+EXPECTED line. bbctester splits on those words anywhere in the file, so no golden may contain
+the text `END` elsewhere (a `(label END)` breaks the parse). With `STATUS: CT error`, EXPECTED is a
+regular expression searched in the compile error (`bbctests/errors/`). bbctester finds `*.bbc` recursively under `bbctests/`, so every golden runs in both
 `compare` and `execute`.
 
 ## Exemplary files

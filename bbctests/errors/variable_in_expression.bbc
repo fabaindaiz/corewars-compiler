@@ -1,0 +1,10 @@
+NAME: a variable inside an expression
+DESCRIPTION: a let variable is a cell's field, not a number pMARS knows when assembling: it cannot be part of an expression
+STATUS: CT error
+SRC:
+(let (x 1)
+  (seq
+    (ADD (+ x 1) x)
+    (DAT 0 (store x))))
+EXPECTED:
+variable `x` cannot be part of an expression

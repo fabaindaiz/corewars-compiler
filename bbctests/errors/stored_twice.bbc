@@ -1,0 +1,10 @@
+NAME: a variable stored twice
+DESCRIPTION: two (store x) for one let: a compile error; bbctester matches EXPECTED as a regular expression against the error
+STATUS: CT error
+SRC:
+(let (x 1)
+  (seq
+    (DAT (store x) 0)
+    (DAT 0 (store x))))
+EXPECTED:
+variable `x` is stored twice

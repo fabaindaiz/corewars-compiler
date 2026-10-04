@@ -244,7 +244,8 @@ expressions `(op a b)` over numbers, constants and labels are emitted for pMARS 
 which RED used to inline.
 
 ### Compile-error tests · i-7d2612-70ea22
-**State.** Half done. The command line's error path is tested through `Cored.Driver`
+**State.** Done (s-7d2612-333abd): goldens with `STATUS: CT error` in `bbctests/errors/` (three
+today). Before: The command line's error path is tested through `Cored.Driver`
 (`test_driver_compile_error_is_clean`, `test_driver_missing_file`). Still no golden uses bbctester's
 `STATUS: CT error`.
 

@@ -1,0 +1,9 @@
+NAME: a pMARS keyword as a label
+DESCRIPTION: (label MOV) is a compile error: pMARS would read it as the opcode
+STATUS: CT error
+SRC:
+(seq
+  (label MOV)
+  (DAT 0 0))
+EXPECTED:
+is a pMARS keyword and cannot be a label

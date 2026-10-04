@@ -49,6 +49,9 @@ The net step (i-7d2612-fbe7c8, half): a pointer's step is the sum of its changes
 nothing when unknown; the paper archetype's step warning disappeared with the wrong prediction it
 came from.
 `--report=json` names the optimizations applied (`"optimizations":[...]`).
+Compile-error goldens (i-7d2612-70ea22) in `bbctests/errors/`: the first draft used `(label END)`
+and bbctester could not parse the file, because it splits sections on the bare word `END`
+anywhere; recorded in `docs/architecture.md`.
 **Left undone.** Summing through inner loops with known trip counts,
 compile-error goldens (i-7d2612-70ea22), the scanner's score.
 
