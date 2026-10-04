@@ -1,0 +1,4 @@
+# The epilogue is meant to be indistinguishable from empty core, which pMARS fills with DAT.F $0, $0:
+# in the dwarf it is cell 4, and the first instruction (ADD) does not touch it.
+golden: bbctests/archetypes/dwarf.bbc
+cell 1 4 DAT.F $0, $0

@@ -25,4 +25,4 @@ _DWH10
   JMP    $_REP5 , #0     
 _LET2 
   DAT    #0     , #2000  
-  DAT    #0     , #0     
+  DAT    $0     , $0     

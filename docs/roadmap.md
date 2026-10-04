@@ -47,8 +47,8 @@ with a failing check; phase 1 has since fixed six of them (see below).
 hand-written forms, and all seven now match them in cycles per iteration. On the user's decisions,
 jump threading closed the scanner's gap (d-7d2612-3f3f32), conditions accept a modifier so a SEQ
 scanner can be written (d-7d2612-8f9340), a labelled bomb `DAT` counts as data, and the epilogue
-`DAT` stays (d-7d2612-1c1c67). **Next:** whether the epilogue becomes `DAT $0, $0`
-(i-7d2612-ed9f79), then the operator design (i-7d2612-7eadd5): the indirect-use default, constants
+`DAT` stays (d-7d2612-1c1c67). The epilogue is now exactly
+empty core (d-7d2612-f7ae87). **Still open in phase 2:** the operator design (i-7d2612-7eadd5): the indirect-use default, constants
 and label arithmetic for the imp spiral and quickscan.
 
 **Phase 1 is complete** (s-7d2612-2c7e4d): the recorded correctness defects are fixed, errors carry
@@ -215,7 +215,9 @@ golden that moves or compares through a pointer without a modifier.
 conditions accept a modifier, or a compound operator for the scan.
 
 ### The epilogue DAT differs from empty core in its modes · i-7d2612-ed9f79
-**State.** Planned (s-7d2612-14641b). The epilogue is meant to be indistinguishable from empty core
+**State.** Done (s-7d2612-14641b): the epilogue is `DAT $0, $0` (d-7d2612-f7ae87); every golden's
+last line changed for that reason, and `behtests/epilogue_empty_core.beh` checks the cell in the
+core. Before: The epilogue is meant to be indistinguishable from empty core
 (d-7d2612-1c1c67), but pMARS fills empty core with `DAT.F $0, $0` (`pmars.c` in the vendored zip,
 lines 165–166) and the epilogue is `DAT.F #0, #0`. A `JMZ`/`JMN` scanner sees both as zero; an
 `SEQ.I`/`SNE.I` scanner comparing against an empty cell sees the epilogue.
@@ -256,8 +258,9 @@ too, for the shorter boot, or only unary ones?
 **State.** Planned (phase 3).
 A `let` whose `(store x)` sits in a `DAT` of its own costs a cell and, when the `DAT` is on the path,
 a `JMP` around it (prog7, prog8: `JMP $2` then `DAT`): one more cell and one more cycle of boot.
-The variable can live in a field the program never reads as code — the epilogue `DAT`, or an
-instruction field the opcode ignores.
+The variable can live in a field the program never reads as code — an instruction field the
+opcode ignores, such as the B-field of a generated `JMP` — but not in the epilogue, which stays
+empty core (d-7d2612-f7ae87).
 Not the epilogue `DAT` itself: every archetype is one cell longer than its hand-written form for
 it, and the user decided to keep it (d-7d2612-1c1c67).
 **Collides with.** d-7d2612-6a1527 (goldens change); i-7d2612-ce4c3b (placement analysis must be right

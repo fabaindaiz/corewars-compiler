@@ -27,4 +27,4 @@ _LET4
 start 
   ADD.AB #4     , *_LET2 
   ADD.A  #5     , @_LET4 
-  DAT    #0     , #0
+  DAT    $0     , $0

@@ -70,7 +70,8 @@ RED warrior is one cell longer than its hand-written form.
    so it costs length and nothing else. One difference remains: pMARS fills empty core with
    `DAT.F $0, $0` (`pmars.c`, lines 165–166, in the vendored `pmars/pmars-0.9.4.zip`), while the epilogue
    is `DAT.F #0, #0`; a `JMZ`/`JMN` scanner cannot tell them apart, an `SEQ.I`/`SNE.I` scanner
-   can (i-7d2612-ed9f79).
+   can (i-7d2612-ed9f79). **Closed** the same day: the epilogue is `DAT $0, $0`
+   (d-7d2612-f7ae87), and pMARS's cdb lists it as an empty cell.
 3. **`unreachable` counts declared data as dead code.** core-clear and scanner hold their bomb as
    `(label bomb) (DAT 0 0)`; `--report` counts it as unreachable code, because only a `let`
    variable's cell counts as data. A phase-4 warning on unreachable cells (i-7d2612-90d6e1) would

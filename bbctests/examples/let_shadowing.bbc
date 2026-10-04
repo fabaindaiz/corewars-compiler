@@ -17,4 +17,4 @@ _LET1
 _LET8 
   DAT    #0     , #2     
   ADD.A  #4     , $_LET1 
-  DAT    #0     , #0     
+  DAT    $0     , $0     

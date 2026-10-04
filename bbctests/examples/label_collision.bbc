@@ -15,4 +15,4 @@ _LET1
   DAT    #7     , #0     
 LET1  
   JMP    $0     , #0     
-  DAT    #0     , #0     
+  DAT    $0     , $0     

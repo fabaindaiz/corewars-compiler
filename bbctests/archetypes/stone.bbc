@@ -19,4 +19,4 @@ _REP6
   JMP    $_REP6 , #0     
 _LET1 
   DAT    #0     , #0     
-  DAT    #0     , #0     
+  DAT    $0     , $0     

@@ -17,4 +17,4 @@ _LET1
   DAT    #0     , #0     
   MOV.I  $_LET1 , $-1    
   JMP    #0     , #0     
-  DAT    #0     , #0     
+  DAT    $0     , $0     

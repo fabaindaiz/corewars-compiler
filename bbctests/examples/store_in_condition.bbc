@@ -15,4 +15,4 @@ _LET1
   NOP    #0     , #0     
 _IF4  
   ADD.A  #1     , $_LET1 
-  DAT    #0     , #0     
+  DAT    $0     , $0     

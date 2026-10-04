@@ -22,4 +22,4 @@ _WHI9
   MOV.I  $_LET1 , {_LET1 
   JMP    $_WHI9 , #0     
 _WHF9 
-  DAT    #0     , #0
+  DAT    $0     , $0

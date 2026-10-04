@@ -47,6 +47,13 @@ labelled `DAT` that never runs counts as data (i-7d2612-cf8fdb, done). Condition
 optional modifier after the operator (d-7d2612-8f9340): additive, no golden changed; with it the
 SEQ scanner is the seventh archetype (`(NE I (Ind a) (Ind b))`), 3 cycles per pair of empty cells
 like the hand-written one, Wilkies 37 and 37 against 36 and 37.
+The epilogue is now `DAT $0, $0`, exactly pMARS's empty core (the user's decision,
+d-7d2612-f7ae87): every one of the 28 goldens changed its last line and nothing else, for that
+behavioural reason; `prog1`'s `nonblank` went from 4 to 3. The new spec
+`behtests/epilogue_empty_core.beh` first could not read the cell at all: cdb lists a cell equal to
+empty core as its address alone (`cellview` in pMARS's `disasm.c`), a line shaped like `calc`'s
+output, so `tools/behave.py` (its own commit) now takes the listing after the cycle count and reads
+a blank one as `DAT.F $0, $0`.
 **What went wrong (continued).** Two of my hand counts were wrong before running: an error column
 (23, is 25) and nothing else; the first mutation of the condition modifier left `imod` unused and
 the build refused it (warning 27), so the mutation had to keep it used. A command that bundled a

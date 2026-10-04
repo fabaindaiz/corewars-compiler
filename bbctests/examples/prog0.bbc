@@ -6,4 +6,4 @@ EXPECTED:
 ;redcode-94b
 
   MOV.I  $0     , $1     
-  DAT    #0     , #0
+  DAT    $0     , $0

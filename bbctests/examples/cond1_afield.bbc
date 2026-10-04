@@ -16,4 +16,4 @@ _LET1
   JMN.A  $_IF8  , $_LET1 
   JMP    $0     , #0     
 _IF8  
-  DAT    #0     , #0     
+  DAT    $0     , $0     

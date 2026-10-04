@@ -20,4 +20,4 @@ _LET9
   DAT    #2     , #0     
 _LET8 
   DAT    #0     , $_LET1 
-  DAT    #0     , #0     
+  DAT    $0     , $0     

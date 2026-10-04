@@ -16,4 +16,4 @@ _LET1
 _DWH8 
   MOV.I  $-1    , >_LET1 
   DJN.B  $_DWH8 , #100   
-  DAT    #0     , #0
+  DAT    $0     , $0

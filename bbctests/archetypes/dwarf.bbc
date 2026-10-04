@@ -17,4 +17,4 @@ _REP4
   JMP    $_REP4 , #0     
 _LET1 
   DAT    #0     , #0     
-  DAT    #0     , #0     
+  DAT    $0     , $0     

@@ -33,4 +33,4 @@ dest4
   JMP    @_LET3 , #0     
 dest1 
   MOV.I  $0     , $1     
-  DAT    #0     , #0
+  DAT    $0     , $0

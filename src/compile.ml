@@ -247,7 +247,9 @@ let prelude = "
 ;redcode-94b
 "
 
-let epilogue = [INSTR (IDAT, RN, RNone, RNone)]
+(* What pMARS fills empty core with (DAT.F $0, $0, pmars.c in the vendored source): a program that
+   runs past its end dies here, a label at the end has a cell, and a scanner sees empty core. *)
+let epilogue = [INSTR (IDAT, RN, RRef (RDir, 0), RRef (RDir, 0))]
 
 (* pMARS 0.9.4 hangs on a source line of 256 characters or more (measured: a 245-character label
    in an instruction line hung it, 200 did not). *)

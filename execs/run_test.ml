@@ -176,7 +176,8 @@ let metrics_of (path : string) : M.t = M.measure (layout_of path)
 let test_metrics_prog1 () =
   let m = metrics_of (example "prog1") in
   check Alcotest.(list int) "length code epilogue data nonzero nonblank"
-    [4; 3; 1; 0; 3; 4] [m.length; m.code; m.epilogue; m.data; m.nonzero; m.nonblank] ;
+    (* the epilogue is DAT $0, $0, empty core: not counted as nonblank *)
+    [4; 3; 1; 0; 3; 3] [m.length; m.code; m.epilogue; m.data; m.nonzero; m.nonblank] ;
   check Alcotest.(option range) "boot" (Some (r 0 0)) m.boot ;
   check Alcotest.int "one loop" 1 (List.length m.loops) ;
   let l = List.hd m.loops in

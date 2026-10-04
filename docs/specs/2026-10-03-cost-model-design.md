@@ -139,7 +139,7 @@ Reference values (the tests check them):
 
 | Program | Values |
 |---|---|
-| prog1 (`bbctests/examples/prog1.bbc`) | `length 4`, `code 3`, `epilogue 1`, `nonzero 3`, `nonblank 4`, `boot 0`; one loop at cells 0–2: `cycles/iter 3`, `overhead/iter 0` (its `JMP` is user-written) |
+| prog1 (`bbctests/examples/prog1.bbc`) | `length 4`, `code 3`, `epilogue 1`, `nonzero 3`, `nonblank 3` (4 before the epilogue became empty core, d-7d2612-f7ae87), `boot 0`; one loop at cells 0–2: `cycles/iter 3`, `overhead/iter 0` (its `JMP` is user-written) |
 | prog7 | `boot 1`; one loop at cells 2–3: `cycles/iter 2`, `overhead/iter 1` (the `DJN`) |
 | prog8 | `boot 1`; one loop at cells 2–5: `cycles/iter 3` (`SLT`, `MOV`, `JMP`; the `JMP` to the end is skipped while looping), `overhead/iter 2` |
 
@@ -205,7 +205,7 @@ compiled output. One spec format, one runner.
 `--report=json` writes JSON to stdout instead of the redcode. Example (prog1):
 
 ```
-length 4/100   code 3  data 0  epilogue 1  unreachable 0   nonzero 3  nonblank 4   boot 0  spl 0
+length 4/100   code 3  data 0  epilogue 1  unreachable 0   nonzero 3  nonblank 3   boot 0  spl 0
 loop 0..2 (LET1, user code, node 8)   cycles/iter 3   overhead 0   exit —
   predicted: step 4 → period 2000 iterations, does not visit every cell (6000 cycles per period)
 policy: speed > size

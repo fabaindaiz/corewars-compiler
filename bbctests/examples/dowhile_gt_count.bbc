@@ -20,4 +20,4 @@ _DWH9
   SLT.BA $_LET2 , $_LET1 
   SNE.AB #0     , #1     
   JMP    $_DWH9 , #0     
-  DAT    #0     , #0     
+  DAT    $0     , $0     

@@ -31,4 +31,4 @@ _LET3
   DAT    #0     , #0     
 _LET4 
   DAT    #0     , #0     
-  DAT    #0     , #0
+  DAT    $0     , $0

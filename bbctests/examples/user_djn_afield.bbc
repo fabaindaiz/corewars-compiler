@@ -15,4 +15,4 @@ _LET1
   DAT    #2     , #0     
 top   
   DJN.A  $top   , $_LET1 
-  DAT    #0     , #0     
+  DAT    $0     , $0     
