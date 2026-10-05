@@ -975,12 +975,12 @@ let test_warnings_dead_code () =
 let test_warnings_archetypes_clean () =
   (* the archetypes are tight: under the default policy only steps that leave cells unvisited,
      which they do not state, are worth saying: the dwarf's and stone's mod 4, the scanner's 10
-     (800 cells); the paper's copy pointer has no known step per lap (its inner loop's trip count is
+     (800 cells), the SEQ scanner's 8 (its ADD.F moves both pointers; one warning for the two); the paper's copy pointer has no known step per lap (its inner loop's trip count is
      not known), so nothing is said about it *)
   List.iter (fun (name, n) ->
     let src = read_file ("archetypes/" ^ name ^ ".src") in
     check Alcotest.int name n (List.length (warnings_in (err_of src))))
-    [("imp", 0); ("dwarf", 1); ("stone", 1); ("clear", 0); ("scanner", 1); ("seqscan", 0); ("paper", 0); ("impring", 0)]
+    [("imp", 0); ("dwarf", 1); ("stone", 1); ("clear", 0); ("scanner", 1); ("seqscan", 1); ("paper", 0); ("impring", 0)]
 
 
 (* Tests for the smaller gaps of the phase-1 review *)
@@ -1451,6 +1451,15 @@ let test_diag_lowercase_opcode () =
   check Alcotest.bool "jmp in a body" true
     (contains (error_of "(seq (label top) (jmp top))") "`jmp` is not a RED form: opcodes are written in capitals, `JMP`")
 
+(* ADD.F of a constant cell moves both fields of its target: the SEQ scanner's two pointers step 8,
+   and the same warning for both is said once. (Its death alone, at instruction 2964, goes through
+   a bomb on its own pointer cell, past which a pointer's value is not followed.) *)
+let test_diag_add_f_steps () =
+  let o = drive [("p.src", read_file "archetypes/seqscan.src")] ["--report"; "p.src"] in
+  check Alcotest.bool "both pointers predicted" true
+    (contains o.err "predicted: step 8 (pointer in cell 5, A-field)" && contains o.err "predicted: step 8 (pointer in cell 5, B-field)") ;
+  check Alcotest.int "one warning for the two" 1 (List.length (warnings_in o.err))
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1634,6 +1643,7 @@ let ocaml_tests = [
     test_case "predictions name their pointer; a rewritten counter is unknown" `Quick test_diag_predictions ;
     test_case "a broken expectation says where" `Quick test_diag_expectation_located ;
     test_case "a lowercase opcode says so" `Quick test_diag_lowercase_opcode ;
+    test_case "ADD.F moves both pointers" `Quick test_diag_add_f_steps ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

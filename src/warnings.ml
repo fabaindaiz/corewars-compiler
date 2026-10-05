@@ -72,4 +72,5 @@ let check ~(mode : mode) ~(policy : Metrics.policy) ~(expects : (expectation * t
       | _ -> (pos, 1, node) :: acc) [] m.dead in
     List.rev_map (fun (_, n, node) ->
       { loc = at node; message = sprintf "%d cell%s never executed and holding no data (dead code)" n (if n = 1 then "" else "s") }) groups in
-  overhead @ steps @ own @ dead
+  (* two pointers of one loop with the same step say the same thing at the same place: once *)
+  List.fold_left (fun acc w -> if List.mem w acc then acc else acc @ [w]) [] (overhead @ steps @ own @ dead)

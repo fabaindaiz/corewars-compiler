@@ -23,8 +23,11 @@ reads its own cells on purpose: only a pointer written through counts. The lower
 caught `seq`, RED's own form, before its arm. A hand-counted column was wrong again (31 for 30),
 caught by the run. An old test pinned the unlocated expectation format and was updated as the
 intended change.
-**Left undone.** Pointers moved together by one `ADD.F` (the SEQ scanner) have no step prediction
-and no warning. The review of `docs/manual` and of this branch, and every merge.
+Then the gap it left: `ADD.F` of a constant cell now steps both of its target's fields (d-7d2612-fb3ce1);
+the SEQ scanner's two pointers are predicted (step 8) and their identical warning is said once.
+Its death alone still is not predicted: it goes through a bomb on its own pointer cell, past which
+the rule follows no pointer; a first test demanded that warning and was corrected.
+**Left undone.** The review of `docs/manual` and of this branch, and every merge.
 
 ## 2026-10-05 · s-7d2612-5e5abb — User manuals
 

@@ -360,9 +360,9 @@ Inside a template, a let named like an earlier template turns that template's ca
 expr: (_X1_b)", where at the top level the call goes to the template.
 
 ### Diagnostics a newcomer meets · i-7d2612-1b199a
-**State.** Done (s-7d2612-14528c, d-7d2612-30fd8f), all four. Still missing: two pointers moved by one
-`ADD.F` have no step prediction, so the SEQ scanner, which dies alone at instruction 2964 when its
-pointers reach its own code, gets no warning. Was: planned (s-7d2612-5e5abb), found by the manual's usability test (a fresh agent
+**State.** Done (s-7d2612-14528c, d-7d2612-30fd8f), all four. Two pointers moved by one `ADD.F` are
+predicted since (d-7d2612-fb3ce1). Outside the prediction by design: a death that passes through a bomb
+on the pointer's own cell, as the SEQ scanner's alone at instruction 2964. Was: planned (s-7d2612-5e5abb), found by the manual's usability test (a fresh agent
 following `docs/manual/` as a newcomer), each reproduced:
 - **A step that hits the warrior's own code is reported as full coverage, silently.** The dwarf
   with step 3 gets `predicted: step 3 → ... covers core` and no warning, and dies at its 8000th

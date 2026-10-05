@@ -216,6 +216,20 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
                     && norm p.coresize amount <> 0 && target c < n && destination (target c) f ->
         Some ((target c, f), (if c.op = IADD then amount else - amount), i)
       | Some _ | None -> None) body in
+  (* ADD.F (or SUB.F) of a cell nothing writes moves both fields of its target by that cell's two
+     numbers: two pointers in one cell stepping together (the SEQ scanner's ADD.F inc, ptrs). *)
+  let constant t = t < n && not (Array.exists (fun (w : cell) ->
+      writes w.op && w.b.mode = RDir && norm p.coresize (w.pos + w.b.value) = t) p.cells) in
+  let by_add_f = List.concat_map (fun i -> let c = p.cells.(i) in
+      let src = norm p.coresize (c.pos + c.a.value) in
+      if (c.op = IADD || c.op = ISUB) && c.md = RF && c.a.mode = RDir && c.b.mode = RDir
+         && target c < n && constant src then
+        let sign k = if c.op = IADD then k else - k in
+        List.filter_map (fun (f, k) ->
+          if norm p.coresize k <> 0 && destination (target c) f then Some ((target c, f), sign k, i) else None)
+          [(FA, p.cells.(src).a.value); (FB, p.cells.(src).b.value)]
+      else []) body in
+  let by_add = by_add @ by_add_f in
   (* A < or > (or { or }) moves its pointer whenever the operand is evaluated, on either operand of
      any instruction. *)
   let by_mode = List.concat_map (fun j -> let w = p.cells.(j) in
