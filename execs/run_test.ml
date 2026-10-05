@@ -1364,6 +1364,51 @@ let test_phase8_snippet_demos_are_their_archetypes () =
       (normalized (golden_expected ("bbctests/snippets/" ^ name ^ ".bbc"))))
     ["imp"; "dwarf"; "stone"; "scanner"; "clear"; "paper"; "quickscan"]
 
+(* The manual verifies itself: every ```red block in docs/manual/ compiles, and a ```redcode block
+   is what the compiler prints for the nearest ```red block before it (trailing spaces aside) *)
+let manual_blocks (text : string) : (string * string) list =
+  let lines = String.split_on_char '\n' text in
+  let rec go acc lines = match lines with
+    | [] -> List.rev acc
+    | l :: rest when String.starts_with ~prefix:"```" l ->
+      let info = String.trim (String.sub l 3 (String.length l - 3)) in
+      let rec body b ls = match ls with
+        | [] -> (List.rev b, [])
+        | x :: xs when String.trim x = "```" -> (List.rev b, xs)
+        | x :: xs -> body (x :: b) xs in
+      let b, rest = body [] rest in
+      go ((info, String.concat "\n" b) :: acc) rest
+    | _ :: rest -> go acc rest in
+  go [] lines
+
+let trimmed (text : string) : string =
+  let strip l = let n = ref (String.length l) in
+    while !n > 0 && (l.[!n - 1] = ' ' || l.[!n - 1] = '\r') do decr n done ; String.sub l 0 !n in
+  String.trim (String.concat "\n" (List.map strip (String.split_on_char '\n' text)))
+
+let test_manual_examples () =
+  let dir = "docs/manual" in
+  let files = Sys.readdir dir |> Array.to_list |> List.sort compare |> List.filter (fun f -> Filename.check_suffix f ".md") in
+  check Alcotest.bool "the manual has chapters" true (files <> []) ;
+  let examples = ref 0 in
+  List.iter (fun f ->
+    let rec walk last blocks = match blocks with
+      | ("red", src) :: rest ->
+        incr examples ;
+        let o = Cored.Driver.run ~read:(golden_read src) ["golden.src"] in
+        check Alcotest.(pair string int) (f ^ ": compiles\n" ^ src) ("", 0)
+          ((if contains o.err "error:" then o.err else ""), o.code) ;
+        walk (Some (src, o.out)) rest
+      | ("redcode", expected) :: rest ->
+        (match last with
+        | Some (src, out) -> check Alcotest.string (f ^ ": output\n" ^ src) (trimmed expected) (trimmed out)
+        | None -> Alcotest.fail (f ^ ": a redcode block with no red block before it")) ;
+        walk last rest
+      | _ :: rest -> walk last rest
+      | [] -> () in
+    walk None (manual_blocks (read_file (Filename.concat dir f)))) files ;
+  check Alcotest.bool "the manual has examples" true (!examples > 0)
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1542,6 +1587,7 @@ let ocaml_tests = [
     test_case "include paths" `Quick test_phase8_include_paths ;
     test_case "included atoms are located" `Quick test_phase8_included_atoms_are_located ;
     test_case "snippet demos are their archetypes" `Quick test_phase8_snippet_demos_are_their_archetypes ;
+    test_case "the manual's examples compile as shown" `Quick test_manual_examples ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

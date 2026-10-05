@@ -142,7 +142,7 @@ history: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
 
 | You changed | Also update |
 |---|---|
-| a construct's emitted code or its cost | `LANGUAGE.md`, `docs/semantics.md` §5, the goldens (with the reason), a `.beh` spec |
+| a construct's emitted code or its cost | `LANGUAGE.md`, `docs/semantics.md` §5, the goldens (with the reason), a `.beh` spec, `docs/manual/` (its test fails until its examples match) |
 | a rule, or a settled question | `docs/decisions.md`: a new row with a `d-` id and its enforcer |
 | a recorded bug's status | its `known-failing:` mark or `KNOWN_FAILING` entry, and its roadmap entry's state |
 | a pass, an IR, a module, a label prefix | `docs/architecture.md` (the audit checks the prefixes) |
@@ -171,6 +171,7 @@ the way and what was left undone, not only what worked.
 | Question | Document |
 |---|---|
 | What does a RED construct mean? What must the compiler preserve? | `docs/semantics.md` |
+| How does a user learn RED and its tools? | `docs/manual/` (examples checked by `test_manual_examples`) |
 | What is the syntax, for a user writing RED? | `LANGUAGE.md` |
 | Where is each pass, what does each IR hold, where does a new file go? | `docs/architecture.md` |
 | Why is it done this way? Was this already decided? | `docs/decisions.md` |

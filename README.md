@@ -8,6 +8,7 @@ This software aims to be an easier way to write and optimize code for corewars. 
 
 ### Instructions of use
 - See REFERENCE.md for develop and run.
+- See docs/manual/ for the user manual: getting started, a tutorial, a cookbook of classic warriors and the tools.
 - See LANGUAGE.md for RED language reference.
 - See TUTORIAL.md for a RED language tutorial (not written yet).
 - See docs/semantics.md for what each construct means and what the compiler preserves.

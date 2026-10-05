@@ -5,6 +5,24 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-05 · s-7d2612-5e5abb — User manuals
+
+**What.** The user asked for user manuals from the language tour. Their decisions: Markdown in the
+repository and a published page made from it, in English, covering getting started, a tutorial, a
+cookbook and the tools, with `LANGUAGE.md` staying the reference. On branch `docs/manual`, from
+`feat/phase-8` (not merged): `docs/manual/` with an index and four chapters, and
+`test_manual_examples` (d-7d2612-c06299), which compiles every `red` block and requires every
+`redcode` block to be the output of the `red` block before it. The prose's claims were run: the
+imp's cells after three steps, imp against dwarf (152 ties, 48 dwarf wins of 200), the tutorial's
+expectations exported with `--emit-beh` and passing in `tools/behave.py`.
+**What went wrong.** The script that filled the expected outputs paired blocks with a non-greedy
+regex that spanned blocks, so several outputs landed under the wrong program; the new test caught it
+on its first run, and the fill was redone with the test's own pairing. The first pairing rule (a
+`redcode` block right after a `red` block) skipped the first chapter's example, which has a command
+between the two: the rule became "the nearest `red` block before it". A first mutation check did
+not apply (BSD `sed` has no `0,/re/` address) and said nothing; redone in Python, it failed as it
+should.
+
 ## 2026-10-05 · s-7d2612-dec815 — Phase 8: the template naming gaps, unary skips, include and snippets, Silk and Mice
 
 **What.** The user asked to keep going with the pending items, on branch `feat/phase-8` from
