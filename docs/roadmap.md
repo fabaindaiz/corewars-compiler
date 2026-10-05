@@ -522,12 +522,16 @@ EXAPUNKS) teach through small constrained goals with cycle and size counts; a tu
 the classic-warriors item (i-7d2612-34b61d) would reuse those programs.
 
 ### Host pMARS traps on some battles · i-7d2612-0cb9e9
-**State.** Planned (s-7d2612-140ece). `_build/pmars-host/pmars` (built by `tools/pmars-host.sh` with
-`-O`) exits with code 133, a trap, on a few battles: the hand-written quickscan against RetroQ with
-seeds 4000 and 4001 (not 1234); the hand-written core-clear against RetroQ and Floody River.
-`tools/bench.py` leaves such an opponent out and says so. **Suspected** (not checked): undefined
-behaviour in pMARS 0.9.4 that clang turns into a trap; 0.9.5 lists overflow and bounds fixes
-(i-7d2612-494e75). **Next step.** A backtrace under lldb, and the same battles under 0.9.5.
+**State.** Done (s-7d2612-11efe5, d-7d2612-b153c1). The cause, found with an ASan build in a scratch
+copy: `sim.c` formats "Warrior %d: %s terminated - End of round %d" into a 60-byte buffer when an
+opponent's `;break` armed cdb and our warrior dies before that breakpoint first runs; a name of about
+19 characters overflows it, and macOS's fortified `sprintf` traps (exit 133). Seed-dependent because
+the order of the death and the breakpoint is. `tools/pmars-host.sh` patches the extracted copy;
+`make check-tools` runs a self-written reproducer (`tools/pmars-trap/`). The same ASan run found two
+memory errors that do not trap here, left as they are: `clparse.c:543` writes one past `options[21]`
+(`OPTNUM` 21 for 22 options with PERMUTATE, RWLIMIT and PSPACE) and `asm.c:2183` reads `buf[-1]` on
+an empty line. The vendored Linux binary has the same overflow, unpatched (assumption: silent there,
+no fortify). Was: planned, cause unknown.
 
 ### pMARS 0.9.5 · i-7d2612-494e75
 **State.** Planned. Released 2026-01-03 with overflow and bounds fixes; builds on macOS without the

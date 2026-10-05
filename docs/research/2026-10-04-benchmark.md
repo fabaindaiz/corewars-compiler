@@ -125,7 +125,9 @@ the top is still the strategy, now written without a compiler cost on these arch
 **pMARS on this machine.** The host build (`tools/pmars-host.sh`) traps (exit 133) on a few battles:
 the hand-written quickscan against RetroQ with seeds 4000 and 4001 (not 1234), the hand-written
 core-clear against RetroQ and Floody River. `bench.py` leaves such an opponent out and says so; one
-opponent of 1107 moves a mean by at most about 0.3 points. The cause is not known (i-7d2612-0cb9e9).
+opponent of 1107 moves a mean by at most about 0.3 points. Cause found and patched on 2026-10-05: a
+60-byte message buffer in pMARS's `sim.c`, overflowed when an opponent's `;break` armed the debugger
+(i-7d2612-0cb9e9, d-7d2612-b153c1); every such battle now runs, with the scores the others predicted.
 
 ## Reproducing
 

@@ -20,12 +20,14 @@ on the nearest thing you can run (`.claude/skills/run-warrior/SKILL.md`) before 
 | `cannot execute binary file`, exit 126 | `pmars/pmars` is Linux x86-64; use `tools/pmars-host.sh` | d-7d2612-3d04ba |
 | `Discarding these labels`, then `Undefined label` | a label with no instruction after it: pMARS drops it; the compiler's epilogue gives a trailing label a cell | d-7d2612-1c1c67 |
 | cdb's `list` prints only an address | the cell equals empty core, `DAT.F $0, $0` (pMARS hides it); `tools/behave.py` reads it as that | d-7d2612-f7ae87 |
+| `Trace/BPT trap`, exit 133, in a battle against a warrior with `;break` | pMARS 0.9.4 formats the death message of a long-named warrior into a 60-byte buffer when an opponent's `;break` armed cdb; `tools/pmars-host.sh` patches it (rebuild: `rm -rf _build/pmars-host`) | d-7d2612-b153c1 |
+| `Killed: 9` from every pMARS run on macOS | the binary was copied over itself after it ran; `rm -rf _build/pmars-host` and rebuild | d-7d2612-b153c1 |
 | a compiled warrior behaves differently from the same RED under another policy | the policy chooses rotation and the peephole (`--report` names them); a numeric offset into a construct's cells depends on that layout: use labels | d-7d2612-6b110b |
 
 ## pMARS exit codes
 
 `0` ran (warnings included) · `2` command-line error · `3` assembly error (bad opcode, undefined
-label, longer than MAXLENGTH) or a file it cannot open (pmars.6 says 1; 0.9.4 exits 3) · `4` cdb `quit` · `126` from the shell: wrong-platform binary.
+label, longer than MAXLENGTH) or a file it cannot open (pmars.6 says 1; 0.9.4 exits 3) · `4` cdb `quit` · `126` from the shell: wrong-platform binary · `133` a trap (above) · `137` killed (above).
 Assembly messages go to stderr; bbctester ignores stderr, so only the exit code reaches a test.
 
 ## Procedure

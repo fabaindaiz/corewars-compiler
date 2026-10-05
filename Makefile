@@ -32,6 +32,9 @@ check: check-tools check-ocaml
 check-tools:
 	python3 tools/audit.py
 	python3 tools/behave.py
+	# a warrior with a long name dying before an opponent's ;break overflowed a 60-byte buffer in
+	# pMARS's sim.c (a trap, exit 133, on macOS); tools/pmars-host.sh patches the build
+	tools/pmars-host.sh >/dev/null && _build/pmars-host/pmars -r 1 -b tools/pmars-trap/loser.red tools/pmars-trap/breaker.red </dev/null >/dev/null
 	python3 .agents/tools/bundle.py verify
 	python3 .agents/tools/bundle.py ids docs/decisions.md docs/roadmap.md .claude/logs/agent-changelog.md
 
