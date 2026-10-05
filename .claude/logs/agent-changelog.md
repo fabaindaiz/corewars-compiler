@@ -5,6 +5,23 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, and the session close
+
+**What.** The user asked to merge and go on with the pending items: `feat/phase-4` to `feat/phase-6`
+were fast-forwarded into `main` and pushed (gate green on the merged tree). On branch
+`feat/phase-7`: the six minors of the phase-6 review (i-7d2612-faa781, d-7d2612-22c819): a
+template's let and `for` names renamed within their scope only, the `for` range check safe from
+overflow, a bound of 10000 template calls and `for` iterations, the header words reserved, a let
+binding no longer read as a call, the A-field error naming the variable as written. Then the user
+asked to close the session completely and take everything to `main`.
+**Areas.** `src/parse.ml`, `src/util.ml`, `execs/run_test.ml`, `LANGUAGE.md`, `docs/decisions.md`,
+`docs/roadmap.md`, `docs/specs/2026-10-04-macros-design.md`.
+**What went wrong.** One new test expected no output at all from a program that compiles with a
+dead-code warning; it now checks for the absence of an error. Two assertions sat behind a failing
+one and never ran red: checked by mutation instead.
+**Left undone.** Unary skip fusion (i-7d2612-40b941), a Silk-style paper and Mice
+(i-7d2612-34b61d), the snippets catalogue (i-7d2612-8e9549): not started, by the user's close.
+
 ## 2026-10-04 · s-7d2612-140ece — Phase 6: A-field modes, the entry point, the macro layer and skip fusion
 
 **What.** On branch `feat/phase-6`, from `feat/phase-5` (none merged). The user's decisions: typed

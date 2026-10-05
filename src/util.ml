@@ -59,6 +59,7 @@ let darg_to_carg (darg : darg) (env : env) : carg =
       | MImm | MDir -> ACVar (m, s)
       | MInd (_) -> ACPnt (m, s)
       | MIndA (_) ->
+        let s = Rename.original s in
         error (sprintf "`%s` is a let variable: its (store %s) decides which field a pointer through it uses" s s) )
     (* A label the user wrote must be one pMARS reads as a label; the compiler's own start with `_`,
        which user names may not. *)

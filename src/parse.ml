@@ -271,7 +271,7 @@ let red_words = ["seq"; "let"; "label"; "com"; "store"; "none"; "repeat"; "if"; 
                  "expect"; "for"; "define"; "program"; "A"; "B"; "AB"; "BA"; "F"; "X"; "I";
                  "Imm"; "Dir"; "Ind"; "Dec"; "Inc"; "AInd"; "ADec"; "AInc"; "JZ"; "JN"; "DZ"; "DN";
                  "EQ"; "NE"; "GT"; "LT"; "length"; "cycles"; "overhead"; "boot"; "step"; "covers-core";
-                 "alive"; "dead"; "cell"]
+                 "alive"; "dead"; "cell"; "start"; "hill"; "name"; "author"; "strategy"; "optimize"; "const"]
 
 let macro_name (sexp : sexp) (s : string) : string =
   let s = label_name sexp s in
@@ -321,8 +321,30 @@ let rec for_vars (s : sexp) : string list =
   | `List l -> List.concat_map for_vars l
   | `Atom _ -> []
 
+let rec labels_in (s : sexp) : string list =
+  match s with
+  | `List [`Atom "label"; `Atom l] -> [l]
+  | `List l -> List.concat_map labels_in l
+  | `Atom _ -> []
+
+(* A template's let and for names renamed within their own scope: the binder and its body, never the
+   let's initial value or a use outside, which may name a label of the program. *)
+let rec scoped (env : (string * sexp) list) (active : string list) (loc : loc option) (s : sexp) : sexp =
+  let node items = let t = `List items in Option.iter (Phys.replace locations t) loc ; t in
+  let inner x = if List.mem_assoc x env then x :: active else List.filter (fun a -> a <> x) active in
+  let binder x xa = if List.mem_assoc x env then List.assoc x env else xa in
+  match s with
+  | `Atom a -> if List.mem a active then List.assoc a env else s
+  | `List [(`Atom "let" as l); `List [(`Atom x as xa); init]; body] ->
+    node [l; node [binder x xa; scoped env active loc init]; scoped env (inner x) loc body]
+  | `List [(`Atom "for" as f); (`Atom k as ka); lo; hi; body] ->
+    node [f; binder k ka; scoped env active loc lo; scoped env active loc hi; scoped env (inner k) loc body]
+  | `List l -> node (List.map (scoped env active loc) l)
+
+(* The templates a body calls: every list's head, except a let's binding, whose head is its name *)
 let rec heads (s : sexp) : string list =
   match s with
+  | `List [`Atom "let"; `List [_; init]; body] -> "let" :: heads init @ heads body
   | `List (`Atom h :: rest) -> h :: List.concat_map heads rest
   | `List l -> List.concat_map heads l
   | `Atom _ -> []
@@ -334,7 +356,12 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
     match List.find_opt (fun h -> List.exists (fun u -> u.name = h && u.index >= t.index) templates) (heads t.body) with
     | Some c -> fail t.at (sprintf "`%s` calls `%s`, which is not defined before it" t.name c)
     | None -> ()) templates ;
-  let count = ref 0 in
+  let count = ref 0 and steps = ref 0 in
+  (* no hill holds more than 200 instructions: an expansion far past that is a mistake, stopped
+     before it costs seconds *)
+  let step (s : sexp) =
+    incr steps ;
+    if !steps > 10000 then fail s "the program expands to more than 10000 template calls and for iterations" in
   let bound (b : sexp) : int =
     match (try Consts.value consts (parse_rexpr b) with Error _ -> None) with
     | Some n -> n
@@ -356,9 +383,10 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
         fail s (let o = Rename.original k in
                 sprintf "`%s` is the variable of a (for %s ...): a let, label or for inside it cannot take its name" o o) ;
       let lo = bound lo and hi = bound hi in
-      if hi - lo + 1 > 1000 then fail s "a (for ...) repeats at most 1000 times" ;
+      (* hi - lo overflows to a negative number on bounds near the integer limits *)
+      if hi >= lo && (hi - lo >= 1000 || hi - lo < 0) then fail s "a (for ...) repeats at most 1000 times" ;
       let iterations = if hi < lo then [] else List.init (hi - lo + 1) (fun i -> lo + i) in
-      let t = `List (`Atom "seq" :: List.map (fun i -> go scope (subst [(k, `Atom (string_of_int i))] (loc_of s) body)) iterations) in
+      let t = `List (`Atom "seq" :: List.map (fun i -> step s ; go scope (subst [(k, `Atom (string_of_int i))] (loc_of s) body)) iterations) in
       Option.iter (Phys.replace locations t) (loc_of s) ;
       t
     | `List (`Atom h :: args) when List.exists (fun t -> t.name = h) templates ->
@@ -381,16 +409,18 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
         | KCode, `List _ -> ()
         | KCode, `Atom _ -> bad (sprintf "a RED expression, not %s" (to_string a))) t.params args ;
       incr count ;
+      step s ;
       (* labels and let binders of the body renamed first, then the arguments put in: a name passed
          in is never renamed and never captured *)
-      let fresh = List.filter (fun d -> not (List.mem_assoc d t.params))
-          (List.sort_uniq Stdlib.compare (defined t.body @ for_vars t.body)) in
+      let own names = List.filter (fun d -> not (List.mem_assoc d t.params)) (List.sort_uniq Stdlib.compare names) in
       let renames = List.map (fun d ->
           let a = `Atom (sprintf "_X%d_%s" !count d) in
           Phys.replace generated a () ;
           Option.iter (Phys.replace locations a) (loc_of s) ;
-          (d, a)) fresh in
-      go scope (subst (renames @ List.combine (List.map fst t.params) args) (loc_of s) t.body)
+          (d, a)) in
+      let binders = renames (own (List.filter (fun d -> not (List.mem d (labels_in t.body))) (defined t.body) @ for_vars t.body)) in
+      let body = scoped binders [] (loc_of s) t.body in
+      go scope (subst (renames (own (labels_in t.body)) @ List.combine (List.map fst t.params) args) (loc_of s) body)
     | `List l ->
       let t = `List (List.map (go scope) l) in
       Option.iter (Phys.replace locations t) (loc_of s) ;

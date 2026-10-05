@@ -1233,6 +1233,31 @@ let test_review6_pointer_values_count () =
   let labelled = "(seq (label ptr) (DAT 0 6) (label top) (if (EQ 1 1) (NOP)) (MOV 9 (Ind ptr)) (JMP 0) (label target) (DAT 7 7))" in
   check Alcotest.(list string) "a labelled pointer across the jump: kept" ["SEQ.AB#1,#1"] (lines_with "SEQ" (out_of ("(program (start top) " ^ labelled ^ ")")))
 
+(* The smaller gaps of the phase-6 review *)
+let test_phase7_template_binders_are_scoped () =
+  (* a template's let and for rename their name inside their own scope only: the global label stays *)
+  let out = out_of "(program (define (t) (seq (JMP top) (let (top 1) (seq (ADD 1 top) (DAT 0 (store top)))))) (seq (label top) (t)))" in
+  check Alcotest.(list string) "a let's name outside the let" ["JMP$top,#0"] (lines_with "JMP" out) ;
+  let out = out_of "(program (define (t) (seq (JMP k) (for k 1 2 (NOP)))) (seq (label k) (t)))" in
+  check Alcotest.(list string) "a for's name outside the for" ["JMP$k,#0"] (lines_with "JMP" out)
+
+let test_phase7_expansion_limits () =
+  let has needle src = check Alcotest.bool needle true (contains (error_of src) needle) in
+  has "a (for ...) repeats at most 1000 times" "(program (for k -4000000000000000000 4000000000000000000 (NOP)))" ;
+  has "the program expands to more than 10000" "(program (for i 1 1000 (for j 1 1000 (NOP))))"
+
+let test_phase7_header_words_and_later_calls () =
+  check Alcotest.bool "a header word names no template" true
+    (contains (error_of "(program (define (start (l Lab)) (JMP l)) (seq (label foo) (start foo)))") "`start` is a RED word") ;
+  check Alcotest.bool "a let binding is no call" false
+    (contains (error_of "(program (define (a) (let (b 3) (seq (NOP) (DAT 0 (store b))))) (define (b) (NOP)) (seq (a) (b)))") "error:")
+
+let test_phase7_afield_error_names_the_variable () =
+  let err = error_of "(program (define (t) (let (v 1) (seq (MOV 0 (} v)) (DAT 0 (store v))))) (t))" in
+  check Alcotest.bool "as written" true (contains err "`v` is a let variable: its (store v)") ;
+  let err = error_of "(let (x 1) (seq (MOV 0 (} x)) (DAT 0 (store x))))" in
+  check Alcotest.bool "outside a template" true (contains err "`x` is a let variable: its (store x)")
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1399,6 +1424,10 @@ let ocaml_tests = [
     test_case "a template's label is a label" `Quick test_review6_template_label_is_a_label ;
     test_case "a template's label is the user's" `Quick test_review6_template_label_is_the_users ;
     test_case "a pointer's value counts cells" `Quick test_review6_pointer_values_count ;
+    test_case "a template's binders are scoped" `Quick test_phase7_template_binders_are_scoped ;
+    test_case "expansion limits" `Quick test_phase7_expansion_limits ;
+    test_case "header words, later calls" `Quick test_phase7_header_words_and_later_calls ;
+    test_case "the A-field error names the variable" `Quick test_phase7_afield_error_names_the_variable ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

@@ -298,7 +298,8 @@ metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (
 dev branch's lambdas, i-7d2612-ec4d2d).
 
 ### Smaller gaps from the phase-6 review · i-7d2612-faa781
-**State.** Planned (s-7d2612-140ece). Found by the branch review, each with a reproducer there;
+**State.** Done (s-7d2612-11efe5, d-7d2612-22c819): all six, each with a `test_phase7_*` case. Was:
+planned (s-7d2612-140ece). Found by the branch review, each with a reproducer there;
 none miscompiles silently except the first, which pMARS then rejects:
 - a template's let binder is renamed throughout its body, scope ignored: `(seq (JMP top) (let (top
   1) ...))` in a template with a global `top` emits `JMP $_X1_top`, an undefined label in pMARS;

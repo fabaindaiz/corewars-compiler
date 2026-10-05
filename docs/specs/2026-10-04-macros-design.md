@@ -49,11 +49,14 @@ follows. Arguments are substituted after the renaming, so a name passed in is ne
 captured. User names may not start with `_`, so a renamed name never meets one. A renamed label is still the
 user's label (a guard that keeps user labels keeps it), and stands wherever a label stands. Inside a
 `for`, a `let`, `label` or `for` of the same name is an error: the `for` replaces every use of its
-name by a number, the binder's included (d-7d2612-52b2e3, from the branch review).
+name by a number, the binder's included (d-7d2612-52b2e3, from the branch review). A let binder or
+`for` variable is renamed within its scope only (the binder and its body); a label, whose scope is
+the whole program, everywhere in the body (d-7d2612-22c819).
 
 **Termination.** A template may call only templates defined before it, so a call never reaches
-itself; a `for` runs a known number of times (at most 1000). Every expansion therefore ends, and
-the warrior's length limit bounds what it produces.
+itself; a `for` runs a known number of times (at most 1000). Every expansion therefore ends; a whole
+program may make at most 10000 template calls and `for` iterations, so it also ends quickly (nested
+`for`s multiply; d-7d2612-22c819).
 
 **Locations.** An expanded node carries the location of the call (or the `for`) that produced it, so
 an error inside an expansion says where the call is.
