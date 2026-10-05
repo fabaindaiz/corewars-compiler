@@ -26,8 +26,26 @@ The page: `tools/manual_page.py` builds one HTML page from the Markdown (side-by
 redcode, chapter anchors, repository links shown as paths), published as a private page. Its first
 build sent four links to anchors that did not exist (a file outside the manual taken for a
 chapter), caught by checking every internal link against the page's ids before publishing.
+Iteration, asked as "use cases, the best workflow and what was learned presenting, so a future
+session chooses these tools by itself": a fresh agent followed the manual as a newcomer (built
+binary, scratch directory) and reported 11 confusions and 8 mismatches. The manual gained chapter 0
+(Core War in five minutes) and chapter 5 (workflows by use case, each tool's measured cost:
+compile under 10 ms, a spec 0.07 s, the benchmark 6 s, the hill 89 s), and every finding was fixed
+and re-measured: battles with a fixed seed (149 ties and 51 dwarf wins, every run), pMARS's output
+decoded, why the dwarf's step is 4 (step 3 bombs its own `MOV` at instruction 8000, probed), what
+`JN` tests on a cell, include paths, the report's fields from `metrics.ml`, a measured "what beats
+what" table. The compiler problems it found are a roadmap item (i-7d2612-1b199a), not fixed in
+passing. The lessons are `docs/research/2026-10-05-presenting-red.md`, and two skills make them the
+default: `write-warrior` (the flow, its costs, its pitfalls) and `present-red` (the medium by
+audience, ten rules).
+**What went wrong, iterating.** The first battle number was quoted without a seed and did not
+repeat. The newcomer read `alive 80000` failing as the core-clear killing itself; it is the round's
+end (alive at 79998). A loop over warriors in the shell failed silently in fish (`$P` is not split,
+`set --` is not bash): run such loops under `bash -c`. The research note first counted six
+mismatches where the report had eight.
 **Left undone.** Merging `feat/phase-8` and `docs/manual`; republishing the page after a manual
-change is by hand (`python3 tools/manual_page.py`, then publish the same file).
+change is by hand (`python3 tools/manual_page.py`, then publish the same file); the compiler
+diagnostics i-7d2612-1b199a.
 
 ## 2026-10-05 · s-7d2612-dec815 — Phase 8: the template naming gaps, unary skips, include and snippets, Silk and Mice
 

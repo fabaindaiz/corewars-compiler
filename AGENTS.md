@@ -181,6 +181,8 @@ the way and what was left undone, not only what worked.
 | How close is RED to hand-written redcode? What was measured, and how? | `docs/research/` (dated notes; the archetypes: `docs/research/2026-10-04-archetypes.md`) |
 | How do I install the toolchain and run the tests? | `REFERENCE.md` |
 | How do I run a warrior and watch it execute? | `.claude/skills/run-warrior/SKILL.md` |
+| How do I write, compose, tune or score a warrior? | `.claude/skills/write-warrior/SKILL.md` |
+| How do I explain, document or publish RED for someone? | `.claude/skills/present-red/SKILL.md` (evidence: `docs/research/2026-10-05-presenting-red.md`) |
 | A warrior misbehaves or pMARS rejects it — what is known? | `.claude/skills/troubleshoot-redcode/SKILL.md` |
 | Which verified fragments can a warrior reuse, and what does each cost? | `snippets/README.md` |
 | What changed recently, and what did it leave undone? | `.claude/logs/agent-changelog.md` |
