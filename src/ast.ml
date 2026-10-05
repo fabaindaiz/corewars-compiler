@@ -157,7 +157,7 @@ type meta = { tag : tag; loc : loc }
 (* consts: the (const name value) items of the header, in order: emitted as EQU lines. *)
 (* hill: the (hill key) item, if written; meta: the (name ...), (author ...) and (strategy ...) items
    as written, in order, each a comment line in the output. *)
-type source = { optimize : string list option; expects : expectation list; consts : (string * Red.rexpr) list;
+type source = { optimize : string list option; expects : (expectation * loc option) list; consts : (string * Red.rexpr) list;
                 hill : string option; meta : (string * string) list; start : string option; body : expr }
 
 (* Every node gets a tag in pre-order from 1; labels are named after tags, so this numbering is

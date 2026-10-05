@@ -55,6 +55,14 @@ let check ~(mode : mode) ~(policy : Metrics.policy) ~(expects : (expectation * t
                message = sprintf "a pointer here advances %d cells per iteration and visits only %d of %d cells; write (expect (step %d)) if that is meant"
                    s.k s.period m.coresize s.k }
       | Step _ | Counter _ -> None) m.predictions in
+  (* A pointer that reaches its own loop is a write away from killing the warrior, whatever its
+     coverage: said always, as the step is. *)
+  let own = if mode = Nothing then [] else
+    List.filter_map (fun (p : Metrics.prediction) -> match p with
+      | Step { own_hit = Some (x, j, c); node; _ } ->
+        Some { loc = at node;
+               message = sprintf "a pointer here reaches cell %d of its own loop after %d iterations (%d cycles): a write through it there hits the warrior's running code" x j c }
+      | Step _ | Counter _ -> None) m.predictions in
   (* Dead code, grouped by the node that emitted it. A jump the static view cannot follow may reach
      it, so nothing is said when there is one. *)
   let dead =
@@ -64,4 +72,4 @@ let check ~(mode : mode) ~(policy : Metrics.policy) ~(expects : (expectation * t
       | _ -> (pos, 1, node) :: acc) [] m.dead in
     List.rev_map (fun (_, n, node) ->
       { loc = at node; message = sprintf "%d cell%s never executed and holding no data (dead code)" n (if n = 1 then "" else "s") }) groups in
-  overhead @ steps @ dead
+  overhead @ steps @ own @ dead

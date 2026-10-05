@@ -80,17 +80,23 @@ and compile_file ~read f report optimize warn emit_beh warn_mode hill_flag : out
   let faster = List.exists (fun (_, _, m) -> Metrics.compare [Metrics.Speed] m chosen < 0) variants in
   let metrics () = chosen in
   let tagged = Ast.tag_expr src.body in
-  let expects = List.map (fun x -> (x, None)) src.expects @ Expect.collect tagged in
-  let failures = List.filter_map (fun x -> match Expect.check (metrics ()) x with
-    | Some (Expect.Fail msg) -> Some msg
-    | Some Expect.Pass | None -> None) expects in
-  if failures <> [] && not warn then stop (String.concat "\n" failures) ;
+  let located = List.map (fun (x, l) -> ((x, None), l)) src.expects
+                @ List.map (fun (x, l) -> (x, Some l)) (Expect.collect_located tagged) in
+  let expects = List.map fst located in
+  (* A broken expectation says where it is written, as every error and warning does. *)
+  let at kind l msg = match l with
+    | Some (l : Ast.loc) -> sprintf "%s:%d:%d: %s: %s" f l.line l.col kind msg
+    | None -> sprintf "%s: %s: %s" f kind msg in
+  let failures = List.filter_map (fun (x, l) -> match Expect.check (metrics ()) x with
+    | Some (Expect.Fail msg) -> Some (l, msg)
+    | Some Expect.Pass | None -> None) located in
+  if failures <> [] && not warn then stop (String.concat "\n" (List.map (fun (l, m) -> at "error" l m) failures)) ;
   (* Warnings on what the chosen program costs (Warnings.check), where it comes from. *)
   let costs = List.map (fun (w : Warnings.warning) -> match w.loc with
     | Some l -> sprintf "%s:%d:%d: warning: %s\n" f l.line l.col w.message
     | None -> sprintf "%s: warning: %s\n" f w.message)
       (Warnings.check ~mode:warn_mode ~policy ~expects ~faster (metrics ()) tagged) in
-  let warnings = String.concat "" costs ^ String.concat "" (List.map (sprintf "warning: %s\n") failures) in
+  let warnings = String.concat "" costs ^ String.concat "" (List.map (fun (l, m) -> at "warning" l m ^ "\n") failures) in
   let redcode = Compile.compile_prog ~opts ~consts:src.consts ?hill ~meta:src.meta ?start:src.start src.body ^ "\n" in
   let files = match emit_beh with
     | None -> []

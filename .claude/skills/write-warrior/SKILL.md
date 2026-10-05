@@ -39,9 +39,10 @@ hill, 1107 warriors) about 90 s a warrior: run it in the background, never block
 - A warrior written from memory of a published one reproduces its data. The user's rule: unlicensed
   sources are ideas only. Choose constants and names afresh, and say in the file whose idea it is.
 - A cell kept as data without a label is reported as dead code.
-- The coverage warning does not know about self-hits: a dwarf moved from step 4 to step 3 is
-  reported as covering the core and bombs its own `MOV` at instruction 8000 (i-7d2612-1b199a).
-  Choose a step whose bombs miss the warrior's own cells, and prove it with `(expect (alive N))`.
+- A step whose bombs reach the warrior's own loop kills it: the step-3 dwarf bombs its `MOV` at
+  instruction 8000. The compiler warns ("reaches cell X of its own loop after N iterations"); it
+  does not follow two pointers moved by one `ADD.F` (the SEQ scanner dies alone at instruction 2964
+  without a warning). Prove survival with `(expect (alive N))`, N under 80000.
 - `(JN (Ind p))` tests the B-field of the cell `p` points to; compare whole cells (`(NE I ...)`) to
   see every non-empty cell.
 - Quote a battle with a fixed seed (`-F 4000`), and know the measured circle: the papers here beat

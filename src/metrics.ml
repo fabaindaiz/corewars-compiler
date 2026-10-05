@@ -23,7 +23,7 @@ type loop_metrics = {
 
 type prediction =
 | Step of { loop : int; node : tag option; cell : int; field : Layout.field; k : int; period : int;
-            cover_cycles : int; full : bool }
+            cover_cycles : int; full : bool; own_hit : (int * int * int) option }
 | Counter of { loop : int; node : tag option; n : int; loop_cycles : int; dies_after : int option }
 
 type t = {
@@ -155,11 +155,36 @@ let base_field (m : rmode) : Layout.field option =
 
 let rec gcd (a : int) (b : int) : int = if b = 0 then a else gcd b (a mod b)
 
-let step_of (p : program) (lm : loop_metrics) ~(cell : int) ~(field : Layout.field) ~(k : int) : prediction =
+(* The inverse of a modulo m (a and m coprime), by the extended Euclid. *)
+let inverse (a : int) (m : int) : int =
+  let rec go r0 r1 s0 s1 = if r1 = 0 then s0 else go r1 (r0 mod r1) s1 (s0 - (r0 / r1) * s1) in
+  if m = 1 then 0 else ((go a m 1 0 mod m) + m) mod m
+
+let step_of (p : program) (lm : loop_metrics) ~(cell : int) ~(field : Layout.field) ~(k : int) ~(written : bool) : prediction =
   let k = norm p.coresize k in
-  let period = p.coresize / gcd p.coresize k in
+  let g = gcd p.coresize k in
+  let period = p.coresize / g in
+  (* The first cell of its own loop, other than its own, the pointer reaches from its initial value:
+     after j iterations it points at cell + value + j*k, so x is reached when g divides
+     x - cell - value, at j = (x - cell - value)/g * (k/g)^-1 modulo period. A write through it there
+     hits the warrior's running code (the step-3 dwarf at iteration 2666). Its own cell is left out,
+     where a B-field pointer reads 0 (a scanner sees it empty), and so is anything after it: a write
+     there can overwrite the pointer itself (the core-clear's bomb resets it to 0 and it never gets
+     further), so its value is not known past that iteration. *)
+  let value = match field with FA -> p.cells.(cell).a.value | FB -> p.cells.(cell).b.value in
+  let reached x =
+    let d = norm p.coresize (x - cell - value) in
+    if d mod g <> 0 then None else Some ((d / g) * inverse (k / g) period mod period) in
+  let own = match reached cell with Some 0 | None -> period | Some j -> j in
+  (* only a pointer something writes through can hit: a paper reads its own cells on purpose *)
+  let hits = if not written then [] else List.filter_map (fun x ->
+      if x = cell then None
+      else match reached x with Some j when j < own -> Some (j, x) | Some _ | None -> None) lm.loop.body in
+  let own_hit = match List.sort compare hits with
+    | (j, x) :: _ -> Some (x, j, j * lm.cycles.max)
+    | [] -> None in
   Step { loop = lm.loop.header; node = lm.node; cell; field; k; period;
-         cover_cycles = period * lm.cycles.max; full = (gcd p.coresize k = 1) }
+         cover_cycles = period * lm.cycles.max; full = (g = 1); own_hit }
 
 let steps (p : program) (lm : loop_metrics) : prediction list =
   let n = Array.length p.cells in
@@ -220,7 +245,11 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
     let k = List.fold_left (fun acc (_, k, _) -> acc + k) 0 mine in
     if List.for_all (fun (_, _, i) -> every i && not (List.mem i inner)) mine && not (overwritten ptr)
        && norm p.coresize k <> 0
-    then Some (step_of p lm ~cell ~field ~k)
+    then
+      (* written through: the B operand of an instruction that writes, going through this field *)
+      let written = List.exists (fun j -> let w = p.cells.(j) in
+          writes w.op && base_field w.b.mode = Some field && norm p.coresize (w.pos + w.b.value) = cell) body in
+      Some (step_of p lm ~cell ~field ~k ~written)
     else None) pointers
 
 let counter (p : program) (entry : range option) (lm : loop_metrics) : prediction option =
@@ -232,7 +261,11 @@ let counter (p : program) (entry : range option) (lm : loop_metrics) : predictio
     else if s.b.mode = RImm then n_of_field s
     else if s.b.mode = RDir then
       let t = norm p.coresize (s.pos + s.b.value) in
-      if t < Array.length p.cells then n_of_field p.cells.(t) else None
+      (* a counter another instruction writes (Mice's MOV #7 before each pass) starts from a value
+         not known here *)
+      let rewritten = Array.exists (fun (w : cell) ->
+          w.pos <> s.pos && writes w.op && w.b.mode = RDir && norm p.coresize (w.pos + w.b.value) = t) p.cells in
+      if t < Array.length p.cells && not rewritten then n_of_field p.cells.(t) else None
     else None in
   Option.map (fun n ->
     (* DJN decrements first: a counter at 0 wraps and runs CORESIZE iterations. *)
@@ -352,6 +385,10 @@ let show_diagnostic (d : Layout.diagnostic) : string =
 let show_range (r : range) : string =
   if r.min = r.max then string_of_int r.min else sprintf "%d..%d" r.min r.max
 
+(* Which pointer a step is: two pointers of one loop can share a step (a paper's source and target). *)
+let whose (cell : int) (field : Layout.field) : string =
+  sprintf " (pointer in cell %d, %s-field)" cell (match field with FA -> "A" | FB -> "B")
+
 (* A step is stored modulo CORESIZE; shown signed, so a predecrement reads -1, not 7999. *)
 let signed (m : t) (k : int) : int = if k > m.coresize / 2 then k - m.coresize else k
 
@@ -380,14 +417,20 @@ let to_text ~(maxlength : int) (m : t) : string =
     let mine (loop, node) = loop = l.loop.header && node = l.node in
     List.iter (fun pr -> match pr with
       | Step s when mine (s.loop, s.node) && (match bounded with Some n -> n < s.period | None -> false) ->
-        add (sprintf "  predicted: step %d → visits %d cells before the counter ends\n" (signed m s.k)
+        add (sprintf "  predicted: step %d%s → visits %d cells before the counter ends\n" (signed m s.k) (whose s.cell s.field)
                (Option.value bounded ~default:0))
       | Step s when mine (s.loop, s.node) && s.full ->
-        add (sprintf "  predicted: step %d → period %d iterations, covers core in %d cycles%s\n"
-               (signed m s.k) s.period s.cover_cycles if_runs)
+        add (sprintf "  predicted: step %d%s → period %d iterations, covers core in %d cycles%s\n"
+               (signed m s.k) (whose s.cell s.field) s.period s.cover_cycles if_runs)
       | Step s when mine (s.loop, s.node) ->
-        add (sprintf "  predicted: step %d → period %d iterations, does not visit every cell (%d cycles per period)%s\n"
-               (signed m s.k) s.period s.cover_cycles if_runs)
+        add (sprintf "  predicted: step %d%s → period %d iterations, does not visit every cell (%d cycles per period)%s\n"
+               (signed m s.k) (whose s.cell s.field) s.period s.cover_cycles if_runs)
+      | Step _ | Counter _ -> ()) m.predictions ;
+    List.iter (fun pr -> match pr with
+      | Step { own_hit = Some (x, j, c); loop; node; _ } when mine (loop, node) ->
+        add (sprintf "  predicted: reaches cell %d of its own loop after %d iterations (%d cycles)\n" x j c)
+      | Step _ | Counter _ -> ()) m.predictions ;
+    List.iter (fun pr -> match pr with
       | Counter c when mine (c.loop, c.node) ->
         let nested = List.exists (fun o -> o != l && List.for_all (fun i -> List.mem i l.loop.body) o.loop.body) m.loops in
         add (sprintf "  predicted: counter %d → %d cycles in the loop%s%s\n" c.n c.loop_cycles
@@ -418,8 +461,11 @@ let to_json ?policy ?optimizations (m : t) : string =
   let ints xs = "[" ^ String.concat "," (List.map string_of_int xs) ^ "]" in
   let field f = match f with FA -> "\"A\"" | FB -> "\"B\"" in
   let prediction pr = match pr with
-    | Step s -> sprintf "{\"kind\":\"step\",\"loop\":%d,\"cell\":%d,\"field\":%s,\"k\":%d,\"period\":%d,\"cover_cycles\":%d,\"full\":%b}"
+    | Step s -> sprintf "{\"kind\":\"step\",\"loop\":%d,\"cell\":%d,\"field\":%s,\"k\":%d,\"period\":%d,\"cover_cycles\":%d,\"full\":%b,\"own_hit\":%s}"
                   s.loop s.cell (field s.field) s.k s.period s.cover_cycles s.full
+                  (match s.own_hit with
+                   | Some (x, j, c) -> sprintf "{\"cell\":%d,\"iterations\":%d,\"cycles\":%d}" x j c
+                   | None -> "null")
     | Counter c -> sprintf "{\"kind\":\"counter\",\"loop\":%d,\"n\":%d,\"loop_cycles\":%d,\"dies_after\":%s}"
                      c.loop c.n c.loop_cycles (opt string_of_int c.dies_after) in
   let diagnostics = "[" ^ String.concat "," (List.map (fun d -> str (show_diagnostic d)) m.diagnostics) ^ "]" in

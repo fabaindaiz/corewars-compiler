@@ -5,6 +5,27 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-05 · s-7d2612-14528c — Diagnostics a newcomer meets
+
+**What.** The user asked to take on the pending items. On branch `feat/diagnostics` (from
+`docs/manual`, nothing merged): the four compiler problems the manual's usability test found
+(i-7d2612-1b199a, d-7d2612-30fd8f). A pointer written through that reaches its own loop is warned
+with the iteration and cycle, computed by modular arithmetic: the step-3 dwarf at iteration 2666,
+7998 cycles, against its measured death at instruction 8000. Broken expectations are located
+errors. A step prediction names its pointer (the paper's two identical lines were two pointers),
+and a rewritten `DJN` counter gets no prediction (Mice's 8000). A lowercase opcode is told to use
+capitals. The manual, `LANGUAGE.md` and the `write-warrior` skill follow.
+**Measured first.** Each archetype run alone for a round: only the SEQ scanner (instruction 2964)
+and the quickscan (15416) die. The rule was calibrated on that, not guessed.
+**What went wrong.** The first rule warned the core-clear, which survives: its bomb overwrites its
+own pointer and resets it, so a pointer's value is unknown past its own cell; and the paper, which
+reads its own cells on purpose: only a pointer written through counts. The lowercase check first
+caught `seq`, RED's own form, before its arm. A hand-counted column was wrong again (31 for 30),
+caught by the run. An old test pinned the unlocated expectation format and was updated as the
+intended change.
+**Left undone.** Pointers moved together by one `ADD.F` (the SEQ scanner) have no step prediction
+and no warning. The review of `docs/manual` and of this branch, and every merge.
+
 ## 2026-10-05 · s-7d2612-5e5abb — User manuals
 
 **What.** The user asked for user manuals from the language tour. Their decisions: Markdown in the

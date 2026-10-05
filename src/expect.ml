@@ -5,16 +5,19 @@ open Metrics
 
 type outcome = Pass | Fail of string
 
-(* Each expectation with the tag of its innermost enclosing loop construct; None outside any. *)
-let collect (e : meta eexpr) : (expectation * tag option) list =
+(* Each expectation with the tag of its innermost enclosing loop construct (None outside any), and
+   where it is written. *)
+let collect_located (e : meta eexpr) : ((expectation * tag option) * loc) list =
   let rec go loop e = match e with
-    | EExpect (x, _) -> [(x, loop)]
+    | EExpect (x, m) -> [((x, loop), m.loc)]
     | EFlow1 ((Repeat _ | While | DoWhile), _, body, m) -> go (Some m.tag) body
     | EFlow1 (If, _, body, _) | ELet (_, _, body, _) -> go loop body
     | EFlow2 (IfElse, _, b1, b2, _) -> go loop b1 @ go loop b2
     | ESeq (es, _) -> List.concat_map (go loop) es
     | EComment _ | ELabel _ | EPrim2 _ -> [] in
   go None e
+
+let collect (e : meta eexpr) : (expectation * tag option) list = List.map fst (collect_located e)
 
 let bound (c : cmp) : string = match c with Eq -> "" | Le -> "<= "
 

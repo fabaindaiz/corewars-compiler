@@ -19,9 +19,9 @@ output (starting with an empty line), everything else to standard error.
 | `--expect=warn` | a broken expectation warns instead of stopping the compilation |
 | `--emit-beh FILE.beh` | write the program's run-time expectations as a behaviour spec, and the redcode beside it |
 
-Exit codes: 0 compiled; 1 an error in the program, printed as `file:line:column: error: ...` (a
-broken expectation is printed as `expect ...: ...`, without a place, for now); 2 an internal error
-of the compiler (please report it, with the program).
+Exit codes: 0 compiled; 1 an error in the program, printed as `file:line:column: error: ...`, a
+broken expectation included; 2 an internal error of the compiler (please report it, with the
+program).
 
 ```text
 e1.src:1:17: error: variable `x` is used but no (store x) places it
@@ -32,7 +32,7 @@ e1.src:1:17: error: variable `x` is used but no (store x) places it
 ```text
 length 5/100   code 4  data 1  epilogue 1  unreachable 0   nonzero 3  nonblank 4   boot 0  spl 0
 loop 0..2 (_REP4, repeat, node 4)   cycles/iter 3   overhead 1   exit —
-  predicted: step 4 → period 2000 iterations, does not visit every cell (6000 cycles per period)
+  predicted: step 4 (pointer in cell 3, B-field) → period 2000 iterations, does not visit every cell (6000 cycles per period)
 policy: speed > size
 optimizations: none
 ```
@@ -45,8 +45,9 @@ optimizations: none
 - **boot**: cycles before the first loop starts; **spl**: how many `SPL` the warrior has.
 - **loop**: each loop's cells, the construct that made it, the cycles one iteration costs, and how
   many of those are control instructions the compiler added (`overhead`).
-- **predicted**: what the compiler can tell without running: a pointer's step and whether it
-  visits the whole core, how long a counter keeps a loop running.
+- **predicted**: what the compiler can tell without running: each pointer's step (and which cell
+  and field holds it) and whether it visits the whole core, the first cell of its own loop a pointer
+  written through reaches, how long a counter keeps a loop running.
 - **optimizations**: which optional transformations the policy chose (below).
 
 ## The policy: what "optimized" means
@@ -73,6 +74,7 @@ The compiler warns where the warrior pays a cost that something could remove, an
 | Warning | When |
 |---|---|
 | a pointer here advances K cells per iteration and visits only N of 8000 cells | always, unless the loop states `(expect (step K))` or `(expect (covers-core))` |
+| a pointer here reaches cell X of its own loop after N iterations (C cycles) | always: a write through that pointer will land on the warrior's own running code (the step-3 dwarf dies that way) |
 | N cells never executed and holding no data (dead code) | with `size` or `stealth` in the policy |
 | a loop spends more control instructions than its construct needs | with `speed` in the policy, when a higher objective declined the faster layout |
 
@@ -96,7 +98,7 @@ Checked when compiling (a failure stops the compilation, or warns with `--expect
 | `(covers-core)` | that pointer visits every cell of the core |
 
 ```text
-expect length <= 3: the warrior is 5 cells
+dwarf.src:1:10: error: expect length <= 3: the warrior is 5 cells
 ```
 
 Checked by running the warrior in pMARS (`--emit-beh`, then `tools/behave.py`):
@@ -164,7 +166,7 @@ downloaded into `_build/bench/` on first use and never committed. The score is t
 | `error: variable x is used but no (store x) places it` | every `let` variable needs one `(store x)` in its body |
 | a jump goes to the wrong place | a bare number is a value: write `(Dir 1)` for "the next cell" |
 | `` `step` is a RED word `` | a template, a parameter or a `for` variable took a word RED uses (`step` is an expectation); pick another (`stride`). A constant may be called `step` |
-| `Not a valid binary expr: (mov ...)` | opcodes are written in capitals: `MOV` |
+| `` `mov` is not a RED form: opcodes are written in capitals `` | write `MOV` |
 | `no such file: snippets/...` | an include path is relative to the including file |
 | a label at the end of the warrior is undefined in pMARS | it needs an instruction after it; the compiler's final `DAT` gives it one |
 | pMARS says "Missing ';assert'" | harmless; `(hill ...)` in the header emits one |

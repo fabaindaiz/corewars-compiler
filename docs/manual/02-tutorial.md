@@ -102,9 +102,12 @@ core, its own code included:
 ```
 
 This warrior drops a bomb on its own `MOV` (cell 1) and dies at its 8000th instruction (`(expect (dead 8000))` holds,
-`(expect (alive 7999))` too; see 2.7 for how to run them). The compiler's coverage check does not
-know yet that a pointer can hit its own warrior: it reports that step 3 visits every cell and stays
-silent.
+`(expect (alive 7999))` too; see 2.7 for how to run them). The compiler sees it coming and says
+so, with the iteration and the cycle:
+
+```text
+dwarf3.src:3:5: warning: a pointer here reaches cell 1 of its own loop after 2666 iterations (7998 cycles): a write through it there hits the warrior's running code
+```
 
 ## 2.3 What it costs
 

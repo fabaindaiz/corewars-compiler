@@ -210,7 +210,7 @@ A file may wrap its single body expression in an optional header. A file without
 
 `(expect e)` states what the compiled warrior must do. It emits no code and does not change the labels the compiler generates. In the header it applies to the whole warrior; as a statement inside a `repeat`, `while` or `do-while` body it applies to that loop.
 
-Checked when compiling (a failure stops the compilation, or is a warning with `--expect=warn`):
+Checked when compiling (a failure stops the compilation, or is a warning with `--expect=warn`; either says `file:line:column` of the `expect`):
 
 - (length <= N) the warrior is at most N cells, the final `DAT` included
 - (cycles N) | (cycles <= N) instructions executed per iteration of the loop
@@ -251,7 +251,8 @@ The compiler warns, on standard error as `file:line:column: warning: ...`, where
 
 - with `speed` in the policy: a loop that spends more control instructions per iteration than its construct needs, when a faster variant exists and the policy declined it for an objective ranked higher (a `while` kept with its test at the top under `boot speed`);
 - with `size` or `stealth`: cells never executed that hold no data (dead code): no variable, no label on a `DAT`, and no executed instruction reads or writes them; not said when a jump the compiler cannot follow might reach them;
-- always: a pointer whose step leaves cells unvisited (a step of 4 visits 2000 of 8000), unless its loop states the step with `(expect (step k))` or `(expect (covers-core))`.
+- always: a pointer whose step leaves cells unvisited (a step of 4 visits 2000 of 8000), unless its loop states the step with `(expect (step k))` or `(expect (covers-core))`;
+- always: a pointer something writes through that reaches a cell of its own loop (other than its own cell, and before it reaches its own cell, whose value is not known after a write there): the iteration and the cycle when a write lands on the warrior's running code.
 
 `run_compile.exe --warn=all` gives every warning whatever the policy, `--warn=none` none. Warnings never stop the compilation.
 

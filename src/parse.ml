@@ -55,6 +55,10 @@ let binder_name ?atom (sexp : sexp) (s : string) : string =
   if Int64.of_string_opt s <> None then fail sexp (sprintf "`%s` is a number and cannot name a variable" s)
   else s
 
+(* The opcodes RED writes as forms, (MOV ...) to (STP ...). *)
+let opcodes = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
+               "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"]
+
 (* pMARS reads these as opcodes or pseudo-opcodes in any case (asm.c), never as labels. *)
 let pmars_keywords = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
                       "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"; "ORG"; "END"; "PIN"; "EQU"; "FOR"; "ROF"]
@@ -198,6 +202,11 @@ let rec parse_exp (sexp : sexp) : expr =
   match sexp with
   | `List (`Atom "com" :: exps) -> EComment (List.fold_left (fun res s -> res ^ " " ^ (String.escaped (to_string s))) "" exps)
   | `List (`Atom "seq" :: exps) -> ESeq (List.map parse_exp exps, loc)
+  (* pMARS reads opcodes in any case; RED's are capitals (seq, above, is RED's own form), and a
+     newcomer's (mov ...) is told so *)
+  | `List (`Atom h :: _) when h <> String.uppercase_ascii h
+                            && List.mem (String.uppercase_ascii h) opcodes ->
+    fail sexp (sprintf "`%s` is not a RED form: opcodes are written in capitals, `%s`" h (String.uppercase_ascii h))
   | `List [`Atom "label"; (`Atom s as a)] -> ELabel (label_name ~atom:a sexp s, loc)
   | `List [eop] ->
     (match eop with
@@ -514,7 +523,7 @@ let parse_source ?(file = "") ?(read : string -> string option = fun _ -> None) 
         optimize := Some (List.map (fun o -> match o with
           | `Atom s -> s
           | `List _ -> fail o (sprintf "Not an objective: %s" (to_string o))) os)
-      | `List [`Atom "expect"; e] -> expects := parse_expectation e :: !expects
+      | `List [`Atom "expect"; e] -> expects := (parse_expectation e, loc_of item) :: !expects
       | `List [`Atom "start"; `Atom l] ->
         if !start <> None then fail item "(start ...) is given twice" ;
         start := Some (label_name item l)

@@ -290,12 +290,12 @@ let test_policy_compare_speed_first () =
 let test_parse_source_plain () =
   let src = parse_source (sexp_from_string (golden_src (example "prog1"))) in
   check Alcotest.(option (list string)) "optimize" None src.optimize ;
-  check Alcotest.(list expectation) "expects" [] src.expects
+  check Alcotest.(list expectation) "expects" [] (List.map fst src.expects)
 
 let test_parse_source_header () =
   let src = parse_source (sexp_from_string "(program (optimize size) (expect (length <= 8)) (MOV 0 1))") in
   check Alcotest.(option (list string)) "optimize" (Some ["size"]) src.optimize ;
-  check Alcotest.(list expectation) "expects" [XLength (Le, 8)] src.expects
+  check Alcotest.(list expectation) "expects" [XLength (Le, 8)] (List.map fst src.expects)
 
 let test_objective_unknown () =
   check Alcotest.(option objective) "fast" None (M.objective_of_string "fast")
@@ -456,10 +456,10 @@ let test_driver_unknown_objective () =
 let test_driver_expectation_fails () =
   let src = "(program (expect (length <= 3)) " ^ prog1_src ^ ")" in
   let o = drive [("p.src", src)] ["p.src"] in
-  check Alcotest.(triple string string int) "error" ("", "expect length <= 3: the warrior is 4 cells\n", 1) (o.out, o.err, o.code) ;
+  check Alcotest.(triple string string int) "error" ("", "p.src:1:10: error: expect length <= 3: the warrior is 4 cells\n", 1) (o.out, o.err, o.code) ;
   let w = drive [("p.src", src)] ["--expect=warn"; "p.src"] in
   check Alcotest.(triple string string int) "warning"
-    (prog1_red, "p.src:5:5: warning: a pointer here advances 4 cells per iteration and visits only 2000 of 8000 cells; write (expect (step 4)) if that is meant\nwarning: expect length <= 3: the warrior is 4 cells\n", 0) (w.out, w.err, w.code)
+    (prog1_red, "p.src:5:5: warning: a pointer here advances 4 cells per iteration and visits only 2000 of 8000 cells; write (expect (step 4)) if that is meant\np.src:1:10: warning: expect length <= 3: the warrior is 4 cells\n", 0) (w.out, w.err, w.code)
 
 let test_driver_compile_error_is_clean () =
   let o = drive [("p.src", "(program (expect (cycles < 3)) (MOV 0 1))")] ["p.src"] in
@@ -1409,6 +1409,48 @@ let test_manual_examples () =
     walk None (manual_blocks (read_file (Filename.concat dir f)))) files ;
   check Alcotest.bool "the manual has examples" true (!examples > 0)
 
+(* A pointer that reaches a cell of its own loop (other than its own) is a write that can hit the
+   warrior: the step-3 dwarf bombs its MOV at iteration 2666, 7998 cycles, and dies at its 8000th
+   instruction (measured); the step-4 dwarf and the stone never hit their loops *)
+let test_diag_self_hit () =
+  let dwarf k = Printf.sprintf "(let (b 0) (seq (repeat (seq (expect (step %d)) (ADD %d b) (MOV I b (Ind b)))) (DAT 0 (store b))))" k k in
+  let err src = (drive [("p.src", src)] ["p.src"]).err in
+  check Alcotest.bool "step 3: warned" true
+    (contains (err (dwarf 3)) "a pointer here reaches cell 1 of its own loop after 2666 iterations (7998 cycles)") ;
+  check Alcotest.bool "step 4: silent" false (contains (err (dwarf 4)) "of its own loop") ;
+  check Alcotest.bool "the stone: silent" false
+    (contains (err "(let (b 0) (seq (SPL 0) (repeat (seq (expect (step 3044)) (ADD 3044 b) (MOV I b (Ind b)))) (DAT 0 (store b))))") "of its own loop") ;
+  check Alcotest.bool "the scanner: silent" false
+    (contains (err "(let (p 20) (seq (repeat (seq (expect (step 10)) (ADD 10 p) (if (JN (Ind p)) (MOV I bomb (Ind p)))) (store p)) (label bomb) (DAT 0 0)))") "of its own loop") ;
+  let o = drive [("p.src", "(let (b 0) (seq (repeat (seq (expect (step 3)) (ADD 3 b) (MOV I b (Ind b)))) (DAT 0 (store b))))")] ["--report"; "p.src"] in
+  check Alcotest.bool "the report says it" true (contains o.err "reaches cell 1 of its own loop after 2666 iterations")
+
+(* A prediction names its pointer, and a counter written before its loop has no known start *)
+let test_diag_predictions () =
+  let report path = (drive [("p.src", read_file path)] ["--report"; "p.src"]).err in
+  let lines = List.filter (fun l -> contains l "predicted: step") (String.split_on_char '\n' (report "archetypes/paper.src")) in
+  check Alcotest.int "the paper: two pointers, two different lines" 2 (List.length (List.sort_uniq compare lines)) ;
+  check Alcotest.bool "each names its cell" true (List.for_all (fun l -> contains l "pointer in cell") lines) ;
+  check Alcotest.bool "Mice: no counter of 8000" false (contains (report "archetypes/mice.src") "counter 8000")
+
+(* A broken expectation is an error like any other: where, then what *)
+let test_diag_expectation_located () =
+  check Alcotest.string "a header expectation"
+    "p.src:1:10: error: expect length <= 3: the warrior is 5 cells\n"
+    (error_of "(program (expect (length <= 3)) (let (b 0) (seq (repeat (seq (ADD 4 b) (MOV I b (Ind b)))) (DAT 0 (store b)))))") ;
+  let err = error_of "(let (b 0) (seq (repeat (seq (expect (cycles 2)) (ADD 4 b) (MOV I b (Ind b)))) (DAT 0 (store b))))" in
+  check Alcotest.bool "a loop's expectation, at it" true (String.starts_with ~prefix:"p.src:1:30: error: expect cycles 2" err) ;
+  let o = drive [("p.src", "(program (expect (length <= 3)) (let (b 0) (seq (repeat (seq (ADD 4 b) (MOV I b (Ind b)))) (DAT 0 (store b)))))")] ["--expect=warn"; "p.src"] in
+  check Alcotest.bool "--expect=warn: a located warning" true (contains o.err "p.src:1:10: warning: expect length <= 3")
+
+(* An opcode in lower case says that RED's opcodes are capitals *)
+let test_diag_lowercase_opcode () =
+  check Alcotest.string "mov"
+    "p.src:1:1: error: `mov` is not a RED form: opcodes are written in capitals, `MOV`\n"
+    (error_of "(mov (Dir 0) (Dir 1))") ;
+  check Alcotest.bool "jmp in a body" true
+    (contains (error_of "(seq (label top) (jmp top))") "`jmp` is not a RED form: opcodes are written in capitals, `JMP`")
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1588,6 +1630,10 @@ let ocaml_tests = [
     test_case "included atoms are located" `Quick test_phase8_included_atoms_are_located ;
     test_case "snippet demos are their archetypes" `Quick test_phase8_snippet_demos_are_their_archetypes ;
     test_case "the manual's examples compile as shown" `Quick test_manual_examples ;
+    test_case "a pointer that hits its own loop" `Quick test_diag_self_hit ;
+    test_case "predictions name their pointer; a rewritten counter is unknown" `Quick test_diag_predictions ;
+    test_case "a broken expectation says where" `Quick test_diag_expectation_located ;
+    test_case "a lowercase opcode says so" `Quick test_diag_lowercase_opcode ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;
