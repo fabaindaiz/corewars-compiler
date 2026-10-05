@@ -22,7 +22,8 @@ The syntax reference is [`LANGUAGE.md`](../../LANGUAGE.md); what each construct 
 A block marked `red` is a RED program; the `redcode` block after it is exactly what the compiler
 prints for it. Both are checked: the test suite compiles every `red` block in this manual and
 compares the result with the `redcode` block that follows (`test_manual_examples`), so an example
-here is never out of date with the compiler.
+here is never out of date with the compiler. A single-page version for sharing is built from these
+files by `tools/manual_page.py`; the Markdown is the source.
 
 The compiled code names its own labels: `_LET1` is the cell of a `let` variable, `_REP4` the head of
 a `repeat`, `_IF7` the end of an `if`, and so on. The number is the node of the program that made

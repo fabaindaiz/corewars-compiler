@@ -98,6 +98,7 @@ dune exec execs/run_compile.exe -- --emit-beh _build/p.beh examples/prog7_expect
 python3 tools/behave.py behtests/prog8_while_lt.beh   # one behaviour spec
 tools/pmars-host.sh             # build pMARS for this machine into _build/pmars-host/
 make bench                      # score the archetypes against Wilkies and Koenigstuhl's top 20 (network; not the gate)
+python3 tools/manual_page.py    # build one HTML page from docs/manual/ into _build/manual-page/ (for publishing)
 ```
 
 ## Verification

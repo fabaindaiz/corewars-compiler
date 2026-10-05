@@ -22,6 +22,12 @@ on its first run, and the fill was redone with the test's own pairing. The first
 between the two: the rule became "the nearest `red` block before it". A first mutation check did
 not apply (BSD `sed` has no `0,/re/` address) and said nothing; redone in Python, it failed as it
 should.
+The page: `tools/manual_page.py` builds one HTML page from the Markdown (side-by-side RED and
+redcode, chapter anchors, repository links shown as paths), published as a private page. Its first
+build sent four links to anchors that did not exist (a file outside the manual taken for a
+chapter), caught by checking every internal link against the page's ids before publishing.
+**Left undone.** Merging `feat/phase-8` and `docs/manual`; republishing the page after a manual
+change is by hand (`python3 tools/manual_page.py`, then publish the same file).
 
 ## 2026-10-05 · s-7d2612-dec815 — Phase 8: the template naming gaps, unary skips, include and snippets, Silk and Mice
 
