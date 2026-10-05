@@ -89,7 +89,7 @@ From `Makefile` unless noted. The OCaml half needs an opam switch with `dune`, `
 
 ```sh
 make check                      # THE GATE: check-tools, then check-ocaml
-make check-tools                # audit + behaviour specs + bundle checks; needs only Python 3.11+ and cc
+make check-tools                # audit + behaviour specs + the pMARS build check + bundle checks; Python 3.11+ and cc
 make check-ocaml                # dune build + the test suites (execute only on Linux x86-64)
 make tests F=compare            # dune exec execs/run_test.exe -- test '<F>'  (ctests: compact)
 make compile src=examples/prog1.src   # print the redcode for one RED file

@@ -9,7 +9,7 @@ allowed-tools: Bash, Read, Write
 ## Get a pMARS that runs here
 
 ```sh
-tools/pmars-host.sh          # prints the path: _build/pmars-host/pmars (built once from pmars/pmars-0.9.4.zip)
+tools/pmars-host.sh          # prints the path: _build/pmars-host/pmars (built from pmars/pmars-0.9.4.zip, patched; rebuilt when its patch stamp is missing)
 ```
 
 `pmars/pmars` is a Linux x86-64 binary (d-7d2612-3d04ba): on macOS it fails with exit 126. The host

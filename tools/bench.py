@@ -209,8 +209,8 @@ def warriors(argv: list[str]) -> list[tuple[str, Path]]:
 
 
 def main(argv: list[str]) -> int:
-    if not PMARS.exists():
-        subprocess.run([str(ROOT / "tools" / "pmars-host.sh")], check=True)
+    # always: the script returns at once when the build is current, and rebuilds an unpatched one
+    subprocess.run([str(ROOT / "tools" / "pmars-host.sh")], check=True, stdout=subprocess.DEVNULL)
     if any(a.endswith(".src") for a in argv) or not [a for a in argv if not a.startswith("--")]:
         build_compiler()
     sets = {"wilkies": (wilkies(), ROUNDS["wilkies"], CONFIG_94B),

@@ -100,7 +100,7 @@ The root directory contains a `Makefile` that provides shortcuts to build and te
   * you can also add `F=<pat>` where `<pat>` is a pattern to filter which test groups should be executed (eg. `make tests F=compare`; the groups are `parse`, `interp`, `errors`, `compare` and `execute`)
   * a few alcotest environment variable can also be set, e.g. `ALCOTEST_QUICK_TESTS=1 make tests` to only run the quick tests (see the help documentation of alcotest for more informations)
 
-- `make check`: the whole gate. `make check-tools` runs the part that needs only Python 3.11+ and a C compiler (the structural audit, the behaviour specs, the agent-guides bundle checks); `make check-ocaml` builds and runs the OCaml tests
+- `make check`: the whole gate. `make check-tools` runs the part that needs only Python 3.11+ and a C compiler (the structural audit, the behaviour specs, a check that the host pMARS survives `tools/pmars-trap/`, the agent-guides bundle checks); `make check-ocaml` builds and runs the OCaml tests
 
 - you can build the executables manually with `make <executable_name>.exe`. For instance, `make run_compile.exe` builds the compiler executable.
 

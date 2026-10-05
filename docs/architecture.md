@@ -20,7 +20,7 @@ meaning each pass must preserve is in `docs/semantics.md`; settled choices are i
 | `archetypes/` | each classic archetype twice: `NAME.red` written by hand, `NAME.src` in RED; measured in `docs/research/2026-10-04-archetypes.md` |
 | `docs/research/` | dated research notes: what was measured, how, and what it found |
 | `pmars/` | third-party pMARS: the Linux binary, its configs (`config/94b.opt`) and the source zip |
-| `tools/` | the gate's own scripts: `audit.py`, `behave.py`, `pmars-host.sh` |
+| `tools/` | the gate's own scripts: `audit.py`, `behave.py`, `pmars-host.sh` (builds and patches the host pMARS), `bench.py`; `tools/pmars-trap/` holds the warriors that check the patch |
 | `docs/` | the documents in the map of `AGENTS.md` |
 
 ## The pipeline

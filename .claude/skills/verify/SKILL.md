@@ -13,7 +13,7 @@ a behaviour half (cdb probes); a report says which halves ran.
 ## The gate
 
 ```sh
-make check-tools      # tools/audit.py, tools/behave.py, bundle.py verify + ids — Python 3.11+ and cc only
+make check-tools      # tools/audit.py, tools/behave.py, tools/pmars-trap/, bundle.py verify + ids — Python 3.11+ and cc only
 make check-ocaml      # dune build + execs/run_test.exe (needs the opam switch; execute group Linux x86-64 only)
 make check            # both
 ```

@@ -100,8 +100,8 @@ def pmars_binary() -> str:
     if os.environ.get("PMARS"):
         return os.environ["PMARS"]
     built = ROOT / "_build" / "pmars-host" / "pmars"
-    if not built.exists():
-        subprocess.run([str(ROOT / "tools" / "pmars-host.sh")], check=True, stdout=subprocess.DEVNULL)
+    # always: the script returns at once when the build is current, and rebuilds an unpatched one
+    subprocess.run([str(ROOT / "tools" / "pmars-host.sh")], check=True, stdout=subprocess.DEVNULL)
     return str(built)
 
 

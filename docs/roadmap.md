@@ -38,10 +38,12 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 
 As of 2026-10-05, end of s-7d2612-11efe5: **`main` holds phases 1 to 6** (phases 4 to 6 merged by
 fast-forward that day) and the phase-6 review's minors (i-7d2612-faa781). The gate: 199 alcotest
-cases besides `execute`, 44 behaviour specs, the audit's 12 checks. **Next**, none started: unary
-skip fusion (i-7d2612-40b941), a Silk-style paper and Mice (i-7d2612-34b61d), the snippets catalogue
-(i-7d2612-8e9549, which needs a decision on how a program uses a catalogue: an include item, a
-prelude, or a document to copy from), the host pMARS trap (i-7d2612-0cb9e9).
+cases besides `execute`, 45 behaviour specs (one known-failing, i-7d2612-672fff), the audit's 12
+checks, and a check that the patched host pMARS survives the battles that trapped it
+(i-7d2612-0cb9e9, done). **Next**, none started: unary skip fusion (i-7d2612-40b941), a Silk-style
+paper and Mice (i-7d2612-34b61d), the snippets catalogue (i-7d2612-8e9549, which needs a decision on
+how a program uses a catalogue: an include item, a prelude, or a document to copy from), the known
+bug i-7d2612-672fff and the smaller gaps i-7d2612-9aa299 and i-7d2612-a73935.
 
 **Phase 6 is built** (s-7d2612-140ece, branch `feat/phase-6` on `feat/phase-5`, merged 2026-10-05): A-field
 modes on numbers, labels and expressions (i-7d2612-e98368), `(start label)` emitted as `ORG`
@@ -330,6 +332,12 @@ of their name, the let's binder and its uses included. A silent miscompile. Char
 **Decide first.** Whether such a let shadows the parameter (rename it like any let binder) or is an
 error (a template's let may not take a parameter's name). Shadowing matches RED's let elsewhere.
 
+### A let binder is checked only for the reserved prefix · i-7d2612-a73935
+**State.** Planned (s-7d2612-11efe5, found by the review). `parse.ml` checks a let's binder with
+`user_name` (no leading `_`) and not `label_name`: `(let (5 1) (seq (ADD 1 5) ... (DAT 0 (store
+5))))` compiles. It is why i-7d2612-672fff miscompiles silently instead of failing: the argument
+`5` lands in a binder's place and is accepted.
+
 ### Smaller gaps from the phase-7 review · i-7d2612-9aa299
 **State.** Planned (s-7d2612-11efe5). Two more error messages print the internal name of a
 template's let variable: `Consts` ("variable `_X1_v` cannot be part of an expression") and the `Num`
@@ -526,12 +534,14 @@ the classic-warriors item (i-7d2612-34b61d) would reuse those programs.
 copy: `sim.c` formats "Warrior %d: %s terminated - End of round %d" into a 60-byte buffer when an
 opponent's `;break` armed cdb and our warrior dies before that breakpoint first runs; a name of about
 19 characters overflows it, and macOS's fortified `sprintf` traps (exit 133). Seed-dependent because
-the order of the death and the breakpoint is. `tools/pmars-host.sh` patches the extracted copy;
-`make check-tools` runs a self-written reproducer (`tools/pmars-trap/`). The same ASan run found two
+the order of the death and the breakpoint is. `tools/pmars-host.sh` patches the extracted copy (a larger
+buffer and `snprintf`: a name is bounded only by the line buffer, and 256 bytes alone still trapped
+on a 216-character name, found by the review); `make check-tools` runs self-written reproducers
+(`tools/pmars-trap/`). The same ASan run found two
 memory errors that do not trap here, left as they are: `clparse.c:543` writes one past `options[21]`
 (`OPTNUM` 21 for 22 options with PERMUTATE, RWLIMIT and PSPACE) and `asm.c:2183` reads `buf[-1]` on
-an empty line. The vendored Linux binary has the same overflow, unpatched (assumption: silent there,
-no fortify). Was: planned, cause unknown.
+an empty line. The vendored Linux binary has the same overflow, unpatched; the `execute` suite runs it
+with `-A` (assemble only), which never reaches it. Was: planned, cause unknown.
 
 ### pMARS 0.9.5 · i-7d2612-494e75
 **State.** Planned. Released 2026-01-03 with overflow and bounds fixes; builds on macOS without the
