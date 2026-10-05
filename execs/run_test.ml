@@ -1239,7 +1239,10 @@ let test_phase7_template_binders_are_scoped () =
   let out = out_of "(program (define (t) (seq (JMP top) (let (top 1) (seq (ADD 1 top) (DAT 0 (store top)))))) (seq (label top) (t)))" in
   check Alcotest.(list string) "a let's name outside the let" ["JMP$top,#0"] (lines_with "JMP" out) ;
   let out = out_of "(program (define (t) (seq (JMP k) (for k 1 2 (NOP)))) (seq (label k) (t)))" in
-  check Alcotest.(list string) "a for's name outside the for" ["JMP$k,#0"] (lines_with "JMP" out)
+  check Alcotest.(list string) "a for's name outside the for" ["JMP$k,#0"] (lines_with "JMP" out) ;
+  (* a let's initial value is outside its scope: it names the program's label *)
+  let out = out_of "(program (define (t) (let (top top) (seq (ADD 1 top) (DAT 0 (store top))))) (seq (label top) (t)))" in
+  check Alcotest.(list string) "a let's initial value" ["DAT#0,$top"; "DAT$0,$0"] (lines_with "DAT" out)
 
 let test_phase7_expansion_limits () =
   let has needle src = check Alcotest.bool needle true (contains (error_of src) needle) in
@@ -1249,6 +1252,9 @@ let test_phase7_expansion_limits () =
 let test_phase7_header_words_and_later_calls () =
   check Alcotest.bool "a header word names no template" true
     (contains (error_of "(program (define (start (l Lab)) (JMP l)) (seq (label foo) (start foo)))") "`start` is a RED word") ;
+  (* only a template's name can be read as a header item: a parameter or a for variable may take one *)
+  check Alcotest.bool "a header word as a parameter or for variable" false
+    (contains (error_of "(program (define (t (name Num)) (DAT 0 name)) (seq (t 3) (for name 1 2 (DAT 0 name))))") "error:") ;
   check Alcotest.bool "a let binding is no call" false
     (contains (error_of "(program (define (a) (let (b 3) (seq (NOP) (DAT 0 (store b))))) (define (b) (NOP)) (seq (a) (b)))") "error:")
 

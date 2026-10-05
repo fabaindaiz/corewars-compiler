@@ -271,7 +271,10 @@ let red_words = ["seq"; "let"; "label"; "com"; "store"; "none"; "repeat"; "if"; 
                  "expect"; "for"; "define"; "program"; "A"; "B"; "AB"; "BA"; "F"; "X"; "I";
                  "Imm"; "Dir"; "Ind"; "Dec"; "Inc"; "AInd"; "ADec"; "AInc"; "JZ"; "JN"; "DZ"; "DN";
                  "EQ"; "NE"; "GT"; "LT"; "length"; "cycles"; "overhead"; "boot"; "step"; "covers-core";
-                 "alive"; "dead"; "cell"; "start"; "hill"; "name"; "author"; "strategy"; "optimize"; "const"]
+                 "alive"; "dead"; "cell"]
+
+(* A template called at the top of the program's body would be read as the header item of its name *)
+let header_words = ["start"; "hill"; "name"; "author"; "strategy"; "optimize"; "const"]
 
 let macro_name (sexp : sexp) (s : string) : string =
   let s = label_name sexp s in
@@ -292,7 +295,9 @@ let parse_template (index : int) (item : sexp) : template =
     let names = List.map fst params in
     if List.length (List.sort_uniq Stdlib.compare names) <> List.length names then
       fail item (sprintf "`%s` names a parameter twice" name) ;
-    { name = macro_name item name; params; body; index; at = item }
+    let name = macro_name item name in
+    if List.mem name header_words then fail item (sprintf "`%s` is a RED word and cannot name a template" name) ;
+    { name; params; body; index; at = item }
   | `Atom _ | `List _ -> fail item (sprintf "Not a template: %s (write (define (name (param Kind) ...) body))" (to_string item))
 
 (* Every atom in [s] that [env] names is replaced; a new list carries [loc], the place of the call
