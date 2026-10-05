@@ -1,0 +1,7 @@
+# Three SPLs make eight processes; each runs the SPL at silk (cell 3), which starts a process at the
+# copy, and the MOV, which copies one cell through the SPL's own fields: the copy lands at 2734. Its
+# SPL carries the fields as the eight processes left them (A 8, B 2731 + 8). Values read in cdb.
+golden: bbctests/archetypes/silk.bbc
+cell 200 2734 SPL.B @8, }2739
+cell 200 2735 MOV.I }-1, >-1
+alive 1000

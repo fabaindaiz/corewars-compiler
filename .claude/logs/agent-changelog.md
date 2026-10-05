@@ -17,6 +17,18 @@ written and a let of a template's name no longer hides the template (i-7d2612-9a
 `snippets/`, each with a demo golden in `bbctests/snippets/` that compiles to its archetype's code
 (compared after renaming labels: the same instructions) and a spec reusing the archetype's probes;
 the golden runners now read included files from the repository.
+Mice and a Silk-style paper (i-7d2612-34b61d), from the published warriors' ideas with constants
+and names of their own: each compiles to its hand-written twin and scores the same (Mice 82.4 /
+70.9, #919; the Silk 42.9 / 21.9, #1053, a weak form). Every archetype the plan named is written.
+The fresh review of the branch found two important issues: include paths spelled differently
+(`./a.src`, `x/../a.src`) broke read-once and the cycle check (now normalized lexically), and the
+first Mice, written from memory, matched the published warrior's constants while its comment
+claimed only the idea, and the Silk used Paperone's distance. Both rewritten with
+constants of their own; the commit that held the copied constants was local and was replaced, so
+they never reached the history. Its minors fixed: an included template's atoms located at the
+call, a directory as an include, `include` a header word with one path, the paper's cost (18 cycles
+a copy, not "6 besides 2 a cell"), the deleted `## Phase 4` heading, the semantics' templates
+paragraph, and a test that each snippet demo compiles to its archetype's code.
 Unary skip fusion (i-7d2612-40b941) closed by measurement: a unary `if` is already one direct jump,
 `JMN fin, x; X`, the same cells and cycles as a skip; the saving the item planned belonged to the
 binary case only.
@@ -26,6 +38,9 @@ session, priced a saving without compiling one example; one compile showed there
 Two new tests again expected no output from programs that compile with a warning. The first
 snippets named a parameter `step`, a RED word, and their comments carried cell counts written
 before measuring (the bomber is 4 cells, not 3; the paper 7, not 8): corrected from `--report`.
+Writing a published warrior from memory reproduced its data: the rule needs constants chosen
+afresh, not only code typed afresh. `(SPL 1)` compiled to `SPL #1`, which splits onto its own cell: in RED a bare number is a value, a
+jump target is `(Dir 1)`; caught by reading the output before writing the hand version.
 
 ## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, the pMARS trap, and the session close
 

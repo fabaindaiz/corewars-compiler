@@ -1,0 +1,10 @@
+(seq
+  (SPL (Dir 1))
+  (SPL (Dir 1))
+  (SPL (Dir 1))
+  (label silk)
+  (SPL (Ind 0) (} 2731))
+  (MOV I (} silk) (Inc silk))
+  (MOV I bomb (Inc 2000))
+  (label bomb)
+  (DAT 0 0))

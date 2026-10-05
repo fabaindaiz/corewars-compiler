@@ -116,7 +116,8 @@ scanner two (its pointer cell).
    pointer; the same question as gap 5, from the other side.
 7. **What could not be written at all** (the imp ring can be since constants and label arithmetic,
    d-7d2612-d9339f; the quickscan since the macro layer, d-7d2612-c4e274, and plays exactly as the
-   hand-written one since skip fusion, d-7d2612-6222c1: `docs/research/2026-10-04-benchmark.md`). An imp spiral launches processes at `imp + k × 2667`,
+   hand-written one since skip fusion, d-7d2612-6222c1: `docs/research/2026-10-04-benchmark.md`). Mice and a Silk-style paper since phase 8
+   (s-7d2612-dec815), each the same code and score as by hand. An imp spiral launches processes at `imp + k × 2667`,
    and a quickscan unrolls a score of comparisons at `start + k × step`: both need arithmetic on
    labels or named constants (RED has neither; `EQU` constants are i-7d2612-a3f2b6) and a way to
    repeat a fragment at compile time (snippets, i-7d2612-8e9549; the dev branch's macro layer,

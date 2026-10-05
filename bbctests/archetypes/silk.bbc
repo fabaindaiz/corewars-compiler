@@ -1,0 +1,26 @@
+NAME: a Silk-style paper in RED
+DESCRIPTION: eight processes copy the paper through the A-field postincrement (}) of its SPL cell, which RED writes on numbers and labels since d-7d2612-0e831c; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_silk.beh
+SRC:
+(seq
+  (SPL (Dir 1))
+  (SPL (Dir 1))
+  (SPL (Dir 1))
+  (label silk)
+  (SPL (Ind 0) (} 2731))
+  (MOV I (} silk) (Inc silk))
+  (MOV I bomb (Inc 2000))
+  (label bomb)
+  (DAT 0 0))
+EXPECTED:
+;redcode-94b
+
+  SPL    $1     , #0     
+  SPL    $1     , #0     
+  SPL    $1     , #0     
+silk  
+  SPL    @0     , }2731  
+  MOV.I  }silk  , >silk  
+  MOV.I  $bomb  , >2000  
+bomb  
+  DAT    #0     , #0     
+  DAT    $0     , $0     

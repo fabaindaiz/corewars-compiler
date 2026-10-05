@@ -129,6 +129,29 @@ opponent of 1107 moves a mean by at most about 0.3 points. Cause found and patch
 60-byte message buffer in pMARS's `sim.c`, overflowed when an opponent's `;break` armed the debugger
 (i-7d2612-0cb9e9, d-7d2612-b153c1); every such battle now runs, with the scores the others predicted.
 
+## Phase 8: Mice and a Silk-style paper (s-7d2612-dec815, 2026-10-05)
+
+Both written from the idea of the published warriors with constants and names of their own: a
+first version, written from memory, matched Mice's published constants and used Paperone's
+distance, and was replaced before merging (the user's rule: unlicensed sources are
+ideas only). The mechanisms are as remembered (ASSUMPTION), each verified to work in pMARS.
+
+| Warrior | Wilkies | Koenigstuhl top 20 | recursive (estimated) | place of 1107 |
+|---|---|---|---|---|
+| Mice (RED, `(start entry)`) | 82.4 | 70.9 | 69.4 | #919 |
+| Mice (hand) | 82.4 | 70.9 | 69.4 | #919 |
+| Silk-style paper (RED, `(} silk)`) | 42.9 | 21.9 | 34.4 | #1053 |
+| Silk-style paper (hand) | 42.9 | 21.9 | 34.4 | #1053 |
+
+- **Mice** keeps its counter before its code, which `(start label)` made expressible; it compiles to
+  the hand-written code instruction for instruction and scores the same. It is the best archetype
+  against Wilkies (82.4; the stone 80.5) and the second on the hill after the stone (#899).
+- **The Silk-style paper** copies through the A-field postincrement of its own `SPL` (`}`), which
+  RED writes on numbers and labels since d-7d2612-0e831c; the same code by hand and in RED. It
+  replicates (cdb shows copies 2731 cells apart), but this form is weak: each copy inherits the
+  fields eight processes moved, and its one bomb line does little. The strategy, not the compiler:
+  a tuned Silk is a matter of writing a better paper.
+
 ## Reproducing
 
 `make bench` (the archetypes, against both sets, compared with `tools/bench_baseline.json`);

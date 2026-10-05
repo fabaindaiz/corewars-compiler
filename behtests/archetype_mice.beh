@@ -1,0 +1,9 @@
+# From entry (cell 1): MOV sets the counter at cell 0 to 7 (1); seven rounds of MOV and DJN (2..15)
+# copy cells 7 down to 1 to 1506 down to 1500, the target at cell 7 falling from 1500 to 1493; SPL
+# starts the copy (16), ADD moves the target by 2903 (17): 4396, which cdb prints as -3604.
+golden: bbctests/archetypes/mice.bbc
+cell 1 0 DAT.F #0, #7
+cell 15 1500 MOV.AB #7, $-1
+cell 15 7 DAT.F #0, #1493
+cell 17 7 DAT.F #0, #-3604
+alive 1000

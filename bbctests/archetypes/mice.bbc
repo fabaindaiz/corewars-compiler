@@ -1,0 +1,33 @@
+NAME: mice in RED
+DESCRIPTION: copy by index with the counter before the code, (start start) as the entry; phase-2 archetype suite (i-7d2612-34b61d), see behtests/archetype_mice.beh
+SRC:
+(program
+  (start entry)
+  (let (count 0)
+    (let (target 1500)
+      (seq
+        (DAT 0 (store count))
+        (label entry)
+        (MOV 7 count)
+        (do-while (DN count) (MOV I (Ind count) (Dec target)))
+        (SPL (Ind target))
+        (ADD 2903 target)
+        (JMZ entry count)
+        (DAT 0 (store target))))))
+EXPECTED:
+;redcode-94b
+ORG entry
+
+_LET1 
+  DAT    #0     , #0     
+entry 
+  MOV.AB #7     , $_LET1 
+_DWH11
+  MOV.I  @_LET1 , <_LET2 
+  DJN.B  $_DWH11, $_LET1 
+  SPL    @_LET2 , #0     
+  ADD.AB #2903  , $_LET2 
+  JMZ.B  $entry , $_LET1 
+_LET2 
+  DAT    #0     , #1500  
+  DAT    $0     , $0     

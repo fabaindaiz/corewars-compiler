@@ -32,6 +32,8 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 | SEQ scanner | 3 / 3 per pair of empty cells | 9 / 7 | 37, 37 / 36, 37 | expressible with `(NE I ...)` (d-7d2612-8f9340); +1 cell for the pointers, +1 epilogue |
 | imp ring (3 points) | 1 / 1 per process | 9 / 8 | 76, 76 / 76, 77 | none but the epilogue; written with constants and label arithmetic (d-7d2612-d9339f) |
 | imp spiral (2 waves) | 1 / 1 per process | 13 / 12 | 70.5 / 70.5 (fixed seed) | none but the epilogue |
+| Mice (copy by index) | 2 per cell copied, both | 8 / 8 (+ epilogue) | 82.4 / 82.4 (fixed seed) | none: its counter before its code with `(start entry)` (d-7d2612-3bce15) |
+| Silk-style paper | 2 per process and copy | 7 / 7 (+ epilogue) | 42.9 / 42.9 (fixed seed) | none: the `}` copy written on labels (d-7d2612-0e831c) |
 | quickscan (16 probes) | 1 / 1 per probe on empty core | 73 / 72 | 33.6 / 33.6 (fixed seed) | none but the epilogue: written with templates and `for` (d-7d2612-c4e274), each probe's `if` fused into a skip (d-7d2612-6222c1) |
 
 ## Where we are
@@ -41,6 +43,14 @@ fast-forward that day) and the phase-6 review's minors (i-7d2612-faa781). The ga
 cases besides `execute`, 45 behaviour specs (one known-failing, i-7d2612-672fff), the audit's 12
 checks, and a check that the patched host pMARS survives the battles that trapped it
 (i-7d2612-0cb9e9, done). **Next**: see the phase-8 paragraph.
+
+**Phase 8 is built** (s-7d2612-dec815, branch `feat/phase-8` from `main`, not merged): a template's
+let shadows a parameter of its name (i-7d2612-672fff fixed, the user's decision), the template
+naming gaps closed (i-7d2612-a73935, i-7d2612-9aa299), unary skip fusion closed by measurement
+(i-7d2612-40b941), `(include "path")` and the snippets catalogue (i-7d2612-8e9549, the user's
+decision), Mice and a Silk-style paper (i-7d2612-34b61d done: every planned archetype is written,
+each the same code and score as by hand). **Next:** strategy rather than language: a quickscan
+handing over to a paper or a stone, a tuned Silk; the snippets grow as warriors need them.
 
 **Phase 6 is built** (s-7d2612-140ece, branch `feat/phase-6` on `feat/phase-5`, merged 2026-10-05): A-field
 modes on numbers, labels and expressions (i-7d2612-e98368), `(start label)` emitted as `ORG`
@@ -226,11 +236,10 @@ long-line error points at the node that emits the line; `Parse.locations` holds 
 Write the classic warriors in RED and measure each against its hand-written form. What they cannot express decides the compound operators and the constants; the ones that work become the snippet catalogue.
 
 ### Classic warriors re-expressed in RED as end-to-end tests · i-7d2612-34b61d
-**State.** Half done (s-7d2612-14641b). Seven archetypes — imp, dwarf, stone, core-clear, a `JMZ`
+**State.** Done (s-7d2612-dec815): the twelve archetypes below. Was: half done (s-7d2612-14641b). Seven archetypes — imp, dwarf, stone, core-clear, a `JMZ`
 scanner, a SEQ scanner, a paper — are written by hand and in RED (`archetypes/`), with goldens
 (`bbctests/archetypes/`), behaviour specs (`behtests/archetype_*.beh`) and the measurements in
-`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd); an imp spiral with two processes per point (s-7d2612-9b0d20); a quickscan written with templates and `for`, scoring exactly as the hand-written one (s-7d2612-140ece). **Still missing:** Mice's
-copy-by-index (expressible since `(start label)`, not attempted), Silk-style paper (expressible since A-field modes on numbers, `(} x)`, not attempted). The benchmark is `make bench`
+`docs/research/2026-10-04-archetypes.md`; an imp ring since constants (s-7d2612-333abd); an imp spiral with two processes per point (s-7d2612-9b0d20); a quickscan written with templates and `for`, scoring exactly as the hand-written one (s-7d2612-140ece); Mice and a Silk-style paper, each the same code and score as by hand (s-7d2612-dec815). **State now:** every archetype the plan named is written; what remains is strategy (a tuned Silk, a quickscan in front of a paper), not expressiveness. The benchmark is `make bench`
 (i-7d2612-f27a91).
 Originally planned: Imp, Dwarf, Stone, a countdown core-clear, Mice, an imp spiral, a SEQ scanner,
 a Silk-style paper: each exercises a different construct (`docs/references.md`, *Corpora*).
@@ -402,6 +411,10 @@ threading in the compiler, which scores 54 and 58.
 **Decide first.** Nothing beyond the policy.
 **Since** (s-7d2612-140ece, d-7d2612-6222c1): an `EQ`/`NE` `if` around one instruction is fused into
 the inverted skip, and a label plus a number counts cells from its label, modulo the core.
+
+## Phase 4 — Warnings
+
+Once errors have locations and the optimizer knows what it can do, the warnings can say where a cost is and what would remove it.
 
 ### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
 **State.** Done (s-7d2612-333abd): warnings driven by the policy (d-7d2612-4d7c73), `--warn=all|none`.

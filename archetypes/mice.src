@@ -1,0 +1,13 @@
+(program
+  (start entry)
+  (let (count 0)
+    (let (target 1500)
+      (seq
+        (DAT 0 (store count))
+        (label entry)
+        (MOV 7 count)
+        (do-while (DN count) (MOV I (Ind count) (Dec target)))
+        (SPL (Ind target))
+        (ADD 2903 target)
+        (JMZ entry count)
+        (DAT 0 (store target))))))
