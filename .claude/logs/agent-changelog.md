@@ -13,8 +13,12 @@ named like a parameter shadows it. Built so far: that shadowing (i-7d2612-672fff
 d-7d2612-e1c41a; its golden moved from `known-bugs` to `examples`, its spec lost the mark), a let's
 name that reads as a number is an error (i-7d2612-a73935), the two remaining messages print names as
 written and a let of a template's name no longer hides the template (i-7d2612-9aa299).
+Unary skip fusion (i-7d2612-40b941) closed by measurement: a unary `if` is already one direct jump,
+`JMN fin, x; X`, the same cells and cycles as a skip; the saving the item planned belonged to the
+binary case only.
 **What went wrong.** The first binder check required a label's shape and broke a tested let name
-(`x#1`); it now rejects only a name that reads as a number.
+(`x#1`); it now rejects only a name that reads as a number. The unary-fusion item, written last
+session, priced a saving without compiling one example; one compile showed there is none.
 
 ## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, the pMARS trap, and the session close
 

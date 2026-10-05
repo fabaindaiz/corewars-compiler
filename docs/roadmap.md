@@ -40,7 +40,7 @@ As of 2026-10-05, end of s-7d2612-11efe5: **`main` holds phases 1 to 6** (phases
 fast-forward that day) and the phase-6 review's minors (i-7d2612-faa781). The gate: 199 alcotest
 cases besides `execute`, 45 behaviour specs (one known-failing, i-7d2612-672fff), the audit's 12
 checks, and a check that the patched host pMARS survives the battles that trapped it
-(i-7d2612-0cb9e9, done). **Next**, none started: unary skip fusion (i-7d2612-40b941), a Silk-style
+(i-7d2612-0cb9e9, done). **Next**, none started: a Silk-style
 paper and Mice (i-7d2612-34b61d), the snippets catalogue (i-7d2612-8e9549, which needs a decision on
 how a program uses a catalogue: an include item, a prelude, or a document to copy from), the known
 bug i-7d2612-672fff and the smaller gaps i-7d2612-9aa299 and i-7d2612-a73935.
@@ -403,18 +403,6 @@ threading in the compiler, which scores 54 and 58.
 **Since** (s-7d2612-140ece, d-7d2612-6222c1): an `EQ`/`NE` `if` around one instruction is fused into
 the inverted skip, and a label plus a number counts cells from its label, modulo the core.
 
-### Unary skip fusion · i-7d2612-40b941
-**State.** Planned (s-7d2612-140ece). A `JZ`/`JN` `if` around one instruction (`JMN fin, x; X;
-fin:`) could be `SNE #0, x; X` (or `SEQ`), as skip fusion does for `EQ`/`NE`: one cell and one
-cycle less. **Collides with.** The field the comparison reads: `SNE.AB #0, x` compares with x's
-B-field, `SNE.A #0, x` with its A-field, and the modifier rules (d-7d2612-891901) must pick the one
-the `JMZ` tested. A `JMZ.F` (both fields zero) has no single-skip form. **Decide first.** Whether the policy may trade a `JMZ.F` for
-two skips.
-
-## Phase 4 — Warnings
-
-Once errors have locations and the optimizer knows what it can do, the warnings can say where a cost is and what would remove it.
-
 ### Static performance analysis and warnings (subproject B) · i-7d2612-90d6e1
 **State.** Done (s-7d2612-333abd): warnings driven by the policy (d-7d2612-4d7c73), `--warn=all|none`.
 Not built: a warning for compiler overhead above a construct's minimum *outside* the loop's own
@@ -634,6 +622,13 @@ scheduled.
 **Seen in.** s-7d2612-14641b, s-7d2612-f082c8.
 
 ## Closed by measurement
+
+### Unary skip fusion · i-7d2612-40b941
+**State.** Closed by measurement (s-7d2612-dec815). A unary `if` needs no extra jump: `(if (JZ x)
+X)` compiles to `JMN fin, x; X`, two cells and one control instruction, exactly what `SNE #0, x; X`
+would cost (2 cycles when x is 0, 1 otherwise, both ways). The planned saving (one cell, one cycle)
+came from the binary case, where the test is a skip followed by a `JMP`; it does not exist here.
+Was: planned (s-7d2612-140ece).
 
 ### Comment injection into pMARS directives · i-7d2612-476e03
 **State.** Closed by measurement. The worry: `ICOM` prints `;text`, and a comment starting with
