@@ -5,6 +5,25 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-05 · s-7d2612-61974e — Closing phases 7 and 8, the manual and the diagnostics
+
+**What.** The user asked to close the session with its findings, pending items and learnings, merge
+everything into `main` and push. `docs/research/2026-10-05-session-learnings.md` gathers what
+s-7d2612-11efe5, s-7d2612-dec815, s-7d2612-5e5abb and s-7d2612-14528c built, found, left and
+learned. The roadmap's "where we are" now says `main` holds phases 1 to 8, the manual and the
+diagnostics. `feat/phase-8`, `docs/manual` and `feat/diagnostics` form one line from `main`, merged by
+one fast-forward and pushed.
+**Frictions, counted in the log** (each grep's matches read, noise dropped): hand counts wrong
+before running, six sessions (i-7d2612-340f22); line endings changed by a text-mode edit, caught
+by the audit in s-7d2612-11efe5 (i-7d2612-276a54); three recorded for the first time: tests
+expecting an empty stream from a compiler that warns (two sessions, i-7d2612-8e76c5), measuring a
+stand-in instead of the thing claimed (two, i-7d2612-861c83), bash loops in the user's fish shell
+(two, i-7d2612-e4d74d).
+**What went wrong, closing.** The first draft of the learnings said every review found an
+important issue; one of five found none, corrected before committing.
+**Left undone.** The items in the note's "Pending" and the roadmap's "where we are"; local branches
+kept after the merge.
+
 ## 2026-10-05 · s-7d2612-14528c — Diagnostics a newcomer meets
 
 **What.** The user asked to take on the pending items. On branch `feat/diagnostics` (from

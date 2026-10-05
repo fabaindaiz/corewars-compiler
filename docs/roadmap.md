@@ -38,13 +38,22 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 
 ## Where we are
 
+As of 2026-10-05, end of s-7d2612-61974e: **`main` holds phases 1 to 8, the user manual and the
+diagnostics**, merged by fast-forward that day. The gate: 224 alcotest cases besides `execute`,
+the behaviour specs, the audit's 12 checks, the host-pMARS check and `test_manual_examples` (every
+example in `docs/manual/` compiled). Every planned archetype is written. **Next**, by what remains
+(`docs/research/2026-10-05-session-learnings.md`): strategy (a quickscan handing over to a paper or
+stone, a tuned Silk, a scanner that beats papers), the self-hit report's first-position case
+(i-7d2612-1b199a), pMARS 0.9.5 (i-7d2612-494e75), and the frictions i-7d2612-340f22,
+i-7d2612-8e76c5, i-7d2612-861c83, i-7d2612-e4d74d.
+
 As of 2026-10-05, end of s-7d2612-11efe5: **`main` holds phases 1 to 6** (phases 4 to 6 merged by
 fast-forward that day) and the phase-6 review's minors (i-7d2612-faa781). The gate: 199 alcotest
 cases besides `execute`, 45 behaviour specs (one known-failing, i-7d2612-672fff), the audit's 12
 checks, and a check that the patched host pMARS survives the battles that trapped it
 (i-7d2612-0cb9e9, done). **Next**: see the phase-8 paragraph.
 
-**Phase 8 is built** (s-7d2612-dec815, branch `feat/phase-8` from `main`, not merged): a template's
+**Phase 8 is built** (s-7d2612-dec815, branch `feat/phase-8` from `main`, merged 2026-10-05): a template's
 let shadows a parameter of its name (i-7d2612-672fff fixed, the user's decision), the template
 naming gaps closed (i-7d2612-a73935, i-7d2612-9aa299), unary skip fusion closed by measurement
 (i-7d2612-40b941), `(include "path")` and the snippets catalogue (i-7d2612-8e9549, the user's
@@ -611,7 +620,8 @@ to detect and repair, × every session that edits a CRLF file by script.
 **The fix.** `tools/audit.py` (`eol-preserved`) fails when a tracked file's line-ending style differs
 from `HEAD`, so `make check-tools` stops the commit (d-7d2612-040878). Seen to fail on a planted
 `Makefile` converted to LF.
-**Seen in.** s-7d2612-0a037e, s-7d2612-a654a5.
+**Seen in.** s-7d2612-0a037e, s-7d2612-a654a5; since the audit, caught by it in s-7d2612-11efe5 (a
+`Makefile` edited through Python's text mode), which is the audit working.
 
 ### Hand counts in tests are wrong before they run · i-7d2612-340f22
 **State.** Planned (s-7d2612-3f3b23). Tests first means expected values computed by hand, and they
@@ -620,9 +630,9 @@ rotated `while`'s death (9 instructions, counted as 8: the entry `JMP` goes to t
 **Cost.** About two minutes each to rerun and recount, × about 5 a session.
 **Proposal.** When a probe fails, read the trace (`run-warrior` skill) before changing the probe or
 the code, and say in the changelog which of the two was wrong. No tool needed.
-**Seen in.** s-7d2612-2c7e4d, s-7d2612-14641b, s-7d2612-f082c8, s-7d2612-333abd, s-7d2612-140ece
-(counted in the log at s-7d2612-11efe5: five sessions; the last, a cell index read from a numbered
-listing that counted a blank line).
+**Seen in.** s-7d2612-2c7e4d, s-7d2612-14641b, s-7d2612-f082c8, s-7d2612-333abd, s-7d2612-140ece,
+s-7d2612-14528c (counted in the log at s-7d2612-61974e: six sessions; the last, an expectation's
+column counted 31 for 30, caught by the run).
 
 ### Compound commands refused whole by a permission rule · i-7d2612-51fe9d
 **State.** Planned (s-7d2612-3f3b23). A command chaining an edit or a check with a denied verb
@@ -653,6 +663,32 @@ it), and an unused variable the `dev` profile rejected.
 once, builds, runs one test group and restores the file. A tooling change: its own commit, when
 scheduled.
 **Seen in.** s-7d2612-14641b, s-7d2612-f082c8.
+
+### Tests that expect no output from a compiler that warns · i-7d2612-8e76c5
+**State.** Planned (s-7d2612-61974e). A new test asserted an empty standard error for a program
+that compiles with a dead-code warning, and failed for that reason, not the one it tested.
+**Cost.** One red run and a rewrite each time, × twice so far.
+**Proposal.** Assert the absence of `error:` (or the exit code), never an empty stream, unless the
+test is about warnings. No tool needed.
+**Seen in.** s-7d2612-11efe5, s-7d2612-dec815 (twice).
+
+### Measuring a stand-in instead of the thing claimed · i-7d2612-861c83
+**State.** Planned (s-7d2612-61974e). The self-hit calibration and the manual's what-beats-what
+table were measured on the hand-written twins (`archetypes/*.red`) while the text spoke of the RED
+warriors; the two scanners' layouts differ, so a death and three table rows were wrong until a
+review re-measured them.
+**Cost.** Wrong numbers in a decision row, the roadmap, a skill and the manual; an hour to find
+and correct.
+**Proposal.** Measure exactly the artifact the sentence names (compile the `.src`); the
+`write-warrior` and `present-red` skills now say so.
+**Seen in.** s-7d2612-5e5abb, s-7d2612-14528c.
+
+### Shell loops written for bash fail silently in fish · i-7d2612-e4d74d
+**State.** Planned (s-7d2612-61974e). The user's shell is fish: a loop using `set --` and an
+unquoted `$P` holding a command ran nothing and exited 127, with no battle result.
+**Cost.** One wasted run each time.
+**Proposal.** Run multi-command loops under `bash -c '...'`. No tool needed.
+**Seen in.** s-7d2612-5e5abb, s-7d2612-14528c.
 
 ## Closed by measurement
 
