@@ -76,9 +76,13 @@ generates (`_LETn`, `_REPn`, `_IFn`, …), which makes the output a function of 
   go through the A-field of the cell they name; on a let variable they are an error, its `(store x)`
   deciding the field.
 - **Templates** (d-7d2612-c4e274). Expansion is a source-to-source step before every rule here: a call is
-  its body with each parameter replaced (after renaming the body's own labels and let binders), a
-  `for` its body once per value. A call reaches only earlier templates and a `for` runs a known
-  number of times, so expansion terminates; argument kinds are checked at each call.
+  its body with each parameter replaced (after renaming the body's own labels everywhere, and its
+  let binders and `for` variables within their scope), a `for` its body once per value. A let or
+  `for` named like a parameter shadows it within its scope (d-7d2612-e1c41a); a name passed in is
+  never captured. A call reaches only earlier templates, a `for` runs a known number of times and a
+  program at most 10000 calls and iterations, so expansion terminates; argument kinds are checked at
+  each call. `(include "path")` adds another file's templates as if defined at the include
+  (d-7d2612-c2df7c).
 - **Cells** (d-7d2612-891901). A plain reference (`(Dir -1)`, a label) and the target of an indirect
   use name a cell. With no modifier written, a cell beside a number or a variable is read and
   written at its B-field, the ICWS'94 convention: `(MOV x (Dir -1))` with `x` in A is `MOV.AB`,

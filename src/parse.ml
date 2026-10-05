@@ -281,7 +281,7 @@ let red_words = ["seq"; "let"; "label"; "com"; "store"; "none"; "repeat"; "if"; 
                  "alive"; "dead"; "cell"]
 
 (* A template called at the top of the program's body would be read as the header item of its name *)
-let header_words = ["start"; "hill"; "name"; "author"; "strategy"; "optimize"; "const"]
+let header_words = ["start"; "hill"; "name"; "author"; "strategy"; "optimize"; "const"; "include"]
 
 let macro_name (sexp : sexp) (s : string) : string =
   let s = label_name sexp s in
@@ -311,7 +311,12 @@ let parse_template (index : int) (item : sexp) : template =
    or for that made it, so an error inside an expansion says where that is. *)
 let rec subst (env : (string * sexp) list) (loc : loc option) (s : sexp) : sexp =
   match s with
-  | `Atom a -> (match List.assoc_opt a env with Some r -> r | None -> s)
+  | `Atom a -> (match List.assoc_opt a env with
+    | Some r -> r
+    (* an atom with no place (from an included file) takes the call's, so an error on it says where *)
+    | None when loc_of s = None && loc <> None && not (Phys.mem generated s) ->
+      let t = `Atom a in Option.iter (Phys.replace locations t) loc ; t
+    | None -> s)
   | `List l ->
     let t = `List (List.map (subst env loc) l) in
     Option.iter (Phys.replace locations t) loc ;
@@ -448,9 +453,17 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
 (* [file] is the source's own path and [read] reads another: (include "path") resolves the path
    against the including file's directory. *)
 let resolve (from : string) (path : string) : string =
-  if Filename.is_relative path then
-    (match Filename.dirname from with "." -> path | d -> Filename.concat d path)
-  else path
+  let joined = if Filename.is_relative path then
+      (match Filename.dirname from with "." -> path | d -> Filename.concat d path)
+    else path in
+  (* one spelling per file, so a file is read once and a cycle is seen however it is written:
+     "." dropped, "d/.." collapsed (lexically: read stays abstract) *)
+  let absolute = not (Filename.is_relative joined) in
+  let parts = List.fold_left (fun acc p -> match p, acc with
+      | ("" | "."), _ -> acc
+      | "..", d :: rest when d <> ".." -> rest
+      | _, _ -> p :: acc) [] (String.split_on_char '/' joined) in
+  (if absolute then "/" else "") ^ String.concat "/" (List.rev parts)
 
 let rec forget_locations (s : sexp) : unit =
   Phys.remove locations s ;
@@ -532,6 +545,7 @@ let parse_source ?(file = "") ?(read : string -> string option = fun _ -> None) 
         | None -> consts := (n, v) :: !consts)
       | `List (`Atom "define" :: _) -> define item
       | `List [`Atom "include"; `Atom path] -> include_file [file] item path
+      | `List (`Atom "include" :: _) -> fail item "an (include ...) takes one path: (include \"file.src\")"
       | `Atom _ | `List _ -> bodies := item :: !bodies) items ;
     (* the body is expanded once the whole header is known: its constants bound the for loops *)
     (match !bodies with

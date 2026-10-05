@@ -43,8 +43,7 @@ let example (name : string) : string = "bbctests/examples/" ^ name ^ ".bbc"
    root (snippets/imp.src) *)
 let golden_read (src : string) (f : string) : string option =
   if f = "golden.src" then Some src
-  else if Sys.file_exists f then Some (In_channel.with_open_bin f In_channel.input_all)
-  else None
+  else (try Some (In_channel.with_open_bin f In_channel.input_all) with Sys_error _ -> None)
 
 let golden_files () : string list =
   List.concat_map (fun dir ->
@@ -1315,6 +1314,56 @@ let test_phase8_include_errors () =
   check Alcotest.bool "an error inside says where" true
     (contains (err [("p.src", "(program (include \"lib.src\") (NOP))"); ("lib.src", "\n(define (t (k Bad)) (NOP))")]) "in lib.src:2:12: `Bad` is not a kind")
 
+(* The phase-8 review's findings on include *)
+let test_phase8_include_paths () =
+  let spin = "(define (spin) (seq (label here) (JMP here)))" in
+  let err files = (drive files ["p.src"]).err in
+  check Alcotest.bool "./lib.src and lib.src are one file" false
+    (contains (err [("p.src", "(program (include \"./lib.src\") (include \"lib.src\") (spin))"); ("lib.src", spin)]) "error:") ;
+  check Alcotest.bool "x/../lib.src is lib.src" false
+    (contains (err [("p.src", "(program (include \"x/../lib.src\") (include \"lib.src\") (spin))"); ("lib.src", spin)]) "error:") ;
+  check Alcotest.bool "a file including itself by another spelling" true
+    (contains (err [("p.src", "(program (include \"a.src\") (NOP))"); ("a.src", "(include \"x/../a.src\")")]) "include cycle") ;
+  check Alcotest.bool "include is a header word" true
+    (contains (err [("p.src", "(program (define (include (a Lab)) (JMP a)) (seq (label q) (include q)))")]) "`include` is a RED word") ;
+  check Alcotest.bool "one path" true
+    (contains (err [("p.src", "(program (include \"a\" \"b\") (NOP))")]) "an (include ...) takes one path")
+
+(* An error on an atom of an included template points at the call *)
+let test_phase8_included_atoms_are_located () =
+  let err = (drive [("p.src", "(program (include \"lib.src\")\n  (t))"); ("lib.src", "(define (t) (for k 1 zz (NOP)))")] ["p.src"]).err in
+  check Alcotest.bool "at the call" true (String.starts_with ~prefix:"p.src:2:" err)
+
+(* A snippet's demo compiles to its archetype's code: the same text once generated labels are
+   numbered in order of appearance and spacing is ignored *)
+let normalized (text : string) : string list =
+  let names = Hashtbl.create 16 in
+  let rename w =
+    (* a template's own label is the user's, renamed per expansion: _X1_bomb is bomb *)
+    let w = if String.starts_with ~prefix:"_X" w then
+        (match String.index_from_opt w 2 '_' with Some i -> String.sub w (i + 1) (String.length w - i - 1) | None -> w)
+      else w in
+    if String.length w > 1 && w.[0] = '_' then
+      (match Hashtbl.find_opt names w with
+      | Some n -> n
+      | None -> let n = Printf.sprintf "L%d" (Hashtbl.length names) in Hashtbl.replace names w n ; n)
+    else w in
+  let token_split l =
+    let b = Buffer.create 16 and out = Buffer.create 64 in
+    let flush () = if Buffer.length b > 0 then (Buffer.add_string out (rename (Buffer.contents b)) ; Buffer.clear b) in
+    String.iter (fun c ->
+      if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c = '_' then Buffer.add_char b c
+      else (flush () ; if c <> ' ' && c <> '\t' && c <> '\r' then Buffer.add_char out c)) l ;
+    flush () ; Buffer.contents out in
+  List.filter (fun l -> l <> "") (List.map token_split (String.split_on_char '\n' text))
+
+let test_phase8_snippet_demos_are_their_archetypes () =
+  List.iter (fun name ->
+    check Alcotest.(list string) name
+      (normalized (golden_expected ("bbctests/archetypes/" ^ name ^ ".bbc")))
+      (normalized (golden_expected ("bbctests/snippets/" ^ name ^ ".bbc"))))
+    ["imp"; "dwarf"; "stone"; "scanner"; "clear"; "paper"; "quickscan"]
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1490,6 +1539,9 @@ let ocaml_tests = [
     test_case "a template's names in errors and calls" `Quick test_phase8_template_names_in_errors ;
     test_case "include" `Quick test_phase8_include ;
     test_case "include errors" `Quick test_phase8_include_errors ;
+    test_case "include paths" `Quick test_phase8_include_paths ;
+    test_case "included atoms are located" `Quick test_phase8_included_atoms_are_located ;
+    test_case "snippet demos are their archetypes" `Quick test_phase8_snippet_demos_are_their_archetypes ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;
