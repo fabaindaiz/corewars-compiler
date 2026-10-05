@@ -15,7 +15,8 @@ hill, 1107 warriors) about 90 s a warrior: run it in the background, never block
 
 1. **Start from a strategy that works**: `docs/manual/03-cookbook.md`, `archetypes/*.src`, or
    `(include "snippets/NAME.src")` (`snippets/README.md` has each template's cost). Each compiles to
-   its hand-written twin's code; the gap to the top of a hill is strategy (`docs/research/2026-10-04-benchmark.md`).
+   its hand-written twin's code, but for the two scanners' pointer cells; the gap to the top of a
+   hill is strategy (`docs/research/2026-10-04-benchmark.md`).
 2. **Header**: `(hill 94nop)` for Koenigstuhl (94b is the default and the tests' settings),
    `(name ...)`, constants as `(const ...)` so they stay `EQU`s to tune.
 3. **Compile with `--report`** and read every warning: a pointer's partial coverage, dead code
@@ -40,13 +41,17 @@ hill, 1107 warriors) about 90 s a warrior: run it in the background, never block
   sources are ideas only. Choose constants and names afresh, and say in the file whose idea it is.
 - A cell kept as data without a label is reported as dead code.
 - A step whose bombs reach the warrior's own loop kills it: the step-3 dwarf bombs its `MOV` at
-  instruction 8000. The compiler warns ("reaches cell X of its own loop after N iterations"); it
-  does not follow two pointers moved by one `ADD.F` (the SEQ scanner dies alone at instruction 2964
-  without a warning). Prove survival with `(expect (alive N))`, N under 80000.
+  instruction 8000. The compiler warns ("reaches cell X of its own loop after N iterations"),
+  including a pointer kept in the loop's own `JMP` and written every lap; it says nothing when the
+  pointer is rewritten before its loop or when the hit would come after a write on the pointer's
+  own cell. Prove survival with `(expect (alive N))`, N under 80000. Measure the RED warrior, not
+  its hand-written twin: the two scanners' layouts differ (the hand-written SEQ scanner dies alone
+  at instruction 2964, the RED one does not).
 - `(JN (Ind p))` tests the B-field of the cell `p` points to; compare whole cells (`(NE I ...)`) to
   see every non-empty cell.
-- Quote a battle with a fixed seed (`-F 4000`), and know the measured circle: the papers here beat
-  the stone and every scanner here; the stone beats the scanner
+- Quote a battle with a fixed seed (`-F 4000`), and measure the warriors the text shows (compile
+  the `.src`), not their hand-written twins. The measured circle: the papers here beat the stone and
+  every scanner here; the stone beats the scanner
   (`docs/research/2026-10-05-presenting-red.md`).
 - `(alive N)` with N of 80000 or more never holds on 94b: the round ends at 80000 cycles.
 - `(start label)` when data must precede the code; the metrics then measure from the entry.

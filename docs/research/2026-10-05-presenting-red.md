@@ -70,8 +70,10 @@ compiled examples; missing exercises).
 
 - Cost of each tool on one warrior (the stone): compile and report under 10 ms, a behaviour spec
   0.07 s, `tools/bench.py` 6 s, `tools/bench.py --hill` 89 s.
-- What beats what, the simple forms (94b, 200 rounds, `-F 4000`): papers beat the stone (152 to 3)
-  and every scanner here (scanner 129 to 0, SEQ scanner 190 to 0, quickscan 182 to 4, core-clear
-  132 to 0); the stone beats the scanner (104 to 0); Mice beats the stone (139 to 1). The classic
+- What beats what, the RED warriors of the cookbook compiled (94b, 200 rounds, `-F 4000`): papers
+  beat the stone (152 to 3) and every scanner here (scanner 124 to 0, SEQ scanner 147 to 0,
+  quickscan 182 to 4, core-clear 132 to 0); the stone beats the scanner (113 to 0); Mice beats the
+  stone (139 to 1). A first version measured the hand-written twins and quoted three rows that the
+  RED warriors do not reproduce (the scanners' layouts differ); the branch review caught it. The classic
   circle's "scanners beat papers" does not hold for these forms; it needs a faster scanner with a
   clear (ASSUMPTION from the literature, not measured here).

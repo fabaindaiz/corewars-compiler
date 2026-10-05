@@ -1452,13 +1452,32 @@ let test_diag_lowercase_opcode () =
     (contains (error_of "(seq (label top) (jmp top))") "`jmp` is not a RED form: opcodes are written in capitals, `JMP`")
 
 (* ADD.F of a constant cell moves both fields of its target: the SEQ scanner's two pointers step 8,
-   and the same warning for both is said once. (Its death alone, at instruction 2964, goes through
-   a bomb on its own pointer cell, past which a pointer's value is not followed.) *)
+   and the same warning for both is said once. (The RED SEQ scanner survives a round alone; the
+   hand-written one, its pointers in its SNE, dies at instruction 2964.) *)
 let test_diag_add_f_steps () =
   let o = drive [("p.src", read_file "archetypes/seqscan.src")] ["--report"; "p.src"] in
   check Alcotest.bool "both pointers predicted" true
     (contains o.err "predicted: step 8 (pointer in cell 5, A-field)" && contains o.err "predicted: step 8 (pointer in cell 5, B-field)") ;
   check Alcotest.int "one warning for the two" 1 (List.length (warnings_in o.err))
+
+(* The phase-8 review of the diagnostics, each case run in pMARS *)
+let test_diag_review () =
+  let err src = (drive [("p.src", src)] ["p.src"]).err in
+  (* the pointer in the loop's own JMP, written on every lap: it bombs its JMP at iteration 2000 and
+     is dead after instruction 6000 *)
+  check Alcotest.bool "a pointer in its own loop, written every lap" true
+    (contains (err "(let (b 0) (seq (repeat (seq (expect (step 4)) (ADD 4 b) (MOV I bomb (Ind b))) (store b)) (label bomb) (DAT 0 0)))") "of its own loop after 2000 iterations") ;
+  (* a pointer rewritten before its loop starts from a value not known here: no claim *)
+  check Alcotest.bool "rewritten before the loop" false
+    (contains (err "(let (b 2) (seq (MOV (Imm 0) b) (repeat (seq (expect (step 4)) (ADD 4 b) (MOV I b (Ind b)))) (DAT 0 (store b))))") "of its own loop") ;
+  (* DJN through a pointer changes the cell it reaches: dead after instruction 10667 *)
+  check Alcotest.bool "a DJN through the pointer" true
+    (contains (err "(let (b 0) (seq (label top) (ADD 3 b) (DJN top (Ind b)) (DAT 0 (store b))))") "of its own loop after") ;
+  (* ADD.F's source cell moved by a > elsewhere is no constant: no step for its pointers *)
+  let o = drive [("p.src", "(let (a 100) (let (b 104) (seq (repeat (seq (ADD F inc ptrs) (NOP (Inc inc)) (if (NE I (Ind a) (Ind b)) (MOV I bomb (Ind b))))) (label ptrs) (DAT (store a) (store b)) (label inc) (DAT 8 8) (label bomb) (DAT 0 0))))")] ["--report"; "p.src"] in
+  check Alcotest.bool "ADD.F of a moving cell" false (contains o.err "step 8 (pointer in cell") ;
+  (* CMP is no RED form (SEQ is): a lowercase cmp is not told to write it *)
+  check Alcotest.bool "cmp" false (contains (error_of "(cmp 0 1)") "`CMP`")
 
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
@@ -1644,6 +1663,7 @@ let ocaml_tests = [
     test_case "a broken expectation says where" `Quick test_diag_expectation_located ;
     test_case "a lowercase opcode says so" `Quick test_diag_lowercase_opcode ;
     test_case "ADD.F moves both pointers" `Quick test_diag_add_f_steps ;
+    test_case "the diagnostics' review cases" `Quick test_diag_review ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;

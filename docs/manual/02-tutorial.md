@@ -106,7 +106,7 @@ This warrior drops a bomb on its own `MOV` (cell 1) and dies at its 8000th instr
 so, with the iteration and the cycle:
 
 ```text
-dwarf3.src:3:5: warning: a pointer here reaches cell 1 of its own loop after 2666 iterations (7998 cycles): a write through it there hits the warrior's running code
+dwarf3.src:5:7: warning: a pointer here reaches cell 1 of its own loop after 2666 iterations (7998 cycles): a write through it there hits the warrior's running code
 ```
 
 ## 2.3 What it costs

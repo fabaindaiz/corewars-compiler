@@ -160,25 +160,30 @@ let inverse (a : int) (m : int) : int =
   let rec go r0 r1 s0 s1 = if r1 = 0 then s0 else go r1 (r0 mod r1) s1 (s0 - (r0 / r1) * s1) in
   if m = 1 then 0 else ((go a m 1 0 mod m) + m) mod m
 
-let step_of (p : program) (lm : loop_metrics) ~(cell : int) ~(field : Layout.field) ~(k : int) ~(written : bool) : prediction =
+let step_of (p : program) (lm : loop_metrics) ~(cell : int) ~(field : Layout.field) ~(k : int)
+    ~(written : bool) ~(always : bool) ~(rewritten : bool) : prediction =
   let k = norm p.coresize k in
   let g = gcd p.coresize k in
   let period = p.coresize / g in
   (* The first cell of its own loop, other than its own, the pointer reaches from its initial value:
      after j iterations it points at cell + value + j*k, so x is reached when g divides
      x - cell - value, at j = (x - cell - value)/g * (k/g)^-1 modulo period. A write through it there
-     hits the warrior's running code (the step-3 dwarf at iteration 2666). Its own cell is left out,
-     where a B-field pointer reads 0 (a scanner sees it empty), and so is anything after it: a write
-     there can overwrite the pointer itself (the core-clear's bomb resets it to 0 and it never gets
-     further), so its value is not known past that iteration. *)
+     hits the warrior's running code (the step-3 dwarf at iteration 2666). Anything after its own
+     cell is left out: a write there can overwrite the pointer itself (the core-clear's bomb resets it
+     to 0 and it never gets further), so its value is not known past that iteration. Its own cell
+     counts only when it is a cell of the loop written through on every lap (a bomber keeping its
+     pointer in the loop's JMP bombs that JMP); a write under a condition may skip it (a JN scanner
+     reads its own cell's B-field as 0). A pointer something rewrites outside its changes starts
+     from a value not known here: nothing is said. *)
   let value = match field with FA -> p.cells.(cell).a.value | FB -> p.cells.(cell).b.value in
   let reached x =
     let d = norm p.coresize (x - cell - value) in
     if d mod g <> 0 then None else Some ((d / g) * inverse (k / g) period mod period) in
   let own = match reached cell with Some 0 | None -> period | Some j -> j in
   (* only a pointer something writes through can hit: a paper reads its own cells on purpose *)
-  let hits = if not written then [] else List.filter_map (fun x ->
-      if x = cell then None
+  let hits = if not written || rewritten then [] else List.filter_map (fun x ->
+      if x = cell then
+        (if always && reached cell <> None then Some (own, x) else None)
       else match reached x with Some j when j < own -> Some (j, x) | Some _ | None -> None) lm.loop.body in
   let own_hit = match List.sort compare hits with
     | (j, x) :: _ -> Some (x, j, j * lm.cycles.max)
@@ -218,8 +223,12 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
       | Some _ | None -> None) body in
   (* ADD.F (or SUB.F) of a cell nothing writes moves both fields of its target by that cell's two
      numbers: two pointers in one cell stepping together (the SEQ scanner's ADD.F inc, ptrs). *)
+  let moves_through (o : operand) = match o.mode with
+    | RBInc | RAInc | RBDec | RADec -> true
+    | RImm | RDir | RAInd | RBInd -> false in
   let constant t = t < n && not (Array.exists (fun (w : cell) ->
-      writes w.op && w.b.mode = RDir && norm p.coresize (w.pos + w.b.value) = t) p.cells) in
+      (writes w.op && w.b.mode = RDir && norm p.coresize (w.pos + w.b.value) = t)
+      || List.exists (fun (o : operand) -> moves_through o && norm p.coresize (w.pos + o.value) = t) [w.a; w.b]) p.cells) in
   let by_add_f = List.concat_map (fun i -> let c = p.cells.(i) in
       let src = norm p.coresize (c.pos + c.a.value) in
       if (c.op = IADD || c.op = ISUB) && c.md = RF && c.a.mode = RDir && c.b.mode = RDir
@@ -261,9 +270,14 @@ let steps (p : program) (lm : loop_metrics) : prediction list =
        && norm p.coresize k <> 0
     then
       (* written through: the B operand of an instruction that writes, going through this field *)
-      let written = List.exists (fun j -> let w = p.cells.(j) in
-          writes w.op && base_field w.b.mode = Some field && norm p.coresize (w.pos + w.b.value) = cell) body in
-      Some (step_of p lm ~cell ~field ~k ~written)
+      let writers = List.filter (fun j -> let w = p.cells.(j) in
+          (writes w.op || w.op = IDJN) && base_field w.b.mode = Some field
+          && norm p.coresize (w.pos + w.b.value) = cell) body in
+      let written = writers <> [] in
+      let always = List.exists (fun j -> every j && not (List.mem j inner)) writers in
+      let rewritten = Array.exists (fun (w : cell) ->
+          not (List.mem w.pos body) && writes w.op && w.b.mode = RDir && norm p.coresize (w.pos + w.b.value) = cell) p.cells in
+      Some (step_of p lm ~cell ~field ~k ~written ~always ~rewritten)
     else None) pointers
 
 let counter (p : program) (entry : range option) (lm : loop_metrics) : prediction option =

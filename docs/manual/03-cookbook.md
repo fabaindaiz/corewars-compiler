@@ -1,7 +1,9 @@
 # 3. Cookbook: the classic strategies in RED
 
 Each recipe is a complete warrior. All but the last are also in `archetypes/` beside a hand-written
-twin, and compile to the same code and score the same (the last is `examples/stone_imp.src`);
+twin (the last is `examples/stone_imp.src`). Most compile to their twin's code exactly; the two
+scanners keep their pointers in a different cell (the scanner in its loop's `JMP`, the SEQ scanner in
+a `DAT`), which changes their scores a little (`docs/research/2026-10-04-archetypes.md`);
 `snippets/` has several as templates you can include. Scores below are against the Wilkies
 benchmark (`tools/bench.py`, fixed seed): 300 beats everything, 100 ties.
 
@@ -346,14 +348,14 @@ from `snippets/quickscan.src`, each expanded sixteen times by a `for`. The warri
 
 The classic strategies are said to beat each other in a circle: bombers beat scanners, scanners
 beat papers, papers beat bombers. Here is what the simple forms of this chapter do against each
-other (94b, 200 rounds, `-F 4000`, measured on 2026-10-05):
+other, compiled from the recipes above (94b, 200 rounds, `-F 4000`, measured on 2026-10-05):
 
 | Battle (A against B) | A wins | B wins | ties |
 |---|---|---|---|
 | stone against paper | 3 | 152 | 45 |
-| stone against scanner | 104 | 0 | 96 |
-| scanner against paper | 0 | 129 | 71 |
-| SEQ scanner against paper | 0 | 190 | 10 |
+| stone against scanner | 113 | 0 | 87 |
+| scanner against paper | 0 | 124 | 76 |
+| SEQ scanner against paper | 0 | 147 | 53 |
 | core-clear against paper | 0 | 132 | 68 |
 | quickscan against paper | 4 | 182 | 14 |
 | Mice against stone | 139 | 1 | 60 |

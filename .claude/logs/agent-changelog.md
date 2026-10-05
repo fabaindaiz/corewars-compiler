@@ -15,8 +15,11 @@ with the iteration and cycle, computed by modular arithmetic: the step-3 dwarf a
 errors. A step prediction names its pointer (the paper's two identical lines were two pointers),
 and a rewritten `DJN` counter gets no prediction (Mice's 8000). A lowercase opcode is told to use
 capitals. The manual, `LANGUAGE.md` and the `write-warrior` skill follow.
-**Measured first.** Each archetype run alone for a round: only the SEQ scanner (instruction 2964)
-and the quickscan (15416) die. The rule was calibrated on that, not guessed.
+**Measured first, and wrongly.** Each archetype run alone for a round, but the loop ran the
+hand-written `archetypes/*.red`, not the RED warriors: the SEQ scanner's death at 2964 is the
+hand-written one's (pointers in its `SNE`); the RED one survives. The same mistake reached the
+manual's what-beats-what table (three rows). Both re-measured on compiled RED warriors after the
+branch review: only the quickscan dies alone (15416).
 **What went wrong.** The first rule warned the core-clear, which survives: its bomb overwrites its
 own pointer and resets it, so a pointer's value is unknown past its own cell; and the paper, which
 reads its own cells on purpose: only a pointer written through counts. The lowercase check first
@@ -27,7 +30,15 @@ Then the gap it left: `ADD.F` of a constant cell now steps both of its target's 
 the SEQ scanner's two pointers are predicted (step 8) and their identical warning is said once.
 Its death alone still is not predicted: it goes through a bomb on its own pointer cell, past which
 the rule follows no pointer; a first test demanded that warning and was corrected.
-**Left undone.** The review of `docs/manual` and of this branch, and every merge.
+**Branch review** (fresh context, `feat/phase-8..feat/diagnostics`): four important findings, all
+fixed test first and each mutated: the warning missed a pointer in its loop's own `JMP` written every
+lap (dead at 6000; the cookbook's own layout), read a pointer's start from a cell rewritten before
+its loop (a false warning and a miss), and the two measurement mistakes above. Its minors fixed:
+`DJN` counts as a write, `ADD.F`'s source moved by `>` is no constant, `cmp` is not told to write
+`CMP` (no RED form), a `text` block's location, stale mentions (architecture, the skill, the
+README's unwritten tutorial). Left as a roadmap note: a hit at the first position is one iteration
+early.
+**Left undone.** Every merge (`feat/phase-8`, `docs/manual`, `feat/diagnostics` are in one line).
 
 ## 2026-10-05 · s-7d2612-5e5abb — User manuals
 

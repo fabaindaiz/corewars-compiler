@@ -10,7 +10,6 @@ This software aims to be an easier way to write and optimize code for corewars. 
 - See REFERENCE.md for develop and run.
 - See docs/manual/ for the user manual: getting started, a tutorial, a cookbook of classic warriors and the tools.
 - See LANGUAGE.md for RED language reference.
-- See TUTORIAL.md for a RED language tutorial (not written yet).
 - See docs/semantics.md for what each construct means and what the compiler preserves.
 - See docs/roadmap.md for known defects and planned work, and docs/references.md for the research behind them.
 - Working with an AI assistant: AGENTS.md is its entry point (CLAUDE.md imports it).

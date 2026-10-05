@@ -56,7 +56,7 @@ let binder_name ?atom (sexp : sexp) (s : string) : string =
   else s
 
 (* The opcodes RED writes as forms, (MOV ...) to (STP ...). *)
-let opcodes = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
+let opcodes = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "SLT"; "SPL";
                "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"]
 
 (* pMARS reads these as opcodes or pseudo-opcodes in any case (asm.c), never as labels. *)

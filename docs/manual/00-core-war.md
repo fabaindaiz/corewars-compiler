@@ -81,5 +81,5 @@ Writing redcode means choosing a modifier and a mode for every operand, keeping 
 of which cell holds each number, and counting cells to write every jump. RED lets you write
 variables, loops and conditions; the compiler chooses the modifiers and modes the way pMARS would
 for the same code written by hand, places every variable in a field, and tells you what the result
-costs. Every classic warrior in [chapter 3](03-cookbook.md) compiles to the same code as its
-hand-written version.
+costs. The classic warriors in [chapter 3](03-cookbook.md) compile to the same code as their
+hand-written versions, or, for the two scanners, to a different layout of the same instructions.
