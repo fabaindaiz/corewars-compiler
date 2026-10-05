@@ -1,9 +1,19 @@
 # 3. Cookbook: the classic strategies in RED
 
-Each recipe is a complete warrior. Each of them is also in `archetypes/` beside a hand-written
-twin, and compiles to the same code and scores the same; `snippets/` has several as templates you
-can include. Scores below are against the Wilkies benchmark (`tools/bench.py`, fixed seed): 300
-beats everything, 100 ties.
+Each recipe is a complete warrior. All but the last are also in `archetypes/` beside a hand-written
+twin, and compile to the same code and score the same (the last is `examples/stone_imp.src`);
+`snippets/` has several as templates you can include. Scores below are against the Wilkies
+benchmark (`tools/bench.py`, fixed seed): 300 beats everything, 100 ties.
+
+Three notations the recipes use beyond the tutorial:
+
+- **A modifier right after the opcode**: `(MOV I a b)` copies the whole cell, `(ADD F a b)` adds both
+  fields to both fields, `(NE I a b)` compares two whole cells. Without one, the compiler chooses
+  the modifier pMARS would give the same line written by hand.
+- **A mode written on a number**: `(# 0)` is the immediate 0 written explicitly, `(Dir 1)` the next
+  cell, `(} x)` the A-field postincrement through cell `x`.
+- **A variable in a loop's own `JMP`**: `(repeat body (store p))` keeps `p` in the B-field of the
+  `JMP` that closes the loop, one cell less than a `DAT` of its own.
 
 ## A bomber: the dwarf
 
@@ -331,6 +341,29 @@ from `snippets/quickscan.src`, each expanded sixteen times by a `for`. The warri
     (label bomb)
     (DAT 0 0)))
 ```
+
+## What beats what
+
+The classic strategies are said to beat each other in a circle: bombers beat scanners, scanners
+beat papers, papers beat bombers. Here is what the simple forms of this chapter do against each
+other (94b, 200 rounds, `-F 4000`, measured on 2026-10-05):
+
+| Battle (A against B) | A wins | B wins | ties |
+|---|---|---|---|
+| stone against paper | 3 | 152 | 45 |
+| stone against scanner | 104 | 0 | 96 |
+| scanner against paper | 0 | 129 | 71 |
+| SEQ scanner against paper | 0 | 190 | 10 |
+| core-clear against paper | 0 | 132 | 68 |
+| quickscan against paper | 4 | 182 | 14 |
+| Mice against stone | 139 | 1 | 60 |
+| core-clear against stone | 82 | 88 | 30 |
+
+Papers beat bombers and bombers beat these scanners, as the circle says; but the papers also beat
+every scanner here. A scanner that beats papers has to be faster than these and finish with a
+clear that kills the copies as they appear (ASSUMPTION, from the Core War literature; not measured
+in this repository). Writing one is a strategy problem, and the place to start is the scanner and
+the core-clear above.
 
 ## Two strategies in one warrior
 

@@ -52,6 +52,9 @@ What happened:
   as words (`Dir`, `Ind`, `Inc`, ...) or as their symbols (`$`, `@`, `>`, ...).
 - You wrote no modifier: the compiler chose `.I`, the one pMARS gives the same line written by
   hand, because two cells are copied whole.
+- Opcodes are written in capitals, as above: `(mov ...)` is not recognised.
+- A bare number is a value, not an address: `(MOV 0 1)` compiles to `MOV.AB #0, #1`, which copies
+  nothing anywhere. Write `(Dir 1)`, or a label, for a cell.
 - `;redcode-94b` names the hill the warrior is written for, the default.
 - The last `DAT $0, $0` is the compiler's: every warrior ends with what empty core holds.
 
@@ -66,6 +69,11 @@ printf 'skip 2\nlist 0,4\nquit\n' | _build/pmars-host/pmars -@ pmars/config/94b.
 
 `skip 2` executes three instructions; `list 0,4` shows the imp has copied itself into cells 1, 2
 and 3. `-@ pmars/config/94b.opt` loads the 94b hill's settings (core 8000, 100 cells a warrior).
+cdb exits with code 4 after `quit`, so do not chain it with `&&`.
+
+pMARS also prints `Warning: Missing ';assert'` for a warrior that names no hill: harmless here.
+Naming the hill in the program, `(program (hill 94b) ...)` ([chapter 2](02-tutorial.md)),
+emits the `;assert` line and the warning goes away.
 
 ## Fight
 
@@ -73,12 +81,31 @@ A battle is two warriors in one core. Compile a second warrior, the dwarf from t
 [cookbook](03-cookbook.md#a-bomber-the-dwarf), and let them fight 200 rounds:
 
 ```sh
-_build/pmars-host/pmars -@ pmars/config/94b.opt -b -k -r 200 imp.red dwarf.red
+_build/pmars-host/pmars -@ pmars/config/94b.opt -b -k -r 200 -F 4000 imp.red dwarf.red
 ```
 
-`-k` prints the result as wins and ties for each warrior. A dwarf bombs every fourth cell, and an
-imp is never where the bombs fall for long: the battle mostly ties (152 of 200 rounds here; the
-dwarf wins the other 48).
+```text
+0 149
+51 149
+```
+
+`-k` prints one line per warrior, in the order of the files: its wins, then the ties. The imp won
+no round, the dwarf 51, and 149 were ties. `-F 4000` places the second warrior at cell 4000 in the
+first round and makes the whole battle repeat exactly; without it, pMARS picks positions at random
+and the numbers change from run to run. Without `-k`, pMARS prints each warrior's score, 3 points a
+win and 1 a tie, then the wins of each warrior and the ties:
+
+```text
+Unknown by Anonymous scores 149
+Unknown by Anonymous scores 302
+Results: 0 51 149
+```
+
+`Unknown by Anonymous` is a warrior with no name: `(name ...)` and `(author ...)` in the header give
+it one ([chapter 2](02-tutorial.md)).
+
+A dwarf bombs every fourth cell, and an imp is never where the bombs fall for long: the battle
+mostly ties.
 
 ## Where to go next
 

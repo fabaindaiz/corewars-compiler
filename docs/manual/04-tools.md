@@ -7,7 +7,7 @@ usage: run_compile.exe [--optimize o1,o2] [--report[=json]] [--expect=warn] [--w
 ```
 
 Run it as `dune exec execs/run_compile.exe -- [options] FILE.src`; the redcode goes to standard
-output, everything else to standard error.
+output (starting with an empty line), everything else to standard error.
 
 | Option | What it does |
 |---|---|
@@ -19,8 +19,9 @@ output, everything else to standard error.
 | `--expect=warn` | a broken expectation warns instead of stopping the compilation |
 | `--emit-beh FILE.beh` | write the program's run-time expectations as a behaviour spec, and the redcode beside it |
 
-Exit codes: 0 compiled; 1 an error in the program, printed as `file:line:column: error: ...`; 2 an
-internal error of the compiler (please report it, with the program).
+Exit codes: 0 compiled; 1 an error in the program, printed as `file:line:column: error: ...` (a
+broken expectation is printed as `expect ...: ...`, without a place, for now); 2 an internal error
+of the compiler (please report it, with the program).
 
 ```text
 e1.src:1:17: error: variable `x` is used but no (store x) places it
@@ -36,8 +37,11 @@ policy: speed > size
 optimizations: none
 ```
 
-- **length**: cells, out of the hill's maximum; `code`, `data` and the final `epilogue` cell;
-  `unreachable` code no path reaches; `nonzero` and `nonblank` cells (what a scanner can see).
+- **length**: cells, out of the hill's maximum: `code` (the warrior's own cells) plus the final
+  `epilogue` cell. Of the code, `data` counts the cells never executed that hold data (a variable,
+  a labelled `DAT`, a cell an instruction reads or writes) and `unreachable` the cells never
+  executed that hold nothing; `nonzero` and `nonblank` count the cells a scanner can tell from
+  empty core.
 - **boot**: cycles before the first loop starts; **spl**: how many `SPL` the warrior has.
 - **loop**: each loop's cells, the construct that made it, the cycles one iteration costs, and how
   many of those are control instructions the compiler added (`overhead`).
@@ -103,6 +107,10 @@ Checked by running the warrior in pMARS (`--emit-beh`, then `tools/behave.py`):
 | `(dead N)` | no process is left after N executed instructions |
 | `(cell ADDR "TEXT" N)` | after N instructions, cell ADDR holds the instruction TEXT |
 
+A round ends after 80000 cycles on 94b, so `(alive N)` with N of 80000 or more never holds. cdb
+writes fields above 4000 as negative numbers (4396 is `-3604`), and a `cell` expectation must be
+written the same way.
+
 ## Behaviour specs
 
 A spec is a small text file that runs a warrior alone in pMARS's debugger and checks what the core
@@ -134,7 +142,7 @@ $P -@ pmars/config/94b.opt -b -k -r 200 -F 4000 w.red other.red              # f
 | `list A,B` | show cells A to B (a cell equal to empty core shows only its address) |
 | `calc CYCLE` | cycles left; printed only while a process is alive |
 | `registers` | the cycle, the processes and their queue |
-| `quit` | stop |
+| `quit` | stop (cdb then exits with code 4) |
 
 ## The benchmark
 
@@ -155,7 +163,9 @@ downloaded into `_build/bench/` on first use and never committed. The score is t
 |---|---|
 | `error: variable x is used but no (store x) places it` | every `let` variable needs one `(store x)` in its body |
 | a jump goes to the wrong place | a bare number is a value: write `(Dir 1)` for "the next cell" |
-| `` `step` is a RED word `` | a template or parameter took a reserved name; pick another (`stride`) |
+| `` `step` is a RED word `` | a template, a parameter or a `for` variable took a word RED uses (`step` is an expectation); pick another (`stride`). A constant may be called `step` |
+| `Not a valid binary expr: (mov ...)` | opcodes are written in capitals: `MOV` |
+| `no such file: snippets/...` | an include path is relative to the including file |
 | a label at the end of the warrior is undefined in pMARS | it needs an instruction after it; the compiler's final `DAT` gives it one |
 | pMARS says "Missing ';assert'" | harmless; `(hill ...)` in the header emits one |
 | the loop is slower than you expected | `--report` shows each loop's cycles and overhead; the warnings say what would remove it |

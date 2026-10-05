@@ -4,14 +4,16 @@ RED is a small s-expression language for writing Core War warriors. Its compiler
 program into ICWS'94 redcode for pMARS and the KotH hills, chooses the modifiers and addressing
 modes you would otherwise write by hand, measures what it emits, and tells you what a warrior costs.
 
-This manual is for people who want to write warriors with it. It is in four chapters:
+This manual is for people who want to write warriors with it. It is in six chapters:
 
 | Chapter | What it gives you |
 |---|---|
+| [0. Core War in five minutes](00-core-war.md) | the game, cells and fields, modes and modifiers, processes, hills: skip it if you know redcode |
 | [1. Getting started](01-getting-started.md) | install the compiler, compile a first warrior, run it in pMARS |
 | [2. Tutorial](02-tutorial.md) | build a warrior step by step: variables, loops, conditions, the header, templates, tests |
 | [3. Cookbook](03-cookbook.md) | the classic strategies written in RED: bombers, scanners, papers, clears, imps, quickscans |
 | [4. Tools](04-tools.md) | the compiler's options, its report, warnings and expectations, behaviour specs, the benchmark |
+| [5. Workflows](05-workflows.md) | which tool answers which question, and the best order for learning, writing a warrior for a hill, testing an idea, teaching and debugging |
 
 The syntax reference is [`LANGUAGE.md`](../../LANGUAGE.md); what each construct means, formally, is
 [`docs/semantics.md`](../semantics.md). The catalogue of reusable templates is

@@ -359,6 +359,22 @@ kind check ("`_X1_v` is a let variable (pass it as a Var)"); `Rename.original` w
 Inside a template, a let named like an earlier template turns that template's call into "Not a valid
 expr: (_X1_b)", where at the top level the call goes to the template.
 
+### Diagnostics a newcomer meets · i-7d2612-1b199a
+**State.** Planned (s-7d2612-5e5abb), found by the manual's usability test (a fresh agent
+following `docs/manual/` as a newcomer), each reproduced:
+- **A step that hits the warrior's own code is reported as full coverage, silently.** The dwarf
+  with step 3 gets `predicted: step 3 → ... covers core` and no warning, and dies at its 8000th
+  instruction, bombing its own `MOV`. The step warning steers a newcomer from step 4 (safe) to a
+  step that kills the warrior. The coverage check could say which of the warrior's own cells the
+  pointer reaches.
+- **A broken expectation prints `expect ...: ...` with no place and no `error:`** (exit 1), unlike
+  every other error (`file:line:col: error:`).
+- **Two predictions are wrong for papers**: the paper's step prediction is printed twice, and Mice's
+  counter is predicted at 8000 although the loop resets it to 7 each pass.
+- **A lowercase opcode** (`(mov ...)`) fails with `Not a valid binary expr`, which does not say that
+  RED's opcodes are capitals (pMARS accepts either).
+**Collides with.** The warnings' wording (d-7d2612-6b110b's policy) for the first; nothing else.
+
 ## Phase 3 — The optimizer, under the policy
 
 Transformations that change emitted code to improve the policy's metric, each measured with `--report` before and after. Speed first: one instruction per iteration is worth about five times eight cells.

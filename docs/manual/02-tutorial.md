@@ -1,8 +1,8 @@
 # 2. Tutorial: a bomber, step by step
 
 This chapter builds a warrior that bombs the core, then teaches it to look before it bombs, and on
-the way shows each part of RED. Compile every step yourself with
-`dune exec execs/run_compile.exe -- FILE.src`.
+the way shows each part of RED. Save each step in a file of its own (the commands below call the
+dwarf `dwarf.src`) and compile it with `dune exec execs/run_compile.exe -- FILE.src`.
 
 ## 2.1 Variables are cells
 
@@ -84,6 +84,28 @@ _LET1
 This is Dewdney's dwarf, the same three instructions and the same three cycles a bomb as written
 by hand. The `repeat` cost one `JMP`.
 
+**Why 4.** The pointer is cell 3 and every bomb lands 4 cells after the last one, on cells 7, 11, 15,
+...: all of them 3 more than a multiple of 4. The code sits in cells 0, 1 and 2, which no bomb ever
+reaches, so the dwarf never hits itself. Change the step to 3 and the bombs visit every cell of the
+core, its own code included:
+
+```red
+(program
+  (expect (dead 8000))
+  (let (b 0)
+    (seq
+      (repeat
+        (seq
+          (ADD 3 b)
+          (MOV I b (Ind b))))
+      (DAT 0 (store b)))))
+```
+
+This warrior drops a bomb on its own `MOV` (cell 1) and dies at its 8000th instruction (`(expect (dead 8000))` holds,
+`(expect (alive 7999))` too; see 2.7 for how to run them). The compiler's coverage check does not
+know yet that a pointer can hit its own warrior: it reports that step 3 visits every cell and stays
+silent.
+
 ## 2.3 What it costs
 
 Ask the compiler:
@@ -159,6 +181,10 @@ Three things to notice:
   compiler aimed it at the head rather than at the `JMP`, one cycle sooner: an empty cell costs 2
   cycles, as in the best hand-written scanner.
 - `(label bomb)` names a cell you can use as an operand.
+
+`(JN (Ind p))` tests the **B-field** of the cell `p` points to, as `JMZ`/`JMN` do by default: a cell
+like `JMP $5, #0` has a zero B-field and reads as empty. A scanner that must see every non-empty cell
+compares whole cells instead, as the SEQ scanner in [chapter 3](03-cookbook.md) does.
 
 The conditions are `JZ`, `JN` (zero, not zero), `DZ`, `DN` (decrement, then test), and the
 comparisons `EQ`, `NE`, `GT`, `LT`. The constructs are `if` (with or without an else), `while`,
@@ -256,8 +282,11 @@ Each call emitted exactly its body, and an `if` around one instruction became a 
 over the `JMP found` when the two cells are equal. Labels a template defines are its own at every
 call, so calling it twice never clashes.
 
-Templates you use often go in a file, and `(include "path")` brings them in. The repository comes
-with a catalogue of verified ones in `snippets/`. The stone, a dwarf with a faster step behind an
+Templates you use often go in a file, and `(include "path")` brings them in. The path is relative
+to the file that includes it: from your own directory, copy `snippets/` next to your program or
+write the path from there (`(include "../snippets/bomber.src")`). The repository comes with a
+catalogue of verified templates in `snippets/`; its `README.md` lists each one's parameters and
+cost. The stone, a dwarf with a faster step behind an
 `SPL 0` that keeps starting it again, in three lines:
 
 ```red
@@ -304,9 +333,13 @@ running it. State it with the expectations `alive`, `dead` and `cell`:
 plus 4). Export them as a behaviour spec and run it in pMARS:
 
 ```sh
-dune exec execs/run_compile.exe -- --emit-beh _build/dwarf.beh dwarf.src
-python3 tools/behave.py _build/dwarf.beh
+dune exec execs/run_compile.exe -- --emit-beh dwarf.beh dwarf.src
+python3 tools/behave.py dwarf.beh
 ```
+
+`--emit-beh` writes the spec and the redcode beside it (`dwarf.red`). A round lasts 80000 cycles
+on 94b, so `(alive N)` with N of 80000 or more never holds: every warrior is "dead" when the round
+is over.
 
 ## 2.8 Measuring it against others
 
