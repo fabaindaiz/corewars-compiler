@@ -5,7 +5,7 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
-## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, and the session close
+## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, the pMARS trap, and the session close
 
 **What.** The user asked to merge and go on with the pending items: `feat/phase-4` to `feat/phase-6`
 were fast-forwarded into `main` and pushed (gate green on the merged tree). On branch
@@ -14,13 +14,47 @@ template's let and `for` names renamed within their scope only, the `for` range 
 overflow, a bound of 10000 template calls and `for` iterations, the header words reserved, a let
 binding no longer read as a call, the A-field error naming the variable as written. Then the user
 asked to close the session completely and take everything to `main`.
-**Areas.** `src/parse.ml`, `src/util.ml`, `execs/run_test.ml`, `LANGUAGE.md`, `docs/decisions.md`,
-`docs/roadmap.md`, `docs/specs/2026-10-04-macros-design.md`.
+A fresh review of that commit found no critical or important issue; of its minors, header words
+now refuse only a template's name (refusing a parameter `name` broke valid programs), a test pins
+that a template's let initial value names the program's label, and two are recorded: a let in a
+template named like a parameter is a silent miscompile on `main` since the macro layer
+(i-7d2612-672fff: characterization golden, known-failing spec), and two more error messages print
+internal names (i-7d2612-9aa299).
+The host pMARS trap (i-7d2612-0cb9e9, d-7d2612-b153c1): an agent in a scratch copy found it with an
+ASan build: `sim.c` formats a dying warrior's message into a 60-byte buffer when an opponent's
+`;break` armed cdb, and macOS's fortified `sprintf` traps on a long name. `tools/pmars-host.sh`
+patches the extracted copy; `make check-tools` runs a self-written reproducer (watched failing with
+exit 133); the bench's three left-out battles now run, with the scores predicted.
+A second fresh review, of the last three commits, found two important flaws in the pMARS fix: 256
+bytes do not hold every name pMARS accepts (a 216-character name still trapped; a RED warrior may
+name itself in 235), and `behave.py` and `bench.py` reused any existing binary, bypassing the stamp.
+Now all three `sprintf(outs, ...)` are `snprintf`, a 240-character loser joins the reproducers
+(watched trapping first), and the tools call the build script every time. Its minors: documents
+that quote what `check-tools` runs, the roadmap's status, `;assert` in the reproducers, the known-bug
+spec saying it assumes shadowing, and a let binder checked only for the reserved prefix
+(i-7d2612-a73935) recorded. Not fixed: the known-bug commit also carried unrelated roadmap edits,
+and the three commits left this log entry to the end.
+Frictions counted in the log: hand counts wrong before running, five sessions; commands refused
+whole, four; both entries in the roadmap updated.
+**Areas.** `src/parse.ml`, `src/util.ml`, `execs/run_test.ml`, `tools/pmars-host.sh`, `Makefile`,
+`tools/pmars-trap/`, `bbctests/known-bugs/`, `behtests/`, `LANGUAGE.md`, `docs/decisions.md`,
+`docs/roadmap.md`, `docs/specs/2026-10-04-macros-design.md`, `docs/research/2026-10-04-benchmark.md`,
+`.claude/skills/troubleshoot-redcode/SKILL.md`.
 **What went wrong.** One new test expected no output at all from a program that compiles with a
 dead-code warning; it now checks for the absence of an error. Two assertions sat behind a failing
-one and never ran red: checked by mutation instead.
+one and never ran red: checked by mutation instead. A test filtered lines before stripping spaces
+and matched nothing. Adding the header words to the RED words refused them as parameters too, a
+regression the review caught. The first self-written pMARS reproducer did not trap: `;break` must
+stand on its own line. Editing the CRLF `Makefile` through Python's text mode turned it LF (the
+audit caught it). Rebuilding pMARS copied the binary over one that had run, and macOS killed every
+later run (`Killed: 9`, 44 behaviour specs red) until `_build/pmars-host` was removed; the script now
+removes the old binary first. The first fix rested on a claim ("256 bytes hold any name") that was
+never measured; the review measured it and it was false.
 **Left undone.** Unary skip fusion (i-7d2612-40b941), a Silk-style paper and Mice
-(i-7d2612-34b61d), the snippets catalogue (i-7d2612-8e9549): not started, by the user's close.
+(i-7d2612-34b61d), the snippets catalogue (i-7d2612-8e9549, which needs the user's decision on how a
+program uses a catalogue): not started, by the user's close. The known bug i-7d2612-672fff and the
+gaps i-7d2612-9aa299. The vendored Linux pMARS binary keeps the 60-byte overflow (no fortify there,
+assumed silent).
 
 ## 2026-10-04 · s-7d2612-140ece — Phase 6: A-field modes, the entry point, the macro layer and skip fusion
 
