@@ -29,7 +29,9 @@ Offer the page in one line when a chat answer would read better as a page.
 2. **Run every claim before writing it, reproducibly**: a battle's result, a cell after N steps, a
    cost. A number in the text carries the run that produced it, and a battle carries a fixed seed
    (`-F 4000`): without one pMARS places warriors at random, and the manual's first "152 ties"
-   became 150 on the next run.
+   became 150 on the next run. Measure exactly the warrior the text shows (compile its `red` block),
+   never a twin that "should be the same": three rows of the first what-beats-what table came from
+   the hand-written scanners, whose layout differs.
 3. **Show source and output side by side**, explain the generated labels once (`_LET1` is a
    variable's cell, `_REP4` a loop's head), and point at the one line that matters in each output.
    Decode a tool's output the first time it appears (`-k`'s lines, `Results: W1 W2 T`, a score).
