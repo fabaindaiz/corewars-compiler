@@ -59,6 +59,18 @@
     "wilkies": 70.5,
     "wilkies_opponents": 12
   },
+  "mice (RED)": {
+    "koenigstuhl": 70.9,
+    "koenigstuhl_opponents": 20,
+    "wilkies": 82.4,
+    "wilkies_opponents": 12
+  },
+  "mice (hand)": {
+    "koenigstuhl": 70.9,
+    "koenigstuhl_opponents": 20,
+    "wilkies": 82.4,
+    "wilkies_opponents": 12
+  },
   "paper (RED)": {
     "koenigstuhl": 71.2,
     "koenigstuhl_opponents": 20,
@@ -105,6 +117,18 @@
     "koenigstuhl": 21.2,
     "koenigstuhl_opponents": 20,
     "wilkies": 36.2,
+    "wilkies_opponents": 12
+  },
+  "silk (RED)": {
+    "koenigstuhl": 21.9,
+    "koenigstuhl_opponents": 20,
+    "wilkies": 42.9,
+    "wilkies_opponents": 12
+  },
+  "silk (hand)": {
+    "koenigstuhl": 21.9,
+    "koenigstuhl_opponents": 20,
+    "wilkies": 42.9,
     "wilkies_opponents": 12
   },
   "stone (RED)": {
