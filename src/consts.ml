@@ -23,7 +23,7 @@ let resolve (consts : string list) (e : expr) : expr =
     | AStore s when is_const s -> constant loc s
     | AExp (m, x) ->
       (match List.find_opt (fun s -> List.mem s vars) (names x) with
-      | Some v -> raise (Error (Some loc, sprintf "variable `%s` cannot be part of an expression: it is a cell's field, not a number" v))
+      | Some v -> raise (Error (Some loc, sprintf "variable `%s` cannot be part of an expression: it is a cell's field, not a number" (Rename.original v)))
       | None ->
         let m = match m with
           | Some m -> m

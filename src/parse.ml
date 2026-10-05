@@ -48,6 +48,13 @@ let user_name ?atom (sexp : sexp) (s : string) : string =
     fail sexp (sprintf "`%s`: names starting with `_` are reserved for the compiler" s)
   else s
 
+(* A let's name never reaches pMARS (its cell is a generated label), so it may be any atom but one
+   that reads as a number: there, every use would be the number. *)
+let binder_name ?atom (sexp : sexp) (s : string) : string =
+  let s = user_name ?atom sexp s in
+  if Int64.of_string_opt s <> None then fail sexp (sprintf "`%s` is a number and cannot name a variable" s)
+  else s
+
 (* pMARS reads these as opcodes or pseudo-opcodes in any case (asm.c), never as labels. *)
 let pmars_keywords = ["MOV"; "ADD"; "SUB"; "MUL"; "DIV"; "MOD"; "JMZ"; "JMN"; "DJN"; "CMP"; "SLT"; "SPL";
                       "DAT"; "JMP"; "SEQ"; "SNE"; "NOP"; "LDP"; "STP"; "ORG"; "END"; "PIN"; "EQU"; "FOR"; "ROF"]
@@ -232,7 +239,7 @@ let rec parse_exp (sexp : sexp) : expr =
     | `Atom "do-while" -> EFlow1 (DoWhile, parse_cond e1, parse_exp e2, loc)
     | `Atom "let" ->
       (match e1 with
-      | `List [(`Atom id as a); e] -> ELet (user_name ~atom:a e1 id, parse_arg e, parse_exp e2, loc)
+      | `List [(`Atom id as a); e] -> ELet (binder_name ~atom:a e1 id, parse_arg e, parse_exp e2, loc)
       | _ -> fail e1 (sprintf "Not a valid let assignment: %s" (to_string e1)) )
     | _ -> fail sexp (sprintf "Not a valid binary expr: %s" (to_string sexp)) )
   | `List [eop; e1; e2; e3] ->
@@ -344,6 +351,9 @@ let rec scoped (env : (string * sexp) list) (active : string list) (loc : loc op
     node [l; node [binder x xa; scoped env active loc init]; scoped env (inner x) loc body]
   | `List [(`Atom "for" as f); (`Atom k as ka); lo; hi; body] ->
     node [f; binder k ka; scoped env active loc lo; scoped env active loc hi; scoped env (inner k) loc body]
+  (* a list's head is a keyword, an operator or a template's name, never a variable: a let of a
+     template's name does not hide the template *)
+  | `List ((`Atom _ as h) :: rest) -> node (h :: List.map (scoped env active loc) rest)
   | `List l -> node (List.map (scoped env active loc) l)
 
 (* The templates a body calls: every list's head, except a let's binding, whose head is its name *)
@@ -402,7 +412,7 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
       List.iter2 (fun (p, kind) a ->
         let bad why = fail a (sprintf "`%s`'s %s is a %s: %s" h p (string_of_kind kind) why) in
         match kind, a with
-        | KNum, `Atom x when List.mem x scope -> bad (sprintf "`%s` is a let variable (pass it as a Var)" x)
+        | KNum, `Atom x when List.mem x scope -> bad (sprintf "`%s` is a let variable (pass it as a Var)" (Rename.original x))
         | KNum, `Atom _ -> ()
         | KNum, `List [op; _; _] when is_operator op -> ()
         | KNum, `List _ -> bad (sprintf "a number, constant, label or expression, not %s" (to_string a))
@@ -423,7 +433,9 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
           Phys.replace generated a () ;
           Option.iter (Phys.replace locations a) (loc_of s) ;
           (d, a)) in
-      let binders = renames (own (List.filter (fun d -> not (List.mem d (labels_in t.body))) (defined t.body) @ for_vars t.body)) in
+      (* a let or for named like a parameter shadows it within its scope, as a let does elsewhere *)
+      let binders = renames (List.sort_uniq Stdlib.compare
+          (List.filter (fun d -> not (List.mem d (labels_in t.body))) (defined t.body) @ for_vars t.body)) in
       let body = scoped binders [] (loc_of s) t.body in
       go scope (subst (renames (own (labels_in t.body)) @ List.combine (List.map fst t.params) args) (loc_of s) body)
     | `List l ->

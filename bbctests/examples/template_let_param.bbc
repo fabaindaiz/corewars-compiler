@@ -1,0 +1,14 @@
+NAME: a let in a template shadows a parameter of its name
+DESCRIPTION: inside the let, x is the let's variable, not the argument 5, as a let shadows elsewhere (the user's decision, d-7d2612-e1c41a); see behtests/template_let_param.beh
+SRC:
+(program
+  (define (t (x Num)) (let (x 1) (seq (ADD 1 x) (JMP 0) (DAT 0 (store x)))))
+  (t 5))
+EXPECTED:
+;redcode-94b
+
+  ADD.AB #1     , $_LET1 
+  JMP    #0     , #0     
+_LET1 
+  DAT    #0     , #1     
+  DAT    $0     , $0     

@@ -324,22 +324,27 @@ none miscompiles silently except the first, which pMARS then rejects:
 - the A-field mode error on a let variable prints the internal name (`_x#1`, `_X1_v`).
 
 ### A let in a template named like a parameter loses its binder · i-7d2612-672fff
-**State.** Known bug (s-7d2612-11efe5, found by the phase-7 review; on `main` since the macro
-layer). `(define (t (x Num)) (let (x 1) (seq (ADD 1 x) ...)))` called as `(t 5)` emits `ADD.AB #1,
+**State.** Fixed (s-7d2612-dec815, d-7d2612-e1c41a): the let shadows the parameter, by the user's
+decision; the golden moved to `bbctests/examples/`, the spec lost its mark. Was: known bug
+(s-7d2612-11efe5, found by the phase-7 review; on `main` since the macro layer). `(define (t (x Num)) (let (x 1) (seq (ADD 1 x) ...)))` called as `(t 5)` emits `ADD.AB #1,
 #5`: parameters are left out of the per-expansion renaming, then the arguments replace every atom
-of their name, the let's binder and its uses included. A silent miscompile. Characterized in
-`bbctests/known-bugs/template_let_param.bbc`, `behtests/template_let_param.beh` (known-failing).
+of their name, the let's binder and its uses included. A silent miscompile. Was characterized in
+`bbctests/known-bugs/` and a known-failing spec; now `bbctests/examples/template_let_param.bbc`,
+`behtests/template_let_param.beh`.
 **Decide first.** Whether such a let shadows the parameter (rename it like any let binder) or is an
 error (a template's let may not take a parameter's name). Shadowing matches RED's let elsewhere.
 
 ### A let binder is checked only for the reserved prefix · i-7d2612-a73935
-**State.** Planned (s-7d2612-11efe5, found by the review). `parse.ml` checks a let's binder with
+**State.** Done (s-7d2612-dec815, d-7d2612-e1c41a): a binder that reads as a number is an error;
+other atoms stay allowed (a let's name never reaches pMARS, and `x#1` was a tested name). Was:
+planned (s-7d2612-11efe5, found by the review). `parse.ml` checks a let's binder with
 `user_name` (no leading `_`) and not `label_name`: `(let (5 1) (seq (ADD 1 5) ... (DAT 0 (store
 5))))` compiles. It is why i-7d2612-672fff miscompiles silently instead of failing: the argument
 `5` lands in a binder's place and is accepted.
 
 ### Smaller gaps from the phase-7 review · i-7d2612-9aa299
-**State.** Planned (s-7d2612-11efe5). Two more error messages print the internal name of a
+**State.** Done (s-7d2612-dec815): both messages print the name as written, and a let of a
+template's name no longer hides the template inside a template. Was: planned (s-7d2612-11efe5). Two more error messages print the internal name of a
 template's let variable: `Consts` ("variable `_X1_v` cannot be part of an expression") and the `Num`
 kind check ("`_X1_v` is a let variable (pass it as a Var)"); `Rename.original` would print `v`.
 Inside a template, a let named like an earlier template turns that template's call into "Not a valid

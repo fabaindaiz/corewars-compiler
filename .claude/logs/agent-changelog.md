@@ -5,6 +5,17 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-10-05 · s-7d2612-dec815 — Phase 8: the template naming gaps, unary skips, include and snippets, Silk and Mice
+
+**What.** The user asked to keep going with the pending items, on branch `feat/phase-8` from
+`main`. The user's decisions: `(include "path")` for the snippets catalogue, and a template's let
+named like a parameter shadows it. Built so far: that shadowing (i-7d2612-672fff fixed,
+d-7d2612-e1c41a; its golden moved from `known-bugs` to `examples`, its spec lost the mark), a let's
+name that reads as a number is an error (i-7d2612-a73935), the two remaining messages print names as
+written and a let of a template's name no longer hides the template (i-7d2612-9aa299).
+**What went wrong.** The first binder check required a label's shape and broke a tested let name
+(`x#1`); it now rejects only a name that reads as a number.
+
 ## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, the pMARS trap, and the session close
 
 **What.** The user asked to merge and go on with the pending items: `feat/phase-4` to `feat/phase-6`

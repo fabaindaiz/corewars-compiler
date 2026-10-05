@@ -1264,6 +1264,27 @@ let test_phase7_afield_error_names_the_variable () =
   let err = error_of "(let (x 1) (seq (MOV 0 (} x)) (DAT 0 (store x))))" in
   check Alcotest.bool "outside a template" true (contains err "`x` is a let variable: its (store x)")
 
+(* A template's let or for named like a parameter shadows it, as a let does elsewhere *)
+let test_phase8_let_shadows_a_parameter () =
+  let out = out_of "(program (define (t (x Num)) (let (x 1) (seq (ADD 1 x) (JMP 0) (DAT 0 (store x))))) (t 5))" in
+  check Alcotest.(list string) "inside the let: the variable" ["ADD.AB#1,$_LET1"] (lines_with "ADD" out) ;
+  let out = out_of "(program (define (t (x Num)) (seq (MOV x 7) (let (x 1) (seq (ADD 1 x) (JMP 0) (DAT 0 (store x)))))) (t 5))" in
+  check Alcotest.(list string) "before the let: the argument" ["MOV.AB#5,#7"] (lines_with "MOV" out)
+
+(* A let's name is no number: every use would read as the number *)
+let test_phase8_let_binder_is_a_name () =
+  check Alcotest.bool "a number" true
+    (contains (error_of "(let (5 1) (seq (ADD 1 5) (JMP 0) (DAT 0 (store 5))))") "`5` is a number and cannot name a variable")
+
+(* Errors name a template's variable as written; a template's let does not hide a template *)
+let test_phase8_template_names_in_errors () =
+  let err = error_of "(program (define (t) (let (v 1) (let (v (+ v 1)) (seq (ADD 1 v) (DAT 0 (store v)))))) (seq (label v) (t)))" in
+  check Alcotest.bool "an expression" true (contains err "variable `v` cannot be part of an expression") ;
+  let err = error_of "(program (define (n (a Num)) (DAT 0 a)) (define (t) (let (v 1) (seq (n v) (DAT 0 (store v))))) (t))" in
+  check Alcotest.bool "a Num argument" true (contains err "`v` is a let variable (pass it as a Var)") ;
+  let out = out_of "(program (define (b) (NOP)) (define (t) (let (b 3) (seq (b) (JMP 0) (DAT 0 (store b))))) (t))" in
+  check Alcotest.(list string) "a call in a let of its name" ["NOP#0,#0"] (lines_with "NOP" out)
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1434,6 +1455,9 @@ let ocaml_tests = [
     test_case "expansion limits" `Quick test_phase7_expansion_limits ;
     test_case "header words, later calls" `Quick test_phase7_header_words_and_later_calls ;
     test_case "the A-field error names the variable" `Quick test_phase7_afield_error_names_the_variable ;
+    test_case "a template's let shadows a parameter" `Quick test_phase8_let_shadows_a_parameter ;
+    test_case "a let's binder is a name" `Quick test_phase8_let_binder_is_a_name ;
+    test_case "a template's names in errors and calls" `Quick test_phase8_template_names_in_errors ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;
