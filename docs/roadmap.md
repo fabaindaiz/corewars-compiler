@@ -36,7 +36,14 @@ Wilkies score, 500 rounds, two runs; noise about 4 points):
 
 ## Where we are
 
-**Phase 6 is built** (s-7d2612-140ece, branch `feat/phase-6` on `feat/phase-5`, not merged): A-field
+As of 2026-10-05, end of s-7d2612-11efe5: **`main` holds phases 1 to 6** (phases 4 to 6 merged by
+fast-forward that day) and the phase-6 review's minors (i-7d2612-faa781). The gate: 199 alcotest
+cases besides `execute`, 44 behaviour specs, the audit's 12 checks. **Next**, none started: unary
+skip fusion (i-7d2612-40b941), a Silk-style paper and Mice (i-7d2612-34b61d), the snippets catalogue
+(i-7d2612-8e9549, which needs a decision on how a program uses a catalogue: an include item, a
+prelude, or a document to copy from), the host pMARS trap (i-7d2612-0cb9e9).
+
+**Phase 6 is built** (s-7d2612-140ece, branch `feat/phase-6` on `feat/phase-5`, merged 2026-10-05): A-field
 modes on numbers, labels and expressions (i-7d2612-e98368), `(start label)` emitted as `ORG`
 (i-7d2612-e725ef), the macro layer of typed templates and `for` (i-7d2612-ec4d2d), and skip fusion
 under the peephole. The quickscan is the tenth archetype; it and the core-clear now play exactly as
@@ -44,7 +51,7 @@ their hand-written twins (`docs/research/2026-10-04-benchmark.md`, phase-6 secti
 snippets catalogue (i-7d2612-8e9549), a Silk-style paper with `}` (i-7d2612-34b61d), a quickscan
 handing over to a paper or stone, unary skip fusion (i-7d2612-40b941).
 
-**Phase 5 is built** (s-7d2612-9b0d20, branch `feat/phase-5` on `feat/phase-4`, not merged):
+**Phase 5 is built** (s-7d2612-9b0d20, branch `feat/phase-5` on `feat/phase-4`, merged 2026-10-05):
 hills by header or flag, metadata as written, `make bench` against Wilkies and Koenigstuhl's top
 20, behaviour specs for every construct, the Core War documentation checked against its sources.
 Measured: RED costs nothing against hand-written archetypes; its best warrior places #899 of 1107
@@ -54,7 +61,7 @@ quickscan and the snippets wait for; A-field modes on numbers (i-7d2612-e98368);
 (i-7d2612-e725ef).
 
 **Phase 4 and the rest of phase 2 are built** (s-7d2612-333abd, branch `feat/phase-4` from `main`,
-not merged): a cell beside a value is its B-field (i-7d2612-9efd00 fixed), constants as `EQU` with
+merged 2026-10-05): a cell beside a value is its B-field (i-7d2612-9efd00 fixed), constants as `EQU` with
 label arithmetic (the imp ring is the eighth archetype), warnings driven by the policy, the phase-1
 review's smaller gaps, compile-error goldens, a pointer's step as its net change per lap. **Next:**
 compile-time repetition (the macro layer, i-7d2612-ec4d2d) for the quickscan and the snippets;
@@ -314,6 +321,22 @@ none miscompiles silently except the first, which pMARS then rejects:
   template `b`);
 - the A-field mode error on a let variable prints the internal name (`_x#1`, `_X1_v`).
 
+### A let in a template named like a parameter loses its binder · i-7d2612-672fff
+**State.** Known bug (s-7d2612-11efe5, found by the phase-7 review; on `main` since the macro
+layer). `(define (t (x Num)) (let (x 1) (seq (ADD 1 x) ...)))` called as `(t 5)` emits `ADD.AB #1,
+#5`: parameters are left out of the per-expansion renaming, then the arguments replace every atom
+of their name, the let's binder and its uses included. A silent miscompile. Characterized in
+`bbctests/known-bugs/template_let_param.bbc`, `behtests/template_let_param.beh` (known-failing).
+**Decide first.** Whether such a let shadows the parameter (rename it like any let binder) or is an
+error (a template's let may not take a parameter's name). Shadowing matches RED's let elsewhere.
+
+### Smaller gaps from the phase-7 review · i-7d2612-9aa299
+**State.** Planned (s-7d2612-11efe5). Two more error messages print the internal name of a
+template's let variable: `Consts` ("variable `_X1_v` cannot be part of an expression") and the `Num`
+kind check ("`_X1_v` is a let variable (pass it as a Var)"); `Rename.original` would print `v`.
+Inside a template, a let named like an earlier template turns that template's call into "Not a valid
+expr: (_X1_b)", where at the top level the call goes to the template.
+
 ## Phase 3 — The optimizer, under the policy
 
 Transformations that change emitted code to improve the policy's metric, each measured with `--report` before and after. Speed first: one instruction per iteration is worth about five times eight cells.
@@ -557,7 +580,9 @@ rotated `while`'s death (9 instructions, counted as 8: the entry `JMP` goes to t
 **Cost.** About two minutes each to rerun and recount, × about 5 a session.
 **Proposal.** When a probe fails, read the trace (`run-warrior` skill) before changing the probe or
 the code, and say in the changelog which of the two was wrong. No tool needed.
-**Seen in.** s-7d2612-2c7e4d, s-7d2612-f082c8.
+**Seen in.** s-7d2612-2c7e4d, s-7d2612-14641b, s-7d2612-f082c8, s-7d2612-333abd, s-7d2612-140ece
+(counted in the log at s-7d2612-11efe5: five sessions; the last, a cell index read from a numbered
+listing that counted a blank line).
 
 ### Compound commands refused whole by a permission rule · i-7d2612-51fe9d
 **State.** Planned (s-7d2612-3f3b23). A command chaining an edit or a check with a denied verb
@@ -566,7 +591,8 @@ these sessions.
 **Cost.** One retry each (about a minute), and once a mutation check silently not run.
 **Proposal.** Restore files with `git show HEAD:FILE > FILE`, park work as a patch in the job's
 scratch directory, and keep denied verbs out of chains (the global rule already says so).
-**Seen in.** s-7d2612-2c7e4d, s-7d2612-14641b, s-7d2612-f082c8.
+**Seen in.** s-7d2612-2c7e4d, s-7d2612-14641b, s-7d2612-f082c8, s-7d2612-9b0d20 (counted in the log at
+s-7d2612-11efe5).
 
 ### One-concern commits split by hand-staged blobs · i-7d2612-f5490f
 **State.** Planned (s-7d2612-3f3b23). Four times this session several fixes landed in the same files

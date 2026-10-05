@@ -1,0 +1,5 @@
+# The let's x (cell 2) shadows the parameter: the ADD should make it 2. Today the argument replaces
+# the binder's uses and the ADD adds to its own B-field.
+golden: bbctests/known-bugs/template_let_param.bbc
+known-failing: i-7d2612-672fff
+cell 1 2 DAT.F #0, #2
