@@ -1,0 +1,20 @@
+NAME: snippet demo: the core-clear snippet, started at its entry
+DESCRIPTION: includes snippets/clear.src and compiles to the clear archetype's code (labels renamed); see behtests/snippet_clear.beh
+SRC:
+(program
+  (include "snippets/clear.src")
+  (start top)
+  (clear top 4))
+EXPECTED:
+;redcode-94b
+ORG top
+
+_LET1 
+  DAT    #0     , #4     
+top   
+_REP8 
+  MOV.I  $_X1_bomb, >_LET1 
+  JMP    $_REP8 , #0     
+_X1_bomb
+  DAT    #0     , #0     
+  DAT    $0     , $0     

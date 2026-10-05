@@ -1,0 +1,11 @@
+; A quickscan's two halves. probes: sixteen comparisons of the cells first + k*stride and
+; first + k*stride + gap; a pair that differs jumps to its stub at hits + 2(k-1). 2 cells a probe (an
+; if around one jump is a skip). stubs: for each probe, point ptr at its cell and jump to found. 2
+; cells a stub. archetypes/quickscan.src; spec behtests/snippet_quickscan.beh.
+(define (probes (first Lab) (hits Lab) (stride Num) (gap Num))
+  (for k 1 16
+    (if (NE I (Dir (+ first (* k stride))) (Dir (+ first (+ (* k stride) gap))))
+      (JMP (+ hits (* 2 (- k 1)))))))
+(define (stubs (first Lab) (ptr Lab) (found Lab) (stride Num))
+  (for k 1 16
+    (seq (MOV (# (- (+ first (* k stride)) ptr)) ptr) (JMP found))))

@@ -1,0 +1,12 @@
+; A bomber: adds step to its pointer and drops a copy of the pointer's cell where it points, for
+; ever. 4 cells (ADD, MOV, JMP and the pointer), 3 cycles a bomb (--report). With stride 4, the
+; dwarf; behind (SPL 0) with 3044, the stone. archetypes/dwarf.src, archetypes/stone.src; specs
+; behtests/snippet_dwarf.beh, behtests/snippet_stone.beh.
+(define (bomber (stride Num))
+  (let (b 0)
+    (seq
+      (repeat
+        (seq
+          (ADD stride b)
+          (MOV I b (Ind b))))
+      (DAT 0 (store b)))))

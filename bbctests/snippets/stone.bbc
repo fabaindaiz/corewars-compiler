@@ -1,0 +1,17 @@
+NAME: snippet demo: the bomber snippet behind (SPL 0) with step 3044: the stone
+DESCRIPTION: includes snippets/bomber.src and compiles to the stone archetype's code (labels renamed); see behtests/snippet_stone.beh
+SRC:
+(program
+  (include "snippets/bomber.src")
+  (seq (SPL 0) (bomber 3044)))
+EXPECTED:
+;redcode-94b
+
+  SPL    #0     , #0     
+_REP8 
+  ADD.AB #3044  , $_LET5 
+  MOV.I  $_LET5 , @_LET5 
+  JMP    $_REP8 , #0     
+_LET5 
+  DAT    #0     , #0     
+  DAT    $0     , $0     

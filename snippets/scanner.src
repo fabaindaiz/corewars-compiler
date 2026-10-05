@@ -1,0 +1,15 @@
+; A scanner: looks at every stride-th cell from first on, and bombs the ones that are not empty. 5
+; cells (the loop holds its pointer in its JMP, the bomb after it); 2 cycles an empty cell, 4 one it
+; bombs (--report: cycles/iter 2..4).
+; archetypes/scanner.src; spec behtests/snippet_scanner.beh.
+(define (scanner (stride Num) (first Num))
+  (let (p first)
+    (seq
+      (repeat
+        (seq
+          (ADD stride p)
+          (if (JN (Ind p))
+            (MOV I bomb (Ind p))))
+        (store p))
+      (label bomb)
+      (DAT 0 0))))

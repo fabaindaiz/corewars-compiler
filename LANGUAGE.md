@@ -198,8 +198,9 @@ A file may wrap its single body expression in an optional header. A file without
   body)
 ```
 
-- (program items) the header: any number of `optimize`, `expect`, `const` and `strategy` items, at most one `hill`, `name` and `author`, and exactly one body expression
+- (program items) the header: any number of `optimize`, `expect`, `const`, `define`, `include` and `strategy` items, at most one `hill`, `name` and `author`, and exactly one body expression
 - (const name value) a constant (see *Constants and expressions*)
+- (include "path") the templates of another file, relative to this one, as if defined here; a file holds only `define` and `include` items, is read once however often it is included, and an include cycle is an error. The catalogue of verified templates is `snippets/` (`snippets/README.md`)
 - (start label) execution starts at `label` (emitted as `ORG label`) instead of the first cell, so data can come before the code; the metrics measure from there, and an unknown label is an error
 - (hill key) the hill the warrior is written for: `94b` (the default), `94nop`, `94`, `94x`, `tiny`, `nano`. It sets the `;redcode-<key>` line, adds `;assert CORESIZE==… && MAXLENGTH==…`, measures on that core and length, rejects a warrior longer than the hill allows, and rejects `LDP`/`STP` on `94nop` (no p-space). `run_compile.exe --hill KEY` overrides it.
 - (name words ...), (author words ...), (strategy words ...) emitted as `;name`, `;author`, `;strategy` lines, only when written (the compiler never invents an author); `strategy` may repeat. Each is one line of words: an empty one, or one with a line break, is an error

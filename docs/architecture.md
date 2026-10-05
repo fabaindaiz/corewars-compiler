@@ -17,6 +17,8 @@ meaning each pass must preserve is in `docs/semantics.md`; settled choices are i
 | `bbctests/archetypes/*.bbc` | goldens for the classic archetypes written in RED (phase 2's acceptance suite) |
 | `behtests/*.beh` | behaviour specs, run by `tools/behave.py` |
 | `examples/*.src` | RED programs to compile by hand (`make compile src=...`) |
+| `snippets/*.src` | the snippets catalogue: templates to `(include ...)`, each with a demo in `bbctests/snippets/` and a spec (`snippets/README.md`) |
+| `bbctests/snippets/*.bbc` | goldens for the snippets' demos |
 | `archetypes/` | each classic archetype twice: `NAME.red` written by hand, `NAME.src` in RED; measured in `docs/research/2026-10-04-archetypes.md` |
 | `docs/research/` | dated research notes: what was measured, how, and what it found |
 | `pmars/` | third-party pMARS: the Linux binary, its configs (`config/94b.opt`) and the source zip |
@@ -38,7 +40,7 @@ The analysis half (`Layout`, `Metrics`, `Expect`) never changes the redcode (d-7
 | Module | Role | Representation it produces |
 |---|---|---|
 | `src/hill.ml` | the hills a warrior may be written for, with their core size, length limit and whether p-space exists | `Hill.t` |
-| `src/parse.ml` | s-expression → AST; first the macro layer (`expand`: templates and `for`, at the s-expression level); the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
+| `src/parse.ml` | s-expression → AST; first the macro layer (`expand`: templates and `for`, at the s-expression level; `(include "path")` reads a file's templates through the driver's `read`); the optional `(program ...)` header; rejects unknown forms with `Ast.Error` at the form's line and column (the located reader records each node's position) | `Ast.source`, `Ast.expr` (= `loc eexpr`) |
 | `src/ast.ml` | the annotated AST `'a eexpr`, `loc`, `meta = { tag; loc }`, the one user error `Error`; `tag_expr` numbers every node in pre-order from 1 | `meta eexpr` (tags feed label names) |
 | `src/consts.ml` | `resolve`: a constant used as an operand becomes an immediate expression, an expression without a mode gets one (immediate without labels, direct with), and a `let` or label named after a constant, or a variable inside an expression, is an `Ast.Error` | `Ast.expr` |
 | `src/rename.ml` | `uniquify`: every `let`-bound variable gets a name no other binder uses (`x`, then `_x#1`, … in the reserved `_` space, so no user name can equal one; messages show the original), so initializers resolve where they are bound; the tree keeps its shape, so tags are unchanged | `Ast.expr` |

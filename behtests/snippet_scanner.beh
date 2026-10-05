@@ -1,0 +1,4 @@
+# The scanner archetype's probes: the snippet demo compiles to the same cells (archetype_scanner.beh)
+golden: bbctests/snippets/scanner.bbc
+cell 3 3 JMP.B $-3, #40
+alive 1000

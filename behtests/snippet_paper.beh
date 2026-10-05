@@ -1,0 +1,5 @@
+# The paper archetype's probes: the snippet demo compiles to the same cells (archetype_paper.beh)
+golden: bbctests/snippets/paper.bbc
+cell 15 1999 MOV.AB #7, #0
+cell 15 2005 DAT.F #0, #2000
+alive 1000

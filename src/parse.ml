@@ -445,7 +445,20 @@ let expand (consts : (string * Red.rexpr) list) (templates : template list) (pro
   go [] program
 
 (* A source: a plain expression, or (program (optimize o ...) (expect e) ... body) *)
-let parse_source (sexp : sexp) : source =
+(* [file] is the source's own path and [read] reads another: (include "path") resolves the path
+   against the including file's directory. *)
+let resolve (from : string) (path : string) : string =
+  if Filename.is_relative path then
+    (match Filename.dirname from with "." -> path | d -> Filename.concat d path)
+  else path
+
+let rec forget_locations (s : sexp) : unit =
+  Phys.remove locations s ;
+  match s with
+  | `List l -> List.iter forget_locations l
+  | `Atom _ -> ()
+
+let parse_source ?(file = "") ?(read : string -> string option = fun _ -> None) (sexp : sexp) : source =
   match sexp with
   | `List (`Atom "program" :: items) ->
     let optimize = ref None and expects = ref [] and consts = ref [] and bodies = ref [] in
@@ -453,6 +466,35 @@ let parse_source (sexp : sexp) : source =
     let words item ws = String.concat " " (List.map (fun w -> match w with
       | `Atom s -> s
       | `List _ -> fail item (sprintf "Not a word: %s" (to_string w))) ws) in
+    let define item =
+      let t = parse_template (List.length !templates) item in
+      if List.exists (fun u -> u.name = t.name) !templates then fail item (sprintf "template `%s` is defined twice" t.name) ;
+      templates := t :: !templates in
+    (* An included file's templates join the program's at the include, in order; a file is read
+       once however often it is included. An error inside it is reported at the include, saying
+       where in the file; once its templates are parsed, its nodes forget their places, so a later
+       error in an expansion points at the call, in the including file. *)
+    let included = ref [] in
+    let rec include_file (stack : string list) (item : sexp) (path : string) =
+      let full = resolve (List.hd stack) path in
+      if List.mem full stack then
+        fail item (sprintf "include cycle: %s" (String.concat " -> " (List.rev (full :: stack))))
+      else if not (List.mem full !included) then begin
+        included := full :: !included ;
+        let text = match read full with Some t -> t | None -> fail item (sprintf "no such file: %s" full) in
+        let parsed = match Located.parse_string_list text with
+          | Ok l -> l
+          | Error msg -> fail item (sprintf "in %s: %s" full msg) in
+        List.iter (fun it ->
+          try match it with
+            | `List [`Atom "include"; `Atom p] -> include_file (full :: stack) it p
+            | `List (`Atom "define" :: _) -> define it
+            | `Atom _ | `List _ -> fail it "an included file holds only (define ...) and (include ...) items"
+          with Error (l, msg) ->
+            let at = match l with Some l -> sprintf "%s:%d:%d" full l.line l.col | None -> full in
+            fail item (sprintf "in %s: %s" at msg)) parsed ;
+        List.iter forget_locations parsed
+      end in
     List.iter (fun item -> match item with
       | `List [`Atom "optimize"] -> fail item "an (optimize ...) needs at least one objective"
       | `List (`Atom "optimize" :: os) ->
@@ -488,10 +530,8 @@ let parse_source (sexp : sexp) : source =
         (match List.find_opt (fun s -> not (List.mem_assoc s !consts)) (names v) with
         | Some s -> fail item (sprintf "a constant is a number: `%s` is not a constant defined before `%s`" s n)
         | None -> consts := (n, v) :: !consts)
-      | `List (`Atom "define" :: _) ->
-        let t = parse_template (List.length !templates) item in
-        if List.exists (fun u -> u.name = t.name) !templates then fail item (sprintf "template `%s` is defined twice" t.name) ;
-        templates := t :: !templates
+      | `List (`Atom "define" :: _) -> define item
+      | `List [`Atom "include"; `Atom path] -> include_file [file] item path
       | `Atom _ | `List _ -> bodies := item :: !bodies) items ;
     (* the body is expanded once the whole header is known: its constants bound the for loops *)
     (match !bodies with

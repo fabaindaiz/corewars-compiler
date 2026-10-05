@@ -1,0 +1,4 @@
+# The dwarf archetype's probes: the snippet demo compiles to the same cells (archetype_dwarf.beh)
+golden: bbctests/snippets/dwarf.bbc
+cell 2 7 DAT.F #0, #4
+alive 1000

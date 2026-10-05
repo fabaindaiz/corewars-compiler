@@ -1,0 +1,21 @@
+NAME: snippet demo: the paper snippet, distance 2000 and step 2365
+DESCRIPTION: includes snippets/paper.src and compiles to the paper archetype's code (labels renamed); see behtests/snippet_paper.beh
+SRC:
+(program
+  (include "snippets/paper.src")
+  (paper 2000 2365))
+EXPECTED:
+;redcode-94b
+
+_REP5 
+_LET1 
+  MOV.AB #7     , #7     
+_DWH10
+  MOV.I  <_LET1 , <_LET2 
+  JMN.B  $_DWH10, $_LET1 
+  SPL    @_LET2 , #0     
+  ADD.AB #2365  , $_LET2 
+  JMP    $_REP5 , #0     
+_LET2 
+  DAT    #0     , #2000  
+  DAT    $0     , $0     

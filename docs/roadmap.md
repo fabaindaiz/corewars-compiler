@@ -40,10 +40,7 @@ As of 2026-10-05, end of s-7d2612-11efe5: **`main` holds phases 1 to 6** (phases
 fast-forward that day) and the phase-6 review's minors (i-7d2612-faa781). The gate: 199 alcotest
 cases besides `execute`, 45 behaviour specs (one known-failing, i-7d2612-672fff), the audit's 12
 checks, and a check that the patched host pMARS survives the battles that trapped it
-(i-7d2612-0cb9e9, done). **Next**, none started: a Silk-style
-paper and Mice (i-7d2612-34b61d), the snippets catalogue (i-7d2612-8e9549, which needs a decision on
-how a program uses a catalogue: an include item, a prelude, or a document to copy from), the known
-bug i-7d2612-672fff and the smaller gaps i-7d2612-9aa299 and i-7d2612-a73935.
+(i-7d2612-0cb9e9, done). **Next**: see the phase-8 paragraph.
 
 **Phase 6 is built** (s-7d2612-140ece, branch `feat/phase-6` on `feat/phase-5`, merged 2026-10-05): A-field
 modes on numbers, labels and expressions (i-7d2612-e98368), `(start label)` emitted as `ORG`
@@ -302,7 +299,10 @@ today). Before: The command line's error path is tested through `Cored.Driver`
 `STATUS: CT error`.
 
 ### Snippets: named RED fragments with verified metrics and specs · i-7d2612-8e9549
-**State.** Unblocked (s-7d2612-140ece): templates are the reuse mechanism. Still planned: the catalogue itself. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
+**State.** Done (s-7d2612-dec815, d-7d2612-c2df7c): `(include "path")` by the user's decision, and six
+snippets in `snippets/` (imp, bomber, scanner, clear, paper, the quickscan's probes and stubs), each
+with a demo that compiles to its archetype's code and a spec; costs in `snippets/README.md`. Was:
+unblocked (s-7d2612-140ece): templates are the reuse mechanism; the catalogue itself planned. A catalogue of RED fragments (imp, bomber loop, scanner, ...), each with its
 metrics and a behaviour spec. **Blocked on** a reuse mechanism in the language (subproject C or the
 dev branch's lambdas, i-7d2612-ec4d2d).
 

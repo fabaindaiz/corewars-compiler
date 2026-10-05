@@ -1,0 +1,19 @@
+NAME: snippet demo: the scanner snippet, stride 10 from cell 20
+DESCRIPTION: includes snippets/scanner.src and compiles to the scanner archetype's code (labels renamed); see behtests/snippet_scanner.beh
+SRC:
+(program
+  (include "snippets/scanner.src")
+  (scanner 10 20))
+EXPECTED:
+;redcode-94b
+
+_REP4 
+  ADD.AB #10    , $_LET1 
+  JMZ.B  $_REP4 , @_LET1 
+  MOV.I  $_X1_bomb, @_LET1 
+_IF9  
+_LET1 
+  JMP    $_REP4 , #20    
+_X1_bomb
+  DAT    #0     , #0     
+  DAT    $0     , $0     

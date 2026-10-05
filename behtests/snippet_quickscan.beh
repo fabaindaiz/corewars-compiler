@@ -1,0 +1,7 @@
+# The quickscan archetype's probes: the snippet demo compiles to the same cells (archetype_quickscan.beh)
+golden: bbctests/snippets/quickscan.bbc
+hill: 94nop
+cell 16 70 DAT.F #0, #300
+cell 18 70 DAT.F #0, #301
+cell 18 370 DAT.F #0, #0
+alive 1000

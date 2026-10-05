@@ -57,7 +57,7 @@ let rec compile ~(read : string -> string option) (args : string list) : output 
 and compile_file ~read f report optimize warn emit_beh warn_mode hill_flag : output =
   let text = match read f with Some t -> t | None -> stop (sprintf "error: no such file: %s" f) in
   let sexp = Parse.sexp_from_string text in
-  let src = Parse.parse_source sexp in
+  let src = Parse.parse_source ~file:f ~read sexp in
   let names = match optimize with
     | Some names -> names
     | None -> Option.value src.optimize ~default:(List.map Metrics.string_of_objective Metrics.default_policy) in

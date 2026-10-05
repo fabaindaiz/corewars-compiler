@@ -1,0 +1,11 @@
+; A core-clear: its pointer sits before its code, so the program starts at entry ((start entry) in
+; the header); writes its bomb to every cell from first on. 4 cells, 2 cycles a cell (--report).
+; archetypes/clear.src; spec behtests/snippet_clear.beh.
+(define (clear (entry Lab) (first Num))
+  (let (p first)
+    (seq
+      (DAT 0 (store p))
+      (label entry)
+      (repeat (MOV I bomb (Inc p)))
+      (label bomb)
+      (DAT 0 0))))

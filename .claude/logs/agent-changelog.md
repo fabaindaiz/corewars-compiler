@@ -13,12 +13,19 @@ named like a parameter shadows it. Built so far: that shadowing (i-7d2612-672fff
 d-7d2612-e1c41a; its golden moved from `known-bugs` to `examples`, its spec lost the mark), a let's
 name that reads as a number is an error (i-7d2612-a73935), the two remaining messages print names as
 written and a let of a template's name no longer hides the template (i-7d2612-9aa299).
+`(include "path")` (d-7d2612-c2df7c) and the snippets catalogue (i-7d2612-8e9549): six snippets in
+`snippets/`, each with a demo golden in `bbctests/snippets/` that compiles to its archetype's code
+(compared after renaming labels: the same instructions) and a spec reusing the archetype's probes;
+the golden runners now read included files from the repository.
 Unary skip fusion (i-7d2612-40b941) closed by measurement: a unary `if` is already one direct jump,
 `JMN fin, x; X`, the same cells and cycles as a skip; the saving the item planned belonged to the
 binary case only.
 **What went wrong.** The first binder check required a label's shape and broke a tested let name
 (`x#1`); it now rejects only a name that reads as a number. The unary-fusion item, written last
 session, priced a saving without compiling one example; one compile showed there is none.
+Two new tests again expected no output from programs that compile with a warning. The first
+snippets named a parameter `step`, a RED word, and their comments carried cell counts written
+before measuring (the bomber is 4 cells, not 3; the paper 7, not 8): corrected from `--report`.
 
 ## 2026-10-05 · s-7d2612-11efe5 — Phase 7: the phase-6 review's minors, the pMARS trap, and the session close
 

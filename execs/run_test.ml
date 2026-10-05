@@ -39,12 +39,19 @@ let golden_expected (path : string) : string = between (read_file path) "EXPECTE
 let expr_of (path : string) : expr = parse_exp (sexp_from_string (golden_src path))
 let example (name : string) : string = "bbctests/examples/" ^ name ^ ".bbc"
 
+(* A golden's source is golden.src; a file it includes is read from the repository, relative to its
+   root (snippets/imp.src) *)
+let golden_read (src : string) (f : string) : string option =
+  if f = "golden.src" then Some src
+  else if Sys.file_exists f then Some (In_channel.with_open_bin f In_channel.input_all)
+  else None
+
 let golden_files () : string list =
   List.concat_map (fun dir ->
     Sys.readdir dir |> Array.to_list |> List.sort compare
     |> List.filter (fun f -> Filename.check_suffix f ".bbc")
     |> List.map (Filename.concat dir))
-    ["bbctests/examples"; "bbctests/known-bugs"]
+    ["bbctests/examples"; "bbctests/known-bugs"; "bbctests/snippets"]
 
 
 (* Tests for annotated emission *)
@@ -83,7 +90,7 @@ let test_emit_prog1_stores () =
 let test_emit_text_unchanged () =
   List.iter (fun path ->
     (* a golden may carry a header (constants, a hill): compiled as the CLI compiles it *)
-    let text = (Cored.Driver.run ~read:(fun _ -> Some (golden_src path)) ["golden.src"]).out in
+    let text = (Cored.Driver.run ~read:(golden_read (golden_src path)) ["golden.src"]).out in
     check Alcotest.string path (String.trim (golden_expected path)) (String.trim text))
     (golden_files ())
 
@@ -1285,6 +1292,29 @@ let test_phase8_template_names_in_errors () =
   let out = out_of "(program (define (b) (NOP)) (define (t) (let (b 3) (seq (b) (JMP 0) (DAT 0 (store b))))) (t))" in
   check Alcotest.(list string) "a call in a let of its name" ["NOP#0,#0"] (lines_with "NOP" out)
 
+(* (include "path") brings a file's templates, the path relative to the including file *)
+let test_phase8_include () =
+  let spin = "(define (spin) (seq (label here) (JMP here)))" in
+  let o = drive [("p.src", "(program (include \"lib.src\") (spin))"); ("lib.src", spin)] ["p.src"] in
+  check Alcotest.(list string) "one level" ["JMP$_X1_here,#0"] (lines_with "JMP" o.out) ;
+  let o = drive [("w/p.src", "(program (include \"lib/a.src\") (seq (twice) (JMP 0)))");
+                 ("w/lib/a.src", "(include \"b.src\") (define (twice) (seq (spin) (spin)))"); ("w/lib/b.src", spin)] ["w/p.src"] in
+  check Alcotest.int "nested, relative to the including file" 3 (List.length (lines_with "JMP" o.out)) ;
+  let o = drive [("p.src", "(program (include \"a.src\") (include \"b.src\") (seq (one) (two)))");
+                 ("a.src", "(include \"c.src\") (define (one) (spin))"); ("b.src", "(include \"c.src\") (define (two) (spin))"); ("c.src", spin)] ["p.src"] in
+  check Alcotest.bool "a file included twice is read once" false (contains o.err "error:")
+
+let test_phase8_include_errors () =
+  let err files = (drive files ["p.src"]).err in
+  check Alcotest.bool "a cycle" true
+    (contains (err [("p.src", "(program (include \"a.src\") (NOP))"); ("a.src", "(include \"b.src\")"); ("b.src", "(include \"a.src\")")]) "include cycle: p.src -> a.src -> b.src -> a.src") ;
+  check Alcotest.string "a missing file, at the include" "p.src:1:10: error: no such file: lib.src\n"
+    (err [("p.src", "(program (include \"lib.src\") (NOP))")]) ;
+  check Alcotest.bool "only templates" true
+    (contains (err [("p.src", "(program (include \"lib.src\") (NOP))"); ("lib.src", "(const k 3)")]) "an included file holds only (define ...) and (include ...) items") ;
+  check Alcotest.bool "an error inside says where" true
+    (contains (err [("p.src", "(program (include \"lib.src\") (NOP))"); ("lib.src", "\n(define (t (k Bad)) (NOP))")]) "in lib.src:2:12: `Bad` is not a kind")
+
 let test_fused_skip () =
   let two = "(let (a 0) (let (b 1) (seq %s (JMP 0) (DAT (store a) (store b)))))" in
   let ops_of body = opcodes (chosen (Printf.sprintf (Scanf.format_from_string two "%s") body)) in
@@ -1458,6 +1488,8 @@ let ocaml_tests = [
     test_case "a template's let shadows a parameter" `Quick test_phase8_let_shadows_a_parameter ;
     test_case "a let's binder is a name" `Quick test_phase8_let_binder_is_a_name ;
     test_case "a template's names in errors and calls" `Quick test_phase8_template_names_in_errors ;
+    test_case "include" `Quick test_phase8_include ;
+    test_case "include errors" `Quick test_phase8_include_errors ;
   ] ;
   "review5", [
     test_case "a step is compared modulo the core" `Quick test_review5_step_modulo_core ;
@@ -1525,7 +1557,7 @@ let () =
     (* A golden is what run_compile.exe prints (its header, policy, hill and all); a compile error is
        the error it prints. *)
     SCompiler ( fun _ s ->
-      let o = Cored.Driver.run ~read:(fun _ -> Some s) ["golden.src"] in
+      let o = Cored.Driver.run ~read:(golden_read s) ["golden.src"] in
       if o.code = 0 then o.out else failwith o.err ) in
   
   let bbc_tests =

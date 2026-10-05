@@ -1,0 +1,4 @@
+# The stone archetype's probes: the snippet demo compiles to the same cells (archetype_stone.beh)
+golden: bbctests/snippets/stone.bbc
+cell 4 3048 DAT.F #0, #3044
+alive 1000

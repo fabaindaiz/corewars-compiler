@@ -1,0 +1,4 @@
+# The imp archetype's probes: the snippet demo compiles to the same cells (archetype_imp.beh)
+golden: bbctests/snippets/imp.bbc
+cell 1 1 MOV.I $0, $1
+alive 1000

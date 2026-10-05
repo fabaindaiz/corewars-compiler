@@ -1,0 +1,11 @@
+NAME: snippet demo: the imp snippet
+DESCRIPTION: includes snippets/imp.src and compiles to the imp archetype's code (labels renamed); see behtests/snippet_imp.beh
+SRC:
+(program
+  (include "snippets/imp.src")
+  (imp))
+EXPECTED:
+;redcode-94b
+
+  MOV.I  $0     , $1     
+  DAT    $0     , $0     

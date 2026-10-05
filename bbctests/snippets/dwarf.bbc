@@ -1,0 +1,16 @@
+NAME: snippet demo: the bomber snippet with step 4: the dwarf
+DESCRIPTION: includes snippets/bomber.src and compiles to the dwarf archetype's code (labels renamed); see behtests/snippet_dwarf.beh
+SRC:
+(program
+  (include "snippets/bomber.src")
+  (bomber 4))
+EXPECTED:
+;redcode-94b
+
+_REP4 
+  ADD.AB #4     , $_LET1 
+  MOV.I  $_LET1 , @_LET1 
+  JMP    $_REP4 , #0     
+_LET1 
+  DAT    #0     , #0     
+  DAT    $0     , $0     

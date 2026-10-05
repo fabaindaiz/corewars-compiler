@@ -180,6 +180,7 @@ the way and what was left undone, not only what worked.
 | How do I install the toolchain and run the tests? | `REFERENCE.md` |
 | How do I run a warrior and watch it execute? | `.claude/skills/run-warrior/SKILL.md` |
 | A warrior misbehaves or pMARS rejects it — what is known? | `.claude/skills/troubleshoot-redcode/SKILL.md` |
+| Which verified fragments can a warrior reuse, and what does each cost? | `snippets/README.md` |
 | What changed recently, and what did it leave undone? | `.claude/logs/agent-changelog.md` |
 | A change touches state, a contract, data, security or verification | look it up in `.agents/knowledge/INDEX.md` before a design decision and open only the cards it links; decide each from its claim and where it stops applying, run its check before claiming done, open a full note only when its boundary is unclear here. Where this file states an invariant that contradicts a note, this file wins and the report says so. Only when the user asks for a review in a fresh context or names the reviewer, give the diff to the `knowledge-reviewer` subagent (`.claude/agents/`) and wait for it |
 | A procedure in `.agents/method/` says otherwise | this repository's own procedure wins (its tracker, logs, gate, commit rules); `.agents/carrier.toml` `adapted` records the mapping |

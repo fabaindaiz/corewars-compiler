@@ -1,0 +1,13 @@
+; A paper: copies its seven cells dist cells away, starts the copy, and moves its target by stride.
+; 7 cells; 6 cycles a copy besides 2 a cell copied (--report). archetypes/paper.src; spec behtests/snippet_paper.beh.
+(define (paper (dist Num) (stride Num))
+  (let (n 7)
+    (let (d dist)
+      (seq
+        (repeat
+          (seq
+            (MOV 7 (store n))
+            (do-while (JN n) (MOV I (Dec n) (Dec d)))
+            (SPL (Ind d))
+            (ADD stride d)))
+        (DAT 0 (store d))))))
