@@ -6,6 +6,7 @@ claim: "Restore whatever a probe, test or job may dirty from the process that la
 confidence: "measured"
 check: "a probe that dirties state and hangs is killed at the timeout and the state comes back byte for byte"
 boundary: "When the child's effects are already isolated · When the supervisor cannot find the state · Effects outside the machine"
+cues: ["finally", "teardown", "atexit", "subprocess timeout", "probe", "temp state", "restore state", "kill child", "hang", "tearDown", "cleanup", "lockfile", "shared state", "fixture restore", "timeout kill"]
 ---
 
 # Cleanup belongs to the supervisor

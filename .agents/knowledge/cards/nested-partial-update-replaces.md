@@ -3,7 +3,7 @@
 
 **Claim.** In a partial-update API a nested object is usually replaced whole; name the leaves (dotted paths) and assert on the keys of the emitted update, not only on its values.
 
-**Not when.** APIs with recursive merge semantics, such as JSON Merge Patch (RFC 7396) or a deep-merge flag · semantics are per API and per call, read or measured, never assumed
+**Not when.** APIs with recursive merge semantics, such as JSON Merge Patch (RFC 7396), a deep-merge flag or a configuration key that says it extends · semantics are per API and per call, read or measured, never assumed
 
 **Check.** assert on the keys of the emitted update mask, not only on values
 

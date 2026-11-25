@@ -6,6 +6,7 @@ claim: "A build or platform flag describes the artefact, not the device it runs 
 confidence: "reasoned"
 check: "the detection signal is shown in a readout on the target and compared with what the device is"
 boundary: "Where the flag and the device coincide by construction · Behaviour that must be decided before any observation is possible · When a signal is itself unverified on the target · This is not a licence to fail silently"
+cues: ["platform check", "sys.platform", "build flag", "is_mobile", "user agent", "device class", "feature detection", "capability", "ifdef", "debug build", "navigator", "os.name", "target arch", "touch support"]
 ---
 
 # Detect by observation, not by build flag

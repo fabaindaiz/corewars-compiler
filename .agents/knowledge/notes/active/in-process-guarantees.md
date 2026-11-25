@@ -6,6 +6,7 @@ claim: "A guarantee enforced by an in-process primitive holds for one process an
 confidence: "reasoned"
 check: "the premise (one worker) is written next to the primitive; a two-worker test, where the effect is irreversible"
 boundary: "When the process really is the boundary · When the in-process primitive is an optimisation over a durable guarantee · When losing the guarantee is cheap · When the in-process state is a cache of negative, self-expiring results"
+cues: ["threading.lock", "mutex", "semaphore", "singleton", "asyncio lock", "race condition", "second worker", "replicas", "gunicorn workers", "in-memory", "advisory lock", "select for update", "distributed lock", "dedupe in memory"]
 ---
 
 # In-process guarantees

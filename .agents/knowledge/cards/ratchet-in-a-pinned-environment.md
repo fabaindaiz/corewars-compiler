@@ -3,8 +3,8 @@
 
 **Claim.** Introduce a rule against an existing backlog as a ratchet that can only go down — violations listed inside the check, or an advisory with a written promotion condition — never as zero and never by disabling the rule; and pin the tools that produce the count.
 
-**Not when.** A greenfield codebase that can hold zero from day one · hermetic builds, which already pay the pinning half · a backlog small enough to clear in the same change · a rule with legitimate exceptions, which needs an exemption mechanism instead
+**Not when.** A greenfield codebase that can hold zero from day one · hermetic builds, which already pay the pinning half · a backlog small enough to clear in the same change · a rule with legitimate exceptions, which needs an exemption mechanism instead · a rule with no correct, portable zero, which stays out of the blocking gate · a dedicated pinned measurement machine · a timeout, which is not a threshold · an environment no machine can pin, where the gate compares branch against base measured together
 
-**Check.** the baseline has one home and lives inside the check; the counting tools are pinned
+**Check.** the baseline has one home inside the check; the counting tools are pinned; the baseline is findings (file, rule, count), never one total, so an environment difference reads as a named rule in a named file; a pure rename and a pure block move each pass
 
 *measured.* Open the full note only when you cannot tell whether its boundary holds here: [ratchet-in-a-pinned-environment](../notes/active/ratchet-in-a-pinned-environment.md).

@@ -6,6 +6,7 @@ claim: "A kill switch is checked first and unconditionally, by one predicate, on
 confidence: "reasoned"
 check: "flip the switch in a test and assert that every writer, reader and scheduler of the feature stops; an audit fails on any path of the feature that does not call the switch predicate"
 boundary: "A flag that only gates a UI affordance, with one path and one reader · A safety control whose off state is itself the danger"
+cues: ["kill switch", "feature flag", "feature_enabled", "is_enabled", "disable feature", "flag check", "emergency off", "toggle", "enabled setting", "scheduler job", "reader path", "second writer", "maintenance mode", "flag at boot"]
 ---
 
 # A kill switch reaches every path

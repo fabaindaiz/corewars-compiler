@@ -6,6 +6,7 @@ claim: "Accept content from outside only as data — an allowlist of types, each
 confidence: "measured"
 check: "one planted package per rule (a script inside, a path escape, an altered or unlisted file, a bomb, an oversized image, a wrong type) is refused with its reason and leaves nothing"
 boundary: "A declared size is a claim · Content signed by a party you already trust and executed in a sandbox · Formats whose parser is itself the attack surface"
+cues: ["zip", "tar", "extract", "upload", "archive", "pickle", "yaml.load", "path traversal", "zip bomb", "file upload", "import package", "manifest hash", "max size", "mime type", "eval", "plugin load"]
 ---
 
 # An untrusted package is parsed, never loaded

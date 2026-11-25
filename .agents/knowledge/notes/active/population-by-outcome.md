@@ -6,6 +6,7 @@ claim: "Never define a training, evaluation or reporting population by a quantit
 confidence: "measured"
 check: "for every filter on the population: was the filtered value knowable at the decision instant?"
 boundary: "When the conditioning is the stage itself · When the outcome is the object of study and not a predictor's population"
+cues: ["train test split", "filter rows", "resample", "balance classes", "evaluation set", "cohort", "where outcome", "exclude users", "filter by result", "oversample", "undersample", "selection bias", "dataset filter", "survivors"]
 ---
 
 # Population by outcome

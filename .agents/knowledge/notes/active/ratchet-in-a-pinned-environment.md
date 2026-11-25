@@ -4,8 +4,9 @@ slug: "ratchet-in-a-pinned-environment"
 topic: "verification"
 claim: "Introduce a rule against an existing backlog as a ratchet that can only go down — violations listed inside the check, or an advisory with a written promotion condition — never as zero and never by disabling the rule; and pin the tools that produce the count."
 confidence: "measured"
-check: "the baseline has one home and lives inside the check; the counting tools are pinned"
-boundary: "A greenfield codebase that can hold zero from day one · hermetic builds, which already pay the pinning half · a backlog small enough to clear in the same change · a rule with legitimate exceptions, which needs an exemption mechanism instead"
+check: "the baseline has one home inside the check; the counting tools are pinned; the baseline is findings (file, rule, count), never one total, so an environment difference reads as a named rule in a named file; a pure rename and a pure block move each pass"
+boundary: "A greenfield codebase that can hold zero from day one · hermetic builds, which already pay the pinning half · a backlog small enough to clear in the same change · a rule with legitimate exceptions, which needs an exemption mechanism instead · a rule with no correct, portable zero, which stays out of the blocking gate · a dedicated pinned measurement machine · a timeout, which is not a threshold · an environment no machine can pin, where the gate compares branch against base measured together"
+cues: ["lint baseline", "existing violations", "ratchet", "noqa", "disable rule", "warnings count", "allowlist of violations", "pin version", "ruff", "eslint", "type check errors", "new rule", "advisory", "mypy baseline", "requirements pin"]
 ---
 
 # Ratchet in a pinned environment
@@ -18,6 +19,8 @@ The same shape works for any rule introduced against a backlog, not only a type 
 
 A baseline is only meaningful if the count is reproducible, and a count is produced by a toolchain. An unpinned checker, or unpinned type stubs, change the count with no code change; the gate goes red in one place and stays green in another, and the first instinct — raise the baseline — quietly gives back what the ratchet held.
 
+A threshold has the same dependency in a sharper form. A test that asserts wall time, a speed-up or a rendered size is a property of the machine it was tuned on: elsewhere it is red on arrival with no code change, and once that red is accepted as "red on main too", the gate stops blocking anything. Such thresholds are set per environment, made relative, or kept out of the gate. **The toolchain of a threshold is the whole machine and whatever else runs on it.** A threshold in the gate is counted in a unit no machine changes, or made relative within one run (the variants alternated in one window), or moved to a measurement job that repeats, reports an interval and is checked by an A/A run; a number kept per environment carries the environment's identity and its load.
+
 That a count depends on more than the toolchain — on the interpreter that runs it, on files in the working tree, on the locale — is `reproduce-the-checkout-not-only-the-environment`; this note needs only the part a baseline cannot live without: the counting tools are pinned.
 
 ## When it does NOT apply
@@ -25,6 +28,8 @@ That a count depends on more than the toolchain — on the interpreter that runs
 A greenfield codebase that can hold zero from day one; there, zero with strict settings is cheaper than a baseline. Hermetic builds (containers, lockfile-driven or Nix-style environments) already pin resolution, and the pinning half of the note is paid for.
 
 A backlog small enough to clear in the same change should be cleared, not ratcheted. A rule with real legitimate exceptions needs an exemption mechanism, not a list of violations.
+
+A rule with no correct, portable zero is never promoted. A check on a judgement call — how a picture reads, whether an entrance makes sense — has no count that is right whatever the author intended; made blocking, it holds the gate red until the creative work changes, which pushes either the work or the check off. It stays an advisory, paired with a report someone reads. A threshold that belongs to one machine is the same case. A dedicated, pinned measurement machine can hold an absolute threshold; and a timeout is not a threshold at all — it detects a hang, set well above the normal time. Where the judgement has an agreed correct answer (an accessibility contrast floor), it is a rule like any other.
 
 ## What it costs
 

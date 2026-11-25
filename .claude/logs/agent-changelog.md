@@ -5,6 +5,36 @@ other; this file is how one warns the next. Write what went wrong and what was l
 what worked. Each entry's id comes from `python3 .agents/tools/bundle.py id s "<title>"`. The format
 reference is at the end of this file: insert new entries directly below this paragraph.
 
+## 2026-11-25 · s-7d2612-a44a51 — agent-guides 0.0.25 to 0.0.34, seven proposals pruned
+
+**What.** The bundle in `.agents/` moved from 0.0.25 to 0.0.34, spliced from the home with
+`release.py splice --write` (130 files written, 2 removed: `knowledge/areas/behaviour.md` and
+`knowledge/areas/evidence.md`, which nothing here linked). The harvest gap
+`2026-10-02..2026-11-24` is now labelled `: transcripts`, as the commit that wrote it said: the
+records were read and only the transcripts were missing; 0.0.34's `verify` refuses an unlabelled gap
+that reaches `harvested_through`. `bundle.py proposals --prune` removed all seven proposals of the
+two harvests (four queued as new candidates, three merged into existing rows). The
+`knowledge-reviewer` copy in `.claude/agents/` was refreshed from `.agents/agents/`.
+**Areas.** `.agents/` (generated), `.agents/carrier.toml` (`harvested_gaps`),
+`.claude/agents/knowledge-reviewer.md`.
+**Why.** The harvest's proposals were taken in by the home, and the release that lists them is what
+lets this repository prune them.
+**Architecture.** ✅ Complies. No source, test or golden changed.
+**What went wrong on the way.** Nothing.
+**What was left undone.** Not adopted, for the user to decide: the `researcher` subagent
+(`.agents/agents/researcher.md`, new since 0.0.25) and the bundle's skills (`close`,
+`decision-review`, `next`, `user-walk`), which `carrier.toml` maps nowhere, so `install-skills` was
+not run. Read beside this repository's rules: `AGENTS.md` says that without an opam switch the
+report states the OCaml half did not run; 0.0.34 adds that a worktree uses the main copy's
+environment where building its own is not cheap and calls the result unproven. Neither says which
+applies in a worktree (unstated precedence). No conflict and no broken reference was found:
+`state-review`'s `changelog --since` reads the current version, which 0.0.34 accepts.
+**Not verified.** `make check-ocaml` ran in the worktree through the main checkout's opam switch
+(`opam exec --switch=...`), not one of its own, so that half is unproven; `make check-tools` ran on the
+worktree's own build.
+**Measured.** `make check-tools`: 54 behaviour specs, 0 unexpected; 502 record ids, 0 errors.
+`check-ocaml`: 224 tests run, the execute group skipped on this platform.
+
 ## 2026-10-05 · s-7d2612-61974e — Closing phases 7 and 8, the manual and the diagnostics
 
 **What.** The user asked to close the session with its findings, pending items and learnings, merge

@@ -4,8 +4,9 @@ slug: "derived-copy-goes-stale-silently"
 topic: "failure-behaviour"
 claim: "When a derived artefact can be served or read in place of its source, delete it on every write to the source or make the source win by rule, and never decide freshness on modification time alone."
 confidence: "measured"
-check: "edit the source with an older timestamp: every derived copy is rebuilt or refused"
+check: "edit the source with an older timestamp, and again keeping its size and time: every derived copy is rebuilt or refused, whichever path consumes it"
 boundary: "Content-addressed copies · Copies that are never read in place of the source · When rebuilding on every write is too expensive"
+cues: ["cache", "mtime", "timestamp", "precompressed", ".gz", "build artifact", "stale cache", "invalidate", "make target", "etag", "if modified", "baked", "generated file", "cache key", "newer than"]
 ---
 
 # A derived copy goes stale silently
@@ -16,7 +17,9 @@ Caches, compressed twins, compiled forms, baked previews and class indexes all e
 
 Two rules close it. **Invalidate on write**: whatever rewrites a source removes its derived twins in the same step, so the consumer falls back to the source until the copy is rebuilt. **The source wins**: where both may exist, a rule says the source is read and the copy ignored, so a stale copy costs time, never correctness.
 
-Modification time is the usual freshness test and a weak one: a move or a preserving copy keeps the old time, a clock or a filesystem's precision can order two writes wrongly, and a tool that sees "nothing newer" does nothing, successfully.
+Modification time is the usual freshness test and a weak one: a move or a preserving copy keeps the old time, a clock or a filesystem's precision can order two writes wrongly, and a tool that sees "nothing newer" does nothing, successfully. Which edit it misses depends on the comparison. A *newer-than* comparison misses an edited source dated before its copy. An *equality* key over size and modification time notices that edit and misses one that keeps both, widened to the precision at which the time is stored: a key normalised to milliseconds misses a sub-millisecond difference, and an interpreter's bytecode cache keyed on whole seconds and size serves a stale compiled module when a source is changed and restored within the same second at the same size, which is what a mutation probe does. After such a probe, use hash-checked caches, turn cache writing off, or delete the cache.
+
+**The freshness check sits on the path every consumer takes**, not in the build script alone. A rebuild guarded by a stamp is bypassed by any consumer that reuses an existing artefact without passing the step that checks the stamp, and a test suite that imports the generated copy of a tool tests the previous build, not the source being edited. Call the build every time (it is cheap when the stamp matches), and test the original, letting the build check the copy.
 
 ## When it does NOT apply
 

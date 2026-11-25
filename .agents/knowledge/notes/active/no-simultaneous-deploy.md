@@ -6,6 +6,7 @@ claim: "Two things that deploy separately can never change at the same instant, 
 confidence: "reasoned"
 check: "both mixes are tested: old reader with new data, new reader with old data"
 boundary: "When both sides genuinely deploy as one artefact · When nothing has read the old shape yet · When the window is provably empty"
+cues: ["migration", "rolling deploy", "rollback", "schema change", "rename column", "enum value", "api shape", "message format", "old reader", "new reader", "backward compat", "add column", "drop column", "serialization format", "deploy order"]
 ---
 
 # No simultaneous deploy

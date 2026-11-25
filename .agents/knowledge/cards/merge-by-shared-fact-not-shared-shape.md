@@ -7,7 +7,7 @@
 
 **Not when.** When you cannot yet tell fact from shape · When one copy is generated from the other
 
-**Check.** every kept duplicate has a recorded reason; every merged one has a test that fails if a caller diverges
+**Check.** every kept duplicate has a recorded reason; every merged one has a test that fails if a caller diverges; a behaviour switch reads a field set only where that decision is made
 
 **Shares its principle** (`same-only-by-a-shared-fact`) with [derived-over-chosen-identifiers](derived-over-chosen-identifiers.md): removing or ignoring this note does not remove the principle.
 

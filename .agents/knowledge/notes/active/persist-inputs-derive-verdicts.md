@@ -5,7 +5,8 @@ topic: "evolving-contracts"
 claim: "Persist what was observed or chosen — and that it was chosen — and derive verdicts and defaults at read time, so a policy or default change reaches everyone who did not choose, and a verdict heals when its cause goes away."
 confidence: "reasoned"
 check: "no stored verdict is read back as an input; after a policy change the recomputed answer reaches old records; a default changed in a test build changes nothing for a user who chose, and a stored preference carries its provenance"
-boundary: "The fact is only knowable at write time · The verdict must be frozen for audit · Recomputing is expensive and the policy never changes · Settings the user expects frozen at what they saw · Values with no meaningful default · Stores that already layer defaults under choices"
+boundary: "The fact is only knowable at write time · Results the users have already seen · The verdict must be frozen for audit · Recomputing is expensive and the policy never changes · Settings the user expects frozen at what they saw · Values with no meaningful default · Stores that already layer defaults under choices"
+cues: ["is_blocked", "is_eligible", "high_risk flag", "stored flag", "user preference", "default setting", "settings table", "derived at read", "recompute", "boolean column", "opt in", "preferences", "policy change", "persist default"]
 ---
 
 # Persist inputs, derive verdicts
@@ -23,13 +24,14 @@ Storing the raw observation (the observed attribute, the link, the balance) and 
 
 The convenient way to save preferences writes every value, defaults included. From then on, the file says "X" for two different people: the one who picked X and the one who never opened the setting. A stored default is the product's answer at the time of writing, kept as if it were the user's input — a verdict frozen in storage. When the product later wants a better default, it has two bad options: overwrite X for everyone, taking the choice away from the first person, or leave it, keeping the second person on the old default forever.
 
-Keeping defaults out of storage (a fallback layer consulted when a key is absent), or storing a flag beside the value that says it was chosen, keeps the two people apart. A new default then reaches exactly those who never chose, and a suggestion the product makes can change a value without counting as the user's decision.
+Keeping defaults out of storage (a fallback layer consulted when a key is absent), or storing a flag beside the value that says it was chosen, keeps the two people apart. A new default then reaches exactly those who never chose, and a suggestion the product makes can change a value without counting as the user's decision. The flag holds only if it is written in the same step as its value: a setter that persists eagerly saves the intermediate state when a caller assigns a suggestion and only then clears the flag, and the suggestion is stored as a choice. Assign suggestions through a path that writes both together.
 
 The same separation argues for two neighbours: repair stored data per key, so one malformed value loses that key and not the whole file; and never store live state that the platform owns (whether a window is fullscreen) — read it each time, so a request the platform refused does not leave a stored value lying.
 
 ## When it does NOT apply
 
-- **The fact is only knowable at write time.** A property only the original event knows — "this event opened the order" — must be recorded then; it cannot be derived later.
+- **The fact is only knowable at write time.** A property only the original event knows — "this event opened the order" — must be recorded then; it cannot be derived later. Persist at the grain the user acted, not the grain today's reader needs: two gestures logged as one kind cannot be split by any later derivation.
+- **Results the users have already seen.** Recomputing with a new rule rewrites what they saw and may have kept. Version the rule by an effective date instead, keeping the old rule for inputs before it, and compare that date with the input's real time, never with a displayed or accelerated one (`derive-state-from-one-clock`).
 - **The verdict must be frozen for audit**: "what the policy said at the time" is a record, not a cache. Store both, and mark the stored verdict as history, not as input.
 - **Recomputing is expensive and the policy never changes.** Rare in practice; policies are exactly what changes.
 - **Settings the user expects frozen at what they saw** — a price, a legal consent version. Snapshot those deliberately.

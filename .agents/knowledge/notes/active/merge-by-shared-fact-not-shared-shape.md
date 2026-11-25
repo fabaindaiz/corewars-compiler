@@ -4,8 +4,9 @@ slug: "merge-by-shared-fact-not-shared-shape"
 topic: "evolving-contracts"
 claim: "Merge copies that must agree by contract and whose divergence would be invisible; keep copies that only look alike, especially where merging would hide an error from a symmetric test, and write down why they stay."
 confidence: "reasoned"
-check: "every kept duplicate has a recorded reason; every merged one has a test that fails if a caller diverges"
+check: "every kept duplicate has a recorded reason; every merged one has a test that fails if a caller diverges; a behaviour switch reads a field set only where that decision is made"
 boundary: "When you cannot yet tell fact from shape · When one copy is generated from the other"
+cues: ["duplicate code", "dedupe", "extract helper", "refactor", "shared function", "copy paste", "reuse style", "reuse constant", "dry", "similar functions", "consolidate", "common util", "tone", "kind field"]
 ---
 
 # Merge by shared fact, not by shared shape
@@ -15,6 +16,8 @@ boundary: "When you cannot yet tell fact from shape · When one copy is generate
 Two kinds of duplication look the same in a diff. In the first, the copies encode **one fact** — how an object is torn down, how a description becomes objects, which numbers a file carries — and they must agree; any divergence is a bug, and nothing notices it, because each copy works on its own. In the second, the copies only share **a shape** — a loop, a search, a guard — while their semantics differ. Merging the first kind removes a class of silent bug. Merging the second produces a function with modes and parameters that reads worse than either copy, and can do worse: when the copies are tested by a check that is symmetric in them, a shared defect moves both the same way and the check stays green.
 
 So the question is not "is this code repeated?" but "is this knowledge repeated?". Only the answer to the second decides.
+
+**The dual: one field read by two decisions is two facts merged because they coincide today.** When a presentational or derived value — a notice's tone, a derived kind — also switches a behaviour, a change made for one consumer silently changes the other: a status that merely looks like a success closes itself, a new kind of data switches off an unrelated suggestion. Give the behaviour its own explicit field, set only where that decision is made. The question is the same one asked of a field instead of a copy: how many pieces of knowledge does it hold?
 
 ## When it does NOT apply
 

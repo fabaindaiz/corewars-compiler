@@ -6,6 +6,7 @@ claim: "Evaluate stored or extracted data at its own last event, never at the wa
 confidence: "measured"
 check: "the evaluation instant is the data's last event, and the answer says how old its data is"
 boundary: "A genuinely live and complete stream up to now · Questions that are about the wall clock on purpose"
+cues: ["datetime.now", "now()", "recency", "last 7 days", "window", "extract", "snapshot", "days since last", "batch export", "as of", "rolling window", "last event", "stale data", "current_date"]
 ---
 
 # Read a snapshot at its own end

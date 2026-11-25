@@ -6,6 +6,7 @@ claim: "A constraint that is dropped does not raise an error — it returns more
 confidence: "measured"
 check: "delete the clause in a test and watch the suite go red; the bound is tested on every path that produces or reads rows"
 boundary: "When the constraint is structural rather than a clause · When more is harmless · When the caller re-filters anyway"
+cues: ["where clause", "tenant_id", "owner_id", "filter by status", "date range", "query filter", "drop the filter", "simplify query", "remove condition", "scope to user", "superset", "list all rows", "date bound", "queryset filter"]
 ---
 
 # An absent constraint widens
@@ -18,7 +19,7 @@ This makes the class invisible to the usual defences. A test asserting "the reco
 
 And an absence assertion needs something to be absent. **In a fixture world that holds one subject, the widened query returns exactly the rows it should**, so even that test passes: the clause is not unasserted, it is unobservable *in the rows*. A test that asserted on the query itself would still see it, and that is the one kind that does. The fidelity of the test double is not what hides it — a double that evaluates the filter correctly hides it just as well — the single-subject world is.
 
-The same shape appears wherever a narrowing clause can be omitted: a tenant filter, an `active` flag, a date range, a permission check, a `WHERE` on a soft-delete column, a role list that defaults to empty-means-all. In each case the bug produces a superset, and a superset looks like success.
+The same shape appears wherever a narrowing clause can be omitted: a tenant filter, an `active` flag, a date range, a permission check, a `WHERE` on a soft-delete column, a role list that defaults to empty-means-all, the scope of a scan that checks a thing exists somewhere in a repository. In each case the bug produces a superset, and a superset looks like success.
 
 ## When it does NOT apply
 

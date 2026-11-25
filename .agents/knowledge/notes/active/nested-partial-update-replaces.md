@@ -5,7 +5,8 @@ topic: "failure-behaviour"
 claim: "In a partial-update API a nested object is usually replaced whole; name the leaves (dotted paths) and assert on the keys of the emitted update, not only on its values."
 confidence: "measured"
 check: "assert on the keys of the emitted update mask, not only on values"
-boundary: "APIs with recursive merge semantics, such as JSON Merge Patch (RFC 7396) or a deep-merge flag · semantics are per API and per call, read or measured, never assumed"
+boundary: "APIs with recursive merge semantics, such as JSON Merge Patch (RFC 7396), a deep-merge flag or a configuration key that says it extends · semantics are per API and per call, read or measured, never assumed"
+cues: ["patch", "update mask", "field mask", "partial update", "nested object", "dotted path", "set merge", "field-set operator", "update_fields", "merge=true", "nested field partial update", "json merge patch", "put vs patch", "emitted update"]
 ---
 
 # A nested partial update replaces
@@ -16,11 +17,13 @@ boundary: "APIs with recursive merge semantics, such as JSON Merge Patch (RFC 73
 
 The defect is invisible in the values and obvious in the **keys**: an update whose mask is `['parent']` replaces the parent; one whose mask is `['parent.child']` touches one leaf. Asserting on the emitted keys turns the semantics into something a unit test can see without a network.
 
+Layered configuration has the same semantics. A tool's configuration table set at a lower layer is a partial update of the effective configuration, and it usually replaces the inherited table of the same name rather than merging with it: the inherited entries vanish without a message. Tools that merge say so in a key of their own (an *extend* key); where there is none, repeat the inherited entries and say why beside them.
+
 Two companions travel with it: a `None` in the new data must be filtered rather than written (it erases the stored value), and deliberately erasing a field goes through a separate, guarded function rather than through "update with null".
 
 ## When it does NOT apply
 
-APIs with recursive merge semantics. **RFC 7396 (JSON Merge Patch)** merges recursively and uses `null` to delete; a deep-merge flag in a document store does the same. Semantics are per API and per call — they are read in the documentation or measured, never assumed from the verb.
+APIs with recursive merge semantics. **RFC 7396 (JSON Merge Patch)** merges recursively and uses `null` to delete; a deep-merge flag in a document store does the same, and so does a configuration layer whose key says it extends. Semantics are per API and per call — they are read in the documentation or measured, never assumed from the verb: one mapper call can replace a map when given a nested value and touch a single leaf when given a dotted key.
 
 ## What it costs
 

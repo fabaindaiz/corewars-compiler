@@ -6,6 +6,7 @@ claim: "Clamping, defaulting or validating a value into a new name leaves both i
 confidence: "reasoned"
 check: "the sanitised value shadows the name, or the raw one is out of scope after it is consumed"
 boundary: "When both values are genuinely needed, for an error message or an audit record · then the original is named for what it is, so using it is a decision"
+cues: ["clamp", "min(", "max(", "sanitize", "validate input", "default value", "raw value", "shadow variable", "limit parameter", "page size limit", "per_page", "int()", "normalize", "safe_value", "strip"]
 ---
 
 # A sanitised value must replace the raw one

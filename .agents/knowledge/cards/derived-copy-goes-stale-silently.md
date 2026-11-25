@@ -5,6 +5,6 @@
 
 **Not when.** Content-addressed copies · Copies that are never read in place of the source · When rebuilding on every write is too expensive
 
-**Check.** edit the source with an older timestamp: every derived copy is rebuilt or refused
+**Check.** edit the source with an older timestamp, and again keeping its size and time: every derived copy is rebuilt or refused, whichever path consumes it
 
 *measured.* Open the full note only when you cannot tell whether its boundary holds here: [derived-copy-goes-stale-silently](../notes/active/derived-copy-goes-stale-silently.md).

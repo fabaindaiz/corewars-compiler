@@ -6,6 +6,7 @@ claim: "In a model trained over time, any cumulative or absolute magnitude encod
 confidence: "measured"
 check: "a classifier trained to recover the period from the features scores near chance"
 boundary: "Targets measured in absolute units · Stationary processes"
+cues: ["feature engineering", "cumulative count", "total_count", "account age", "days since", "ratio feature", "training features", "model feature", "lifetime total", "normalize by population", "time drift", "add feature", "num_events"]
 ---
 
 # An absolute level is a time index

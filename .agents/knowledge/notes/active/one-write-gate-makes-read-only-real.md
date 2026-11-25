@@ -6,6 +6,7 @@ claim: "Route every write to an external store through one gate, let a process-w
 confidence: "measured"
 check: "the audit fails on a planted write outside the gate; read-only refuses before anything is sent"
 boundary: "SDKs that write on their own · Writes from a second process or language · Aliasing defeats a textual audit"
+cues: ["read_only", "readonly flag", "read-only mode", "database client", "write gate", "insert", "update statement", "delete call", "external store", "production database", "dry_run", "exploration script", "audit writes", "env switch"]
 ---
 
 # One write gate makes read-only real

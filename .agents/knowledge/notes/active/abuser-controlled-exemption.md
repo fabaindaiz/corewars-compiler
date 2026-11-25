@@ -6,6 +6,7 @@ claim: "Never let a control switch itself off, or stop looking, above a count th
 confidence: "reasoned"
 check: "construct the input just above each cap and assert the control still fires"
 boundary: "Caps that bound cost on a value the abuser cannot grow cheaply · Fan-outs genuinely unbounded by benign behaviour · A cap that hands off is not a cap that exempts"
+cues: ["rate limit", "max_count", "threshold", "cap", "ceiling", "per-ip limit", "skip above", "truncate window", "abuse", "spam filter", "fraud check", "limit exceeded", "bypass", "max_requests"]
 ---
 
 # An exemption the abuser controls

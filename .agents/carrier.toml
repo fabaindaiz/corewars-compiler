@@ -3,7 +3,7 @@ carrier = "r-7d2612"
 adopted = "2026-10-02"
 upstream = "r-5ed7e8"
 harvested_through = "2026-11-24"
-harvested_gaps = ["2026-10-02..2026-11-24"]
+harvested_gaps = ["2026-10-02..2026-11-24: transcripts"]
 adapted = [
   "AGENTS.md is the canonical root file and CLAUDE.md only imports it, so every assistant reads one source",
   "the gate is `make check`, split into `check-tools` (Python 3.11+ and a C compiler) and `check-ocaml` (the opam switch), because the OCaml toolchain is not present on every machine that works here",
@@ -19,4 +19,7 @@ declined = [
   "separate Cursor and Copilot surfaces: only Claude Code is in use; AGENTS.md is already the file the others read",
   "a commit skill: the commit rule is a few lines in the root file",
   "an .ocamlformat file and a formatting step in the gate during adoption: formatting every module is a structural change of its own, planned separately",
+]
+lineage = [
+  "0.0.34 r-5ed7e8 2026-11-25",
 ]

@@ -6,6 +6,7 @@ claim: "An automated refusal must rest on an identifier that cannot collide and 
 confidence: "reasoned"
 check: "for every refusing signal, the answers to \"can it collide?\" and \"can someone else assert it?\" are both no"
 boundary: "Friction, not refusal · When the subject can self-clear instantly · Accepted, documented risks"
+cues: ["block user", "ban", "lockout", "deny", "ip block", "email match", "name match", "fraud signal", "account suspend", "auto reject", "blocklist", "device fingerprint", "collide", "rate limit by ip", "captcha"]
 ---
 
 # Refuse only on evidence nobody else can assert

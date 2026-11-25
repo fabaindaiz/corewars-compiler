@@ -6,6 +6,7 @@ claim: "When a dangerous operation infers which targets it acts on, the inferred
 confidence: "measured"
 check: "run the command with no scope argument: it refuses, and the \"not reached\" report is computed against the declared scope"
 boundary: "Read-only operations where the widest scope costs only time · When the full set genuinely is the intended default, and it is small, named and shown before acting · When the inference draws on something narrower than the risk"
+cues: ["no target given", "delete all", "deploy all", "default targets", "dry run", "--all", "infer targets", "glob all", "not reached", "scope argument", "list of services", "environments", "force flag", "fallback to all"]
 ---
 
 # A default scope is the widest one

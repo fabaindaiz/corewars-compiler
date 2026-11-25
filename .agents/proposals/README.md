@@ -48,3 +48,12 @@ carrier's id, and on an outbox from 0.0.22 or 0.0.23 (`tracking/`) that was neve
 becomes a proposal that reads whole: what a cell did not say is written as missing, and what did not fit
 its field is kept in the evidence. The conversion refuses, and removes nothing, when a table file holds
 text that is not a row of it; move that text into a row first.
+
+**A proposal carries its own title, and an older one does not.** Since 0.0.32 `propose` writes
+`# Proposal: <target>` as the body's first line, so the file satisfies the ordinary rule that a document
+has one top-level heading. Proposals written by an earlier release have no title and **cannot be given
+one**: the file's name is a hash of its content, so editing it breaks the check that verifies it. A
+repository whose structural audit asks every document for exactly one top-level heading therefore
+exempts `proposals/p-*.md` by path, once, until the older files are pruned. Two carriers met this as a
+red check in the middle of a close, each in the step meant to confirm the work was finished, before the
+rule was written here.

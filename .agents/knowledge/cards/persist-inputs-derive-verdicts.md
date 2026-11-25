@@ -3,7 +3,7 @@
 
 **Claim.** Persist what was observed or chosen — and that it was chosen — and derive verdicts and defaults at read time, so a policy or default change reaches everyone who did not choose, and a verdict heals when its cause goes away.
 
-**Not when.** The fact is only knowable at write time · The verdict must be frozen for audit · Recomputing is expensive and the policy never changes · Settings the user expects frozen at what they saw · Values with no meaningful default · Stores that already layer defaults under choices
+**Not when.** The fact is only knowable at write time · Results the users have already seen · The verdict must be frozen for audit · Recomputing is expensive and the policy never changes · Settings the user expects frozen at what they saw · Values with no meaningful default · Stores that already layer defaults under choices
 
 **Check.** no stored verdict is read back as an input; after a policy change the recomputed answer reaches old records; a default changed in a test build changes nothing for a user who chose, and a stored preference carries its provenance
 

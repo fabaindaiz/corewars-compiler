@@ -6,6 +6,7 @@ claim: "When a system cannot be booted in the environment it is written in — i
 confidence: "reasoned"
 check: "the gate names what it can and cannot see; composition is traced by reading before a change is called done"
 boundary: "When the system can be run and the obstacle is effort · When the environment can be simulated"
+cues: ["hardware", "needs device", "cannot run locally", "no credentials", "startup wiring", "composition", "dependency injection", "unit tests pass", "boot error", "embedded", "production only", "wiring", "integration", "can't boot"]
 ---
 
 # An unrunnable system moves the gate
@@ -23,7 +24,7 @@ The mistake this note exists to prevent is treating an unrunnable system as a no
 ## When it does NOT apply
 
 - **When the system can be run and the obstacle is effort** — a docker-compose nobody wrote, a fixture nobody made. Then the correct move is to make it runnable, and this note is an excuse. The distinction is whether the obstacle is *physical* (hardware, a credential that must not exist in development) or merely unbuilt.
-- **When the environment can be simulated.** Hardware-in-the-loop practice exists to remove exactly this obstacle: the real controller runs against a simulated plant. The arrangement this note describes holds until such a rig exists, and a rig for composition alone is often cheap: resolve the whole dependency graph at startup with stand-ins for the hardware and credentials, and fail the gate if resolution fails — which turns the class this note says bites at startup into a check that runs before it.
+- **When the environment can be simulated.** Hardware-in-the-loop practice exists to remove exactly this obstacle: the real controller runs against a simulated plant. The arrangement this note describes holds until such a rig exists, and a rig for composition alone is often cheap: resolve the whole dependency graph at startup with stand-ins for the hardware and credentials, and fail the gate if resolution fails — which turns the class this note says bites at startup into a check that runs before it. A type checker does not replace it: in the one run below, it found the import-time failure and not the mis-wiring.
 
 ## What it costs
 

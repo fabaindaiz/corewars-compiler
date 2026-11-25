@@ -6,6 +6,7 @@ claim: "A test double that accepts more than the real dependency makes the test 
 confidence: "reasoned"
 check: "a contract test runs the fake and the real dependency on the same cases; tests cannot open sockets"
 boundary: "Pure-function tests with no double · doubles generated from the real implementation, or contract-tested against it on the same cases"
+cues: ["mock", "stub", "fake", "monkeypatch", "patch", "magicmock", "responses", "vcr", "contract test", "network access", "socket", "test fixture", "httpx mock", "return_value", "side_effect"]
 ---
 
 # Test double fidelity
@@ -20,12 +21,19 @@ The failure has recognisable forms:
 - **Different semantics.** A fake that replaces nested maps where the real store deep-merges, or the reverse.
 - **The wrong method stubbed.** The stub overrides a method the code no longer calls; it is never consulted, and the test asserts the absence of the behaviour it is named for.
 - **Errors swallowed by the code under test.** The code's own handling catches the failure the double caused, and the suite passes for the wrong reason.
+- **A neutral default on the interface.** An interface method given a default that answers "nothing" lets every double inherit that answer while the real implementation answers something. Leave it abstract, so each double must answer; the main fake can derive its answer from its own data.
+- **The original object kept.** An in-memory store hands back the object it was given; the real one hands back its own representation (a timestamp without its zone, truncated to its precision), so a comparison that never matches against the real store matches against the double.
+- **One shape for every answer.** A double that returns a body for every call cannot show that the client fails on a specified empty success; a local server that answers exactly as the specification says can.
+
+**The harness and the development runtime are doubles too.** A harness health check that asks only whether an emulator answers passes one whose guest clock is hours behind the host, and every reader that filters by time then sees nothing while the actions land: check the harness clock against the host before such a run (`derive-state-from-one-clock`). A headless renderer is a double of the screen — stub font metrics, no colour, no animation — so a constant calibrated against it is calibrated against fiction: carry the datum on something that is not a pixel (an accessibility description the test can read), move the arithmetic into a pure function, and measure an animation over a recording. And the editor's runtime is a double of each export target: an export audit asks what the engine does differently per target and measures each answer on the real export.
 
 The companion rule is about the other direction of infidelity. When the test configuration can point at real endpoints, **deny network sockets by default**: a test that slips its mock does not error, it succeeds against production — and in a system with physical or financial effects, it performs them. The guard itself needs a test, because an untested safety mechanism quietly stops working.
 
 ## When it does NOT apply
 
 Pure-function tests with no double. Doubles generated from the real implementation, or contract-tested against it on the same cases.
+
+**Blaming the harness on "it passes alone".** A harness is a double of the target too, and on a long-running one under load most surprises are the harness. But test pollution and real races also pass alone, so before convicting it: rerun the failure alone and again after the test that preceded it, look for state an earlier test left changed, and ask whether review can find an input that reaches the suspected race. On a fresh, idle harness the code is the first suspect.
 
 ## What it costs
 

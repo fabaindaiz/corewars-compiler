@@ -5,6 +5,6 @@
 
 **Not when.** Checks whose detection an external conformance suite already proves · even then, the local wiring that runs them still owes one plant-and-watch
 
-**Check.** each new check was seen red on a planted violation once, and that is recorded
+**Check.** each new check was seen red once on a plant of the defect it exists for, in the real artefact, placed where the property it violates is observable, and seen to change the checked quantity; that is recorded, and its count of examined subjects matches the subjects known to exist
 
 *measured.* Open the full note only when you cannot tell whether its boundary holds here: [a-check-must-be-seen-to-fail](../notes/active/a-check-must-be-seen-to-fail.md).

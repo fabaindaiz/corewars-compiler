@@ -6,6 +6,7 @@ claim: "Make time-dependent state a pure function of one authoritative clock, ne
 confidence: "measured"
 check: "reach the same instant from the start and from the end and compare the output byte for byte; every reported interval has a clamp and every inferred intent its own call"
 boundary: "Path-dependent simulation · Genuinely interactive state · When evaluating at an arbitrary instant is too expensive · Values whose semantics you control and have verified on the target · The viewport is an input to drawing, not to state"
+cues: ["delta time", "dt", "tick", "requestanimationframe", "timestamp", "animation", "scheduler", "elapsed", "clock", "timer", "setinterval", "duration clamp", "monotonic", "frame time", "simulation step"]
 ---
 
 # Derive state from one clock
@@ -18,7 +19,7 @@ State computed as `f(clock)` has neither. Any instant is one evaluation; jumping
 
 That leaves the clock itself as the single point everything trusts, so it is the one place that must be distrusted. Timing values reported by a platform layer — a latency, an elapsed interval, an "ended" event, the direction of a step — are **claims**, and on the target they may not hold even where they held in development:
 
-- **Clamp** a reported interval to a plausible range; an unbounded one moves the whole state by its error.
+- **Clamp** a reported interval to a plausible range; an unbounded one moves the whole state by its error. A first report from a pooled, reused platform resource may carry its previous user's value: bound it by the wall time since the last start, and believe it only if it persists.
 - **Check an end event against what you already know** (the length of the thing that ended) and ignore one that is implausibly early.
 - **Never infer an intent from the shape of a noisy value.** A clock that is not strictly monotonic produces small backward steps; reading each as a rewind fires the rewind path many times a second. Route explicit intent — a seek, a reset — through its own call, and let the clock only report time.
 
@@ -30,7 +31,7 @@ Anything that genuinely cannot be a function of the clock — live input, a user
 - **Genuinely interactive state**, which cannot be reconstructed at an arbitrary instant because its input did not exist yet. That is the quarantined exception, not a reason to abandon the rule for everything else.
 - **When evaluating at an arbitrary instant is too expensive** for every frame and nothing ever seeks. Then the accumulation's drift is the price of speed, and it should be measured and written down, not assumed small.
 - **Values whose semantics you control and have verified on the target.** Bounding is for claims; a value that is already a fact needs no clamp.
-- **The viewport is an input to drawing, not to state.** A zoom or resize that hands the content a different view to be placed for makes state a function of the clock *and* the view, and a round trip no longer returns the same picture. Keep placement a function of the clock alone and scale the drawn result.
+- **The viewport is an input to drawing, not to state.** A zoom or resize that hands the content a different view to be placed for makes state a function of the clock *and* the view, and a round trip no longer returns the same picture. Keep placement a function of the clock alone and scale the drawn result. The view can also smuggle accumulation back in: a setup hook that runs again on every view change, and reads back a value the per-frame pass has already scaled, turns a pure function of time into a sum of view changes. Capture base values once, never read back in setup what the per-frame pass writes, and check by changing the view several times at one instant and requiring the same frame.
 
 ## What it costs
 

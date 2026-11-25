@@ -6,6 +6,7 @@ claim: "Test point-in-time correctness by rebuilding from a world truncated at a
 confidence: "reasoned"
 check: "a truncation test over the whole feature set, plus a planted leak that makes it fail"
 boundary: "State without history · Meaning · Pure append-only logs with no late corrections"
+cues: ["point in time", "as of", "data leakage", "leak", "feature timestamp", "snapshot", "backfill", "event time", "knowable at", "time travel", "training data", "join asof", "valid_from", "lookahead", "historical features"]
 ---
 
 # Truncate the world to test as-of

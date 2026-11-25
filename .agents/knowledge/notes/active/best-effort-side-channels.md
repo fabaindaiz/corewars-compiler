@@ -6,6 +6,7 @@ claim: "A channel that reports on an operation must never be able to fail it."
 confidence: "reasoned"
 check: "make the side call raise in a test: the operation succeeds and the failure leaves a distinct log line"
 boundary: "When the side channel is the product · When the channel is the only record · When swallowing hides a systemic failure"
+cues: ["webhook", "notification", "send email", "analytics event", "cache invalidation", "try except", "swallow error", "log and continue", "metrics call", "callback", "slack alert", "fire and forget", "audit log call", "outbound call"]
 ---
 
 # Best-effort side channels

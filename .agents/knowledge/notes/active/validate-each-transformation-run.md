@@ -6,6 +6,7 @@ claim: "When a tool you cannot fully trust rewrites an artefact — a formatter,
 confidence: "reasoned"
 check: "the projection (tokens, comments, numbers, identifiers, pixels) is compared after every run, and a planted loss is rejected"
 boundary: "Transformations meant to change the protected projection · Where the invariant cannot be stated · Tools already verified at the level you need"
+cues: ["formatter", "codegen", "generator", "translate", "bulk refactor", "sed -i", "black", "prettier", "codemod", "lost comment", "diff check", "round trip", "idempotent formatting", "tokens preserved", "regenerate"]
 ---
 
 # Validate each transformation run
@@ -14,12 +15,14 @@ boundary: "Transformations meant to change the protected projection · Where the
 
 Proving a transformer correct in general is expensive or impossible: a formatter's grammar, a translation model, a generator with a hundred options. Checking one run is cheap, because the thing that must survive can usually be named and extracted mechanically — the token sequence once whitespace is ignored, the multiset of comments, every number and identifier in a translated document, the rendered pixels of a refactored view. Compare that projection before and after; accept the output only if it matches.
 
+An agent that condenses or rewrites a document is such a tool, and the guard is only as good as its projection: one that checks a single invariant passes a run that lost everything else.
+
 This turns an untrusted tool into a safe one without changing it, and it catches exactly the failures review misses: a dropped comment in a long diff, a number altered in a fluent translation, a changed string literal that looks like reformatting.
 
 ## When it does NOT apply
 
 - **Transformations meant to change the protected projection.** A real refactor changes tokens; then the projection is the behaviour (rendered output, test results), not the text.
-- **Where the invariant cannot be stated** — a free prose rewrite has nothing mechanical to preserve.
+- **Where the invariant cannot be stated** — a free prose rewrite has nothing mechanical to preserve. A condensation is not a free rewrite: list the kinds of content that must survive it (conditions, warnings, states, definitions, identifiers) in the plan's success criteria, and check each, mechanically where possible.
 - **Tools already verified at the level you need** (a certified compiler); even then, the wiring around them is not.
 
 ## What it costs

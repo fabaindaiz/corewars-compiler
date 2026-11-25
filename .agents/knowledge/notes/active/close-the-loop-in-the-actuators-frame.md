@@ -4,8 +4,9 @@ slug: "close-the-loop-in-the-actuators-frame"
 topic: "time-and-control"
 claim: "Measure a feedback loop's error in a frame the actuator moves and the observer's own motion does not, take the target once per input change, and give every threshold inside the loop hysteresis, because a loop comes to rest at its threshold."
 confidence: "measured"
-check: "a probe holding the input at the threshold counts mode changes: zero"
+check: "a probe holding the input at the threshold counts zero mode changes, and applying a correction twice gives the same result as once"
 boundary: "Open-loop actions · Thresholds crossed once and not revisited · When the observer frame is what the user controls"
+cues: ["control loop", "hysteresis", "pid", "chatter", "follow camera", "steer", "threshold switch", "mode change", "deadband", "setpoint", "feedback", "target position", "error correction", "oscillate"]
 ---
 
 # Close the loop in the actuator's frame
@@ -15,6 +16,8 @@ boundary: "Open-loop actions · Thresholds crossed once and not revisited · Whe
 Anything that steers toward a target — an object toward a pointer, a scroll toward a cursor, a controller toward a set point — reduces an error. If the error is measured in a frame that moves with the thing being steered (screen coordinates while the view follows the steered object), acting does not reduce it: the gap stays constant however far it travels, and the loop never arrives. Measured in the frame the actuator changes and the observer does not (world or ground coordinates), each step shrinks the gap and the loop converges.
 
 The target has the same trap in time: re-reading a screen-space target every frame, while the view moves, re-creates the gap each frame. Take it once, when the input changes.
+
+The correction itself moves the frame. A residual measured downstream of a correction already applied is in the corrected frame, so a loop that adds its proposal to the applied correction counts that correction twice, and its proposals grow run after run. Estimate absolute targets and apply them, never increments on increments; state in which frame each residual is measured; and pin it with a test that applying twice gives the same result as applying once. A search window that is right in the raw frame is wrong in the corrected one.
 
 And a loop that converges does not stop anywhere in particular — it stops where the forces balance. With one threshold switching between two behaviours (slow or fast, on or off), that resting point **is** the threshold, and noise flips the behaviour back and forth. Two thresholds — switch up at one, back down at a lower one — give the resting state room.
 

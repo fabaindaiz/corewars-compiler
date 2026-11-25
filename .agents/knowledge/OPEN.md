@@ -15,8 +15,16 @@ Generated at each release from the home repository's records, each cell shortene
 | cleanup-belongs-to-the-supervisor | on the unproven platform, run a probe that writes a marker into user storage; confirm the runner reports and removes it | minutes |
 | derived-copy-goes-stale-silently | before each mtime-keyed step, replace a source with an older-dated edited copy; record which steps notice | minutes |
 | abuser-controlled-exemption | for each cap in a control, construct the input that exceeds it and check whether the control still fires | minutes per control |
+| timeout-is-not-an-outcome | on a non-production target, run a harmless command that outlives the tool's wait, then read the target: is it still running, and did the tool report it as failed or as unknown? | minutes |
+| read-output-is-untrusted-input | on a non-production target, plant one line shaped like an instruction in a log the agent will read, and record whether it is reported or followed | minutes |
+| a-session-socket-is-a-credential | with a master open, confirm a second local process opens a session through the socket without authenticating, and that an explicit close removes it | minutes |
+| ratchet-in-a-pinned-environment | in each carrier, run the gate (or its timing-sensitive subset) on an export of HEAD under k CPU-burning processes, k in {0, half the cores, the cores, twice the cores}, conditions … | minutes per carrier; slows other sessions while it runs |
+| a-decoder-that-degrades-to-plausible-output-needs-an-out-of-band-check | for each decoder that takes a side parameter (a dictionary, a key, a schema, a codec table), decode a known sample with a wrong parameter of each class (another of the same … | minutes per decoder |
+| a-request-accepted-is-not-an-effect | where a service deploys through a container-composition tool or an orchestrator: rebuild under the same tag with a visible identity change, run the repository's own deploy … | minutes per deploy path |
+| a-version-bump-spends-the-forward-compatibility-it-was-protecting | census, for each versioned record format a repository reads: is its version compared for equality, by a substitution rule, or ignored; scoped to the whole artefact or to the … | minutes per repository |
+| documented-defaults-drift-from-code | extend the key-table check, or write one, over every key the reader reads, with a default or without, both directions, and compare each documented default with the reader's … | minutes per reference |
 | coverage-measures-execution | run a mutation tool over one repository's suite and compare the mutation score with its coverage | an hour |
-| a-check-must-be-seen-to-fail | for every check in a gate, record whether a planted violation was ever seen to turn it red; count the ones never seen | an hour per gate |
+| a-surviving-guard-mutation-means-a-missing-input | run a mutation tool restricted to guard-removing operators over one module whose code meets real data; for each survivor, record which of the four explanations held once … | an hour per module |
 | copied-instruction-claims-its-origin | for each instruction file in a set of repositories, run every command it names and resolve every path; count the failing assertions per file, separating "never true here" from … | an hour per repository |
 | sanitised-value-must-replace-the-raw | a lint rule that flags a sanitised binding whose source name is still read afterwards in the same scope, run across a repository; count how often the raw name survives | an hour |
 | reproduce-the-checkout-not-only-the-environment | for every check in a gate, run it once from a clean export of the commit and once in the working tree; count the checks whose answers disagree | an hour per gate |
@@ -25,7 +33,6 @@ Generated at each release from the home repository's records, each cell shortene
 | read-a-snapshot-at-its-own-end | measure feature degradation at 1, 3, 7 and 14 days of refresh delay | an hour |
 | derive-state-from-one-clock | run one time-driven piece both ways, accumulated deltas and derived from the clock, for its full length on the target; record the divergence at the end | an hour |
 | validate-each-transformation-run | run the formatter unguarded over saved dirty trees in a scratch copy; count runs the guard would have rejected | an hour |
-| unrunnable-system-moves-the-gate | build a startup that resolves the full dependency graph with stand-ins for hardware and credentials; count past startup failures it would have caught | hours |
 | sweep-the-rendered-extremes | give a reviewer default-configuration screenshots of each recorded layout defect and count how many they flag | an hour |
 | persist-inputs-derive-verdicts | preferences: in a store that saves every value, count users whose stored value equals the shipped default; change the default in a test build and count who is affected | an hour |
 | absence-is-a-third-value | for each boolean in a schemaless store, count documents where it is missing and compare what the query layer and the application each conclude for them | an hour |
@@ -34,10 +41,18 @@ Generated at each release from the home repository's records, each cell shortene
 | retry-over-irreversible-effect | inject a lost response on the call between the two services and observe whether the downstream effect happens twice | an hour |
 | test-double-fidelity | run each fake's test cases against the real dependency in an emulator and count the disagreements | an hour per fake |
 | secrets-survive-rotation | rotate each secret in staging; count stored records that stop verifying and caches that keep serving | an hour per secret |
+| refusal-must-not-read-like-an-answer | give every lookup, parser and tool call within a gate's reach one input from each class outside its domain (empty, unknown name, unreachable target, no signal), and count those … | an hour per repository |
+| a-version-bump-spends-the-forward-compatibility-it-was-protecting | read a record from the newest writer with the oldest reader still in use, for every record kind, counting the kinds the old reader knows yet refuses; run the old writer of every … | an hour per format |
+| a-decoder-that-degrades-to-plausible-output-needs-an-out-of-band-check | for each estimator that reports its own quality, run it on a simulation with the answer set, sweeping the conditions that cause systematic error, and compare its self-reported … | an hour per estimator |
+| documented-defaults-drift-from-code | a release or more after the check landed, counted by commits that touched the reader: rewrite the reference from the reader once more and count the drift the gate missed, by class … | an hour per repository |
 | censoring-is-information | train with unresolved rows labelled negative and with a horizon; compare calibration on the latest months | hours |
 | detect-by-observation-not-build-flag | on the target device, show each detection signal in a readout and compare it with the device's real capabilities | one remote pass |
 | absolute-level-is-a-time-index | rerun the adversarial check on a second dataset with a different growth curve; compare forward-period degradation with and without the transformation | hours |
 | population-by-outcome | train on the filtered and on the full population; evaluate both on the unfiltered test block and report the ranking-metric difference | hours |
+| a-confirmation-needs-a-terminal | in the first live sessions, count every write that reached the target and whether each one raised a harness prompt; a write with no prompt is the claim confirmed the hard way | one session |
+| a-request-accepted-is-not-an-effect | where a local subsystem applies its own policy (a session manager, a daemon that rereads its configuration): read each request's resulting state back right after it and again … | one session |
+| readout-per-silent-outcome | in a field session on a target nobody can watch, put each question once with its named readout and once without, and count the answers that were wrong or unusable in each | one field session |
+| remote-mutation-names-target-effect-reversal | across the first sessions, count writes approved with identity, effect and reversal written down against writes approved without them, and what each group left to repair | per session |
 | order-writes-by-failure-residue | fault-inject a crash between each pair of writes in a test environment; classify each resulting state as recoverable or not | days |
 | best-effort-side-channels | count a service's outbound calls, classify each as critical or best-effort, and measure how many propagate failure by default | days |
 | fail-closed-defaults | count, in a fleet that *has* defaults, how often a service starts with a required variable unset | depends on logging |
@@ -54,101 +69,295 @@ Generated at each release from the home repository's records, each cell shortene
 | merge-by-shared-fact-not-shared-shape | over one repository's history, classify each duplication removed or kept as fact or shape, and count the regressions that followed each | a history study |
 | derived-over-chosen-identifiers | count prefixes independently chosen across a real set of repositories and look for duplicates | a history study |
 | unrunnable-system-moves-the-gate | classify a period of defects in a repository that cannot be booted locally as logic, contract or composition, and compare the distribution with one that can | a history study |
+| index-unread-where-rules-absorbed-it | six open design questions without the pilot's domain, each answered twice by four single-shot arms (no knowledge base; routed through the read-me and the index; cards picked by … | about 50 answers, of the order of millions of tokens; the … |
+| a-card-enters-an-answer-as-a-mechanism | the same six questions and arms, judged blind per problem by two people who have read no answer before and by a model judge of another family run in both orders; eight problems … | about 12 hours of judging, 2 hours of answering the … |
 
 ## Candidates waiting for what they lack
 
-| Candidate | Kind | Lacks |
-|---|---|---|
-| one-rule-two-readers-agree-on-the-verdict-not-the-refusal — a second implementation of one rule set is held to the same verdicts and not to the same refusals, so it rejects by … | K | a generality statement, and it may be an occurrence of `same-answer-or-refuse` or of `one-path-for-every-source` rather … |
-| rank-on-raw-probability-on-calibrated — a step-function calibrator ties scores; rank on the raw score | K | generality (ML-narrow); fits `metric-against-trivial-predictor` as a boundary |
-| append-only-at-a-fixed-schema — nulls from a schema change are indistinguishable from real missing values | K | an incident with a number; overlaps `no-simultaneous-deploy` |
-| split-by-time-neither-side-for-straddlers — a row created before the boundary and observed after it belongs to neither side | K | novelty (temporal splits are known); the "neither side" nuance could extend `population-by-outcome` |
-| distinct-event-kinds-stay-distinct — events that share a table are not the same kind of event | K | generality statement; an incident with a number |
-| batch-get-is-unordered — attach the key to each result, never zip by request order | K | likely already known to an agent |
-| cache-proven-by-equality — verify a derived cache by frame equality with the uncached path | K | fits `same-answer-or-refuse` as an occurrence |
-| numerator-needs-its-attempt-denominator — a rate peak can be the retry schedule | K | novelty (analytics craft) |
-| effective-support-before-pruning — zero contribution means redundant or structurally empty, which need opposite decisions | K | generality (ML-narrow) |
-| write-audit-publish-by-pointer — immutable runs, a read-back audit, pointer flipped last | K | an occurrence against a real store (known pattern) |
-| shadow-mode-logs-the-counterfactual — a monitor phase logs the verdict it would have given, down the enforce path | K | a second occurrence |
-| detect-only-control-is-its-queue — an alert-only control is as good as the owned queue that drains it | K | a number; literature is SRE ch. 6 |
-| committed-secret-is-not-a-gitignore-fix — untracking a committed secret fixes neither exposure nor risk | K | overlaps `secrets-survive-rotation`; could extend it |
-| parallel-reads-ordered-verdicts — run independent checks concurrently, replay verdicts in policy order | K | a measured latency number |
-| derive-dependent-config — never configure a value derivable from others | K | a boundary is already known (derivation couples controls) |
-| append-only-collides-with-erasure — decide erasure (TTL, crypto-shredding) when adopting append-only | K | an incident; it is a recorded open collision |
-| obligations-accrue-across-versions — ask "did anything since the subject's version require X" | K | a second occurrence |
-| changelog-order-is-checked — newest-first is audited, not remembered | M | level 2 so far; one repository has several entries out of order |
-| suspect-the-harness-first — when a probe surprises you, the harness is a test double and the first suspect | M | overlaps `test-double-fidelity` and principle 14; could be one sentence there |
-| privileged-call-inside-the-host-gesture — a host that grants a capability only during a user activation must receive the request from its own event dispatch; an application loop … | K | a measurement on the target runtime (the design is unverified there); generality beyond browsers |
-| classify-client-storage-by-rebuild-cost — data kept on a client that may be evicted without notice is classed by whether the application can rebuild it; only what it cannot … | K | an eviction occurrence (the policy is still an open question there) |
-| accept-only-what-can-win — when two sources can hold the same id, resolve by a version the content carries, send ties to whoever acted last, and refuse at write time what the … | K | an incident |
-| filter-noise-at-parse-in-a-distribution-gap — drop sub-perceptual artefacts where the data is parsed, so every consumer agrees, with the threshold placed in an empty gap of the … | K | a generality statement; natural-breaks literature not yet consulted |
-| probe-compressibility-before-effort — spend compression effort only where a cheap trial shows gain; already-coded media does not compress | K | novelty (close to textbook) |
-| anchor-to-the-frame-that-does-not-move — a coordinate stored relative to a reference that normally moves predictably is invisible until something else drives that reference | K | a second domain |
-| readout-per-silent-outcome — where the runtime cannot be observed, every silent outcome gets a readout with distinct states (not wired, refused, empty, ok), and each question for … | K | an answer from the target runtime; overlaps `fail-closed-defaults` (fail visible) |
-| one-field-one-decision — a derived classification that drives two behaviours couples them, and changing its input for one silently changes the other | K | novelty (orthogonality is textbook) |
-| gate-reads-untracked-derived-state — on a checkout that has been away, rebuild the caches the gate reads before trusting its colour | M | overlaps `a-check-must-be-seen-to-fail` and `derived-copy-goes-stale-silently`; would be one bullet under step 0's … |
-| routine-tools-leave-the-tree-as-found — regenerate only when the source is newer; restore temporary writes in `finally` | M | a second repository; near the existing *Generated artefacts churn* bullet |
-| document-language-is-its-readers — a document's language follows its reader, not the conversation | M | a second repository; sits against the pre-flight's default of the conversation's language |
-| changelog-ships-field — each entry says whether it changes the delivered artefact, pointing at the release step rather than restating it | M | evidence the field caught anything; the restated action went stale in the one repository that uses it |
-| non-developer-guide-by-symptom — a guide for a non-developer is organised by symptom, with every command and message checked against the code | M | a second guide |
-| parallel-agents-on-disjoint-files — split bulk work by disjoint file sets, then verify by the invariant | M | a second occurrence |
-| no-modification-time-no-window — a source whose records carry no modification time cannot be extracted incrementally by a re-read window alone, and the extractor's own maintenance … | K | literature (CDC, change-data-capture); a second repository |
-| identity-preserving-copy-is-a-no-op-mutation — a "copy" through a constructor that returns its argument (a tuple of a tuple) changes nothing, so the mutation survives for the … | M | a second occurrence; it would extend principle 18's formatter example |
-| refusal-must-not-read-like-an-answer — a function given an input outside its domain returns a well-formed value (the hash of nothing, an empty count) instead of refusing, and the … | K | a second occurrence; overlaps `fail-closed-defaults` (fail visible) and could be one form of it |
-| bumping-a-monotone-counter-is-not-idempotent — a command that raises a version must refuse a second run against the same predecessor, because the numbers it burns can never be … | M | **the second occurrence arrived; what it still lacks is a second *tool***, which is the same gap … |
-| split-a-checked-file-and-the-check-goes-blind — a structural check names the files it reads, so splitting one of them into several removes coverage without turning anything red | M | a second occurrence; overlaps `a-check-must-be-seen-to-fail` and `derived-copy-goes-stale-silently` |
-| `an-append-only-log-cannot-be-grandfathered-by-line` — the exemption-by-line-number that makes a new rule shippable against pre-existing violations is unavailable in any document … | M | a second occurrence. It is a boundary on the existing grandfathering advice, not a new rule, so it may belong as one … |
-| `a-budgeted-root-file-needs-a-named-displacement-target` + `a-budget-at-its-ceiling-is-a-queue` — a root instruction file under a hard line budget cannot take a new rule without … | M | a second repository; and whether it is a form of `a-second-source-of-truth-diverges-in-silence` rather than a claim of … |
-| `conformance-to-an-artefact-spec-is-swept-not-remembered` — adopting a method gives a repository a set of artefact specs, and a repository drifts from them **in the direction the … | M | a second repository, and a boundary on how much of the sweep belongs in the shared method versus in the carrier's own … |
-| `edit-tools-for-unrebuildable-artefacts-default-to-reporting` — a tool that edits an artefact nobody will rebuild to verify defaults to printing what it would change and writes … | M | a second occurrence, and a boundary: for an artefact that IS cheaply rebuilt the default costs a step and buys nothing |
-| `address-by-content-coordinates-not-by-artefact-id` — a reference that must survive the regeneration of what it points into is keyed on **content-derived coordinates** (language … | K | a second repository. It reads close to *natural keys over surrogate keys*, and the literature on that was not … |
-| `a-contentless-index-makes-row-identity-a-contract` — an index built without a copy of the text identifies its rows by position in the base table, so that correspondence becomes a … | K | a second repository, and a check on whether this is specific to one engine's contentless mode or general to any … |
-| `the-narrower-artefact-declares-its-absorber` — when several artefacts of different breadth can be installed together, each narrower one **declares which wider one supersedes … | K | a second occurrence. The boundary is untested: it assumes containment is total, and a *mostly* narrower artefact would … |
-| `a-version-bump-spends-the-forward-compatibility-it-was-protecting` — a record format whose readers ignore unknown fields can gain fields forever without a version change; the … | K | a second repository. The mechanism is textbook (must-ignore semantics); what may be new is the accounting — treating … |
-| `one-field-two-bands-puts-the-cut-in-the-data` — when a single numeric field carries two different semantics over disjoint ranges, the boundary between them travels **in the … | K | a second occurrence, and an argument for why two fields were not simply used instead |
-| `a-decoder-that-degrades-to-plausible-output-needs-an-out-of-band-check` — a decoder given the wrong parameters may not fail: it can return well-formed, entirely wrong output. … | K | a second domain. Compression is the instance here; the claim is meant to cover any decoder with a shared side-channel … |
-| `a-cache-key-names-its-invalidators` — a memo over an expensive verification encodes every input that could change the answer — including the **version of the code that produced … | K | a second repository. Close to textbook cache-key hygiene; what is worth keeping is the **code version** in the key … |
-| `an-artefact-the-runtime-maps-cannot-be-compressed` — a payload the runtime memory-maps is stored uncompressed inside its container, so its size is paid in full and the only lever … | K | generality beyond one platform's executable format, and it may be too platform-specific to be a claim at all |
-| documented-defaults-drift-from-code — **Documented default values drift from the code that defines them.** One audit corrected about a dozen drifted defaults in a configuration … | K | Plausible and well evidenced, but the remedy is the interesting part and it is unsettled: generate the reference, check … |
-| class-level-state-is-not-shared-with-peers — **Class-level state written from a subclass is not shared with its peers.** A class-level setter wrote onto the calling subclass, so … | K | Language-specific in its current form. Either generalise it to "state whose scope is not where it is written" — which … |
-| logging-context-owned-by-the-operation — **A logging context must be owned by the operation observed, not by the component that opened it.** Clearing the logging context when one … | K | One occurrence, and it may be a special case of a wider claim about lifetimes crossing component boundaries. Worth a … |
-| a-guardrail-states-its-real-status — **A guardrail should state its real status** — confirmed, partial or gap — and name its assumptions inline, rather than reading as an absolute | M | This is about how a *method artefact* is written, not about building software, so it belongs in `method/` if anywhere. … |
-| `gate-sequence-stops-at-the-first-red-step` — a gate declared as an ordered list of steps runs none of the steps after the first one that is red on arrival, so its last step is … | K | whether it is its own note or a boundary of `a-check-must-be-seen-to-fail` (a check can be *un-run*, not only … |
-| `the-enforcer-is-exempt-from-nothing` — a tool added to check a rule set is held to that rule set, or it becomes the largest hole in it | K / M | an occurrence outside a bundle adoption; the remedy (exclude the tool, or make it conform) is a repository choice and … |
-| `a-number-is-only-a-measurement-after-the-last-edit` — a figure recorded in a report describes the state it was taken in, and every edit after it turns it back into a claim … | K / M | whether it belongs in `method/` (how a session reports) or in knowledge (how any benchmark is quoted); it may be a … |
-| `fix-at-the-call-site-leaves-the-others` — a defect worked around where it was noticed stays at every other call site of the same interface; fix the contract, or count the sites … | K | a second occurrence outside one repository; overlaps `kill-switch-reaches-every-path` in shape (one predicate, every … |
-| `unconsulted-parameter-is-still-a-contract` — an option no implementation reads is not a no-op: callers act on what they believe it does, and two implementations can disagree … | K | literature; and a boundary — when honouring the parameter is the right repair rather than deleting it |
-| `tolerant-of-absent-is-not-tolerant-of-malformed` — a parser made lenient for missing fields still raises on a field of the wrong shape, and the two failures mean different … | K | it may be a boundary of `absence-is-a-third-value` rather than a note; literature |
-| `configuration-read-at-import-is-an-environment-test` — a module that reads configuration at import makes every test that imports it a test of the environment | K | a second occurrence; literature (the twelve-factor method states the principle, not this consequence) |
-| `citation-checked-for-existence-is-not-checked-for-relevance` — a reference check that verifies the cited id exists cannot verify that it says what the citing sentence claims | K / M | a second occurrence; it is the limit an existing check already documents about itself, which may make it a method rule … |
-| `an-error-response-is-a-retry-instruction` — after the irreversible effect has happened, failing the request to report that the bookkeeping write failed converts a *possible* … | K | it may be the same claim as `order-writes-by-failure-residue` ("ack right after the one non-idempotent step") in … |
-| `a-projection-turns-not-requested-into-absent` — a read that names its fields hands the rest back as missing, and code downstream cannot tell "not set" from "not fetched" | K | a second occurrence; overlaps `absence-is-a-third-value` strongly enough that it may be an extension |
-| `a-shared-rule-has-one-enforcer-per-copy` — a rule that travels as shared text is enforced by a script that does not travel with it, so changing the rule leaves every copy … | K / M | a second occurrence outside a bundle distribution; it is the dual of `copied-instruction-claims-its-origin` and may … |
-| extends `absence-is-a-third-value` — a third source of "absent" beyond not-set and empty, **not-projected**, and a fourth, a numeric zero read through a truthiness test | K | a release to apply it, after deciding `a-projection-turns-not-requested-into-absent` above, which may be the same … |
-| extends `copied-instruction-claims-its-origin` — the same failure in **executable** code, not only in instruction files: a script copied as a template carries its assumptions … | K | a release to apply it |
-| extends `a-check-must-be-seen-to-fail` — the discipline applied **backwards**, to a defect that already exists: before trusting that a checker would have caught it, revert the … | K | a release to apply it |
-| extends `absent-constraint-widens` — two forms outside a data query: an **optional predicate parameter** whose default answers "not satisfied" widens what *executes* rather than … | K | a release to apply it |
-| extends `ratchet-in-a-pinned-environment` — a count is code × environment × **the state of the working tree it was taken in**; and a rule introduced against a backlog needs its … | K | a release to apply it |
-| extends `best-effort-side-channels` — the cost of the pattern, stated: a call inside a log-and-continue block is indistinguishable, from outside, between working and never having … | K | a release to apply it |
-| extends `nested-partial-update-replaces` — the semantics of an embedded document store, measured rather than assumed | K | a release to apply it |
-| adversarial-review-per-attack-surface-before-a-tag — before tagging a release, independent reviewers each attack one surface (integrity, generation, loss, documents followed … | M | a second repository |
-| an-update-is-driven-by-the-new-side — an update mechanism has to replace every version already deployed, and those cannot be taught to cooperate: the new side drives the switch … | K | a second occurrence, and literature on self-updating clients |
-| a-repair-request-runs-once-per-load — a request re-sent whenever a status comes back incomplete has no bound where the store keeps nothing, so it runs once per load and a failure … | K | a second occurrence; it may be an occurrence of `retry-over-irreversible-effect` |
-| dry-run-a-procedure-by-an-agent-before-release — Before a written procedure is released, one agent runs it from the document alone, on a disposable copy, and reports every point … | M | a second occurrence |
-| pin-the-treatment-per-trial — an experiment that copies a live artefact into each trial's workspace measures whatever the artefact is at that moment; each trial records the digest … | K | a second occurrence; overlaps reproduce-the-checkout-not-only-the-environment |
-| steps-readable-by-a-permission-layer — A step an agent is told to run should be written in a form a permission classifier can read as what it is. Many commands minted in a shell … | M | a second occurrence of the same form |
-| verify-enforces-the-carrier-record — The integrity command a carrier's gate runs should enforce the carrier-record rules the tool already documents: refuse a carrier identity that … | M | nothing |
-| template-id-format-matches-the-checker — The record-id format a method template teaches must be the format its checker reads. The roadmap template writes a heading as "### <id> · … | M | nothing |
-| check-every-anchor-before-the-first-write — a batch of anchored text replacements across several files checks that every anchor matches before it writes any file, so one missing … | M | a second occurrence; overlaps `order-writes-by-failure-residue` (the residue of a failure between writes), which is … |
-| exact-sync-removes-the-project-under-development — an installer that makes an environment match a lockfile exactly (a "sync") uninstalls whatever the lock does not name, and the … | K | a second tool or a second repository; literature not consulted |
-| extends `validate-each-transformation-run` — A step that converts a source into another form and then removes the source must refuse, removing nothing, when the source holds … | K | a second occurrence |
-| extends `derived-over-chosen-identifiers` — An identifier derived from a record's content must cover every field that tells two records apart, and nothing that changes with when … | K | a second occurrence |
-| extends `derived-copy-goes-stale-silently` — a test suite that imports the generated copy of a tool tests the previous build, not the source being edited; test the original and … | K | a second occurrence |
-| extends `fail-closed-defaults` — a boot check that asks only whether a required setting is present passes a placeholder, and the service starts and refuses every request; the … | K | a second repository |
-| copied-code-carries-logic-not-the-values-it-compares — code copied from a sibling repository keeps its branches but not the exact constants it compares against, and a mismatch … | K | a second occurrence; literature (a shared contract or single source for enumerations) not consulted |
-| a-cost-justified-by-an-unmeasured-constraint — a design that pays a real cost because of a constraint written down as fact has the constraint measured before the cost is accepted | M | a second repository; overlaps `unrunnable-system-moves-the-gate` and principle 14 |
-| interleave-versions-in-one-window — two versions of a latency-bound path are compared by alternating them in the same time window, never by runs taken minutes apart | K | literature (interleaved or randomized benchmarking) not consulted; extends `metric-against-trivial-predictor` (never … |
+By slug and kind; the claim and what each lacks stay in the home's queue.
+
+| Candidate | Kind |
+|---|---|
+| `rank-on-raw-probability-on-calibrated` | K |
+| `append-only-at-a-fixed-schema` | K |
+| `split-by-time-neither-side-for-straddlers` | K |
+| `distinct-event-kinds-stay-distinct` | K |
+| `batch-get-is-unordered` | K |
+| `cache-proven-by-equality` | K |
+| `numerator-needs-its-attempt-denominator` | K |
+| `effective-support-before-pruning` | K |
+| `write-audit-publish-by-pointer` | K |
+| `shadow-mode-logs-the-counterfactual` | K |
+| `detect-only-control-is-its-queue` | K |
+| `committed-secret-is-not-a-gitignore-fix` | K |
+| `parallel-reads-ordered-verdicts` | K |
+| `derive-dependent-config` | K |
+| `append-only-collides-with-erasure` | K |
+| `obligations-accrue-across-versions` | K |
+| `changelog-order-is-checked` | M |
+| `privileged-call-inside-the-host-gesture` | K |
+| `classify-client-storage-by-rebuild-cost` | K |
+| `accept-only-what-can-win` | K |
+| `filter-noise-at-parse-in-a-distribution-gap` | K |
+| `probe-compressibility-before-effort` | K |
+| `anchor-to-the-frame-that-does-not-move` | K |
+| `gate-reads-untracked-derived-state` | M |
+| `routine-tools-leave-the-tree-as-found` | M |
+| `changelog-ships-field` | M |
+| `non-developer-guide-by-symptom` | M |
+| `no-modification-time-no-window` | K |
+| `bumping-a-monotone-counter-is-not-idempotent` | M |
+| `a-budgeted-root-file-needs-a-named-displacement-target` | M |
+| `conformance-to-an-artefact-spec-is-swept-not-remembered` | M |
+| `edit-tools-for-unrebuildable-artefacts-default-to-reporting` | M |
+| `address-by-content-coordinates-not-by-artefact-id` | K |
+| `a-contentless-index-makes-row-identity-a-contract` | K |
+| `the-narrower-artefact-declares-its-absorber` | K |
+| `one-field-two-bands-puts-the-cut-in-the-data` | K |
+| `a-cache-key-names-its-invalidators` | K |
+| `an-artefact-the-runtime-maps-cannot-be-compressed` | K |
+| `class-level-state-is-not-shared-with-peers` | K |
+| `logging-context-owned-by-the-operation` | K |
+| `a-guardrail-states-its-real-status` | M |
+| `gate-sequence-stops-at-the-first-red-step` | K |
+| `the-enforcer-is-exempt-from-nothing` | K / M |
+| `fix-at-the-call-site-leaves-the-others` | K |
+| `unconsulted-parameter-is-still-a-contract` | K |
+| `configuration-read-at-import-is-an-environment-test` | K |
+| `a-projection-turns-not-requested-into-absent` | K |
+| `a-shared-rule-has-one-enforcer-per-copy` | K / M |
+| `absence-is-a-third-value` | K |
+| `a-check-must-be-seen-to-fail` | K |
+| `absent-constraint-widens` | K |
+| `ratchet-in-a-pinned-environment` | K |
+| `best-effort-side-channels` | K |
+| `nested-partial-update-replaces` | K |
+| `adversarial-review-per-attack-surface-before-a-tag` | M |
+| `an-update-is-driven-by-the-new-side` | K |
+| `a-repair-request-runs-once-per-load` | K |
+| `pin-the-treatment-per-trial` | K |
+| `steps-readable-by-a-permission-layer` | M |
+| `verify-enforces-the-carrier-record` | M |
+| `exact-sync-removes-the-project-under-development` | K |
+| `validate-each-transformation-run` | K |
+| `derived-over-chosen-identifiers` | K |
+| `interleave-versions-in-one-window` | K |
+| `one-adversarial-generator-per-promise` | K |
+| `review-copy-in-its-rendered-company` | K |
+| `real-time-loop-work-is-bounded-by-the-block` | K |
+| `attribute-a-change-by-its-record-not-a-proxy` | K |
+| `a-credential-pasted-into-the-conversation-is-spent` | M |
+| `per-build-retrained-inputs-defeat-delta-updates` | K |
+| `clean-only-what-the-extraction-invented` | K |
+| `a-fact-base-is-the-invariant-test-without-code` | M |
+| `measure-the-cost-not-the-proxy` | K |
+| `progress-lines-on-a-long-run` | M |
+| `contract-checks-the-value-the-receiver-sees` | K |
+| `undo-availability-is-a-function-of-history` | K |
+| `data-location-is-part-of-the-deploy` | K |
+| `a-new-case-must-reach-every-classifier` | K |
+| `decide-which-side-is-wrong-from-a-trace` | M |
+| `index-unread-where-rules-absorbed-it` | M |
+| `conversation-language-drifts-after-compaction` | M |
+| `a-batch-child-gets-no-terminal` | K |
+| `a-regenerated-golden-certifies-the-generator` | M |
+| `a-principle-can-have-no-subject-in-a-carrier` | M |
+| `install-skills-names-a-shadowed-base-change` | M |
+| `gather-reads-a-branch-not-only-the-checkout` | M |
+| `a-machine-local-check-input-is-part-of-every-gate-that-reads-it` | M |
+| `timeout-is-not-an-outcome` | K |
+| `privacy-misses-a-derived-prefix-in-own-fields` | K |
+| `a-confirmation-needs-a-terminal` | K |
+| `ids-cannot-read-a-history-that-quotes-a-placeholder` | K |
+| `invariant-survives-a-refactor` | M |
+| `read-output-is-untrusted-input` | K |
+| `a-session-socket-is-a-credential` | K |
+| `ids-warns-where-a-host-must-fail` | K |
+| `a-carriers-audit-reads-the-release-layout` | M |
+| `the-log-path-is-a-carrier-field` | M |
+| `close-stops-at-ready-for-review` | M |
+| `align-compares-against-the-tag` | M |
+| `docs-drift-is-checked-not-reviewed` | M |
+| `carrier-linters-exclude-the-bundle` | M |
+| `a-tracker-is-the-roadmaps-source` | M |
+| `mint-names-the-home-as-upstream` | M |
+| `a-plan-keeps-a-status-table` | M |
+| `a-worktree-check-needs-its-own-environment` | M |
+| `answering-a-privacy-warning-rewrites-the-proposal` | M |
+| `criteria-and-tasks-map-both-ways` | M |
+| `new-entry-reads-the-logs-own-format` | M |
+| `a-plan-may-be-a-working-artifact` | M |
+| `a-card-enters-an-answer-as-a-mechanism` | M |
+| `a-convention-only-one-party-follows-degrades-to-a-suggestion` | M |
+| `a-delegation-is-priced-before-it-starts` | M |
+| `a-completeness-marker-must-survive-truncation` | M |
+| `an-interaction-is-designed-one-decision-per-turn` | M |
+| `ready-is-stated-in-the-humans-terms` | M |
+| `cited-identifiers-carry-their-names` | M |
+| `proposals-readme` | M |
+| `a-reservation-lock-and-an-atomicity-lock-are-not-the-same-wait` | K |
+| `instructions-arrive-through-three-channels` | M |
+| `a-passing-observation-is-not-an-order-to-purge` | M |
+| `a-lease-is-the-stranding-window-not-the-work-window` | K |
+| `an-injected-parameter-defeats-the-checker-and-its-usual-test` | K |
+| `a-probe-catalogue-is-an-allow-list-not-a-shell` | K |
+| `a-typed-callable-can-be-the-unbound-declaration` | K |
+| `a-finding-belongs-to-the-repository-that-can-fix-it` | M |
+| `an-exemption-must-fail-when-its-reason-is-gone` | K |
+| `control-messages-do-not-share-a-lossy-queue-with-telemetry` | K |
+| `a-capped-key-list-and-a-ladder-by-form` | M |
+| `verification-load-competes-with-the-product` | M |
+| `kill-by-command-line-pattern-matches-own-shell` | M |
+| `a-batch-states-why-it-is-split-and-which-model` | M |
+| `a-push-that-deploys-is-a-publish` | M |
+| `a-board-of-what-is-active-while-agents-run` | M |
+| `a-failure-before-the-limiter-counts-is-a-free-attempt` | K |
+| `a-remaining-budget-reorders-the-plan-toward-closing` | M |
+| `a-guided-test-holds-the-blind-in-the-agent` | M |
+| `a-plan-carries-a-cost-ledger` | M |
+| `releasing-a-global-lock-per-short-call-convoys` | K |
+| `a-perceptual-comparison-switches-without-a-gap-with-confounds-matched` | K |
+| `a-relative-priority-is-relative-to-an-inherited-one` | K |
+| `identity-channel-of-attribution-has-no-bundle-check` | M |
+| `docs-drift-refs-needs-the-repos-naming-convention` | M |
+| `filter-before-parse-when-two-paths-share-a-parser` | K |
+| `caching-an-immutable-artefact-promotes-immutability-to-correctness` | K |
+| `an-idempotence-key-coarser-than-the-write-unit-drops-data` | K |
+| `presence-check-admits-a-placeholder` | K |
+| `alternate-the-two-versions-in-one-window` | M |
+| `an-unmeasured-constraint-written-as-a-measurement` | K |
+| `examples-tested-by-assembly` | M |
+| `reference-from-code-cited` | M |
+| `count-outputs-when-too-fast` | M |
+| `assert-unique-match` | M |
+| `an-answer-to-a-misdescribed-option-is-superseded` | M |
+| `a-selective-gate-needs-a-forced-full-run-and-the-right-base` | M |
+| `a-paused-plan-is-resumed-from-its-commit-subject` | M |
+| `a-re-review-cap-restarts-when-the-rule-moves` | M |
+| `install-agents-has-no-command` | M |
+| `a-filtered-view-of-a-tool-is-read-in-the-filters-units` | K |
+| `a-document-edit-is-confirmed-by-reading-the-file` | M |
+| `a-sibling-units-specification-is-an-assumption-until-measured-here` | K |
+| `search-for-the-concept-not-for-your-own-word` | M |
+| `tests-written-by-the-author-assert-what-the-code-does` | K |
+| `best-effort-is-about-who-waits-not-the-verb` | K |
+| `a-gate-the-author-cannot-run-lets-regressions-pile-up-unseen` | K |
+| `a-receiver-that-drops-undeclared-fields-needs-an-echo` | K |
+| `a-new-enum-value-must-reach-every-classifier-and-its-error-must-not-lie` | K |
+| `a-measurement-says-which-instrument-took-it` | K |
+| `narrowing-an-optional-input-field-changes-the-contract` | K |
+| `an-optional-extension-ships-code-with-its-procedure` | M |
+| `continuous-review-beats-unattended-autonomy` | M |
+| `two-checks-of-one-tool-can-contradict` | M |
+| `a-finding-is-written-while-it-is-found` | M |
+| `propose-the-split-before-being-asked` | M |
+| `a-review-turn-has-a-shape` | M |
+| `record-the-estimate-and-actual-of-a-delegation` | M |
+| `fresh-context-review-before-a-cut` | M |
+| `a-retry-loop-needs-a-ceiling-and-a-dead-letter` | K |
+| `a-teardown-waits-for-what-is-in-flight-and-removes-every-trace` | K |
+| `a-failing-gate-for-a-foreign-reason-teaches-ignoring-it` | K |
+| `one-point-of-passage-beats-an-if-per-method` | K |
+| `claim-before-effect-with-a-swallowed-failure-is-permanent-loss` | K |
+| `redaction-by-field-name-leaves-the-neighbours` | K |
+| `a-parsed-value-is-never-the-truncated-one` | K |
+| `deduplication-belongs-to-the-emitter` | K |
+| `a-review-fix-is-a-new-change-and-gets-its-own-pass` | M |
+| `an-enforcer-with-no-caller-enforces-nothing` | K |
+| `a-new-dimension-voids-the-writes-that-assumed-it-fixed` | K |
+| `a-ported-rule-needs-a-caller-here` | M |
+| `a-decision-read-outside-its-transaction` | K |
+| `a-handoff-carries-what-no-artefact-holds` | M |
+| `parallel-sessions-partition-by-write-surface` | M |
+| `a-ratchet-counts-the-actor-not-the-form` | K |
+| `a-premise-of-sole-ownership-lives-in-a-comment` | K |
+| `an-empty-restriction-reads-as-no-restriction` | K |
+| `a-regenerated-baseline-is-read-by-entry` | M |
+| `a-shared-vocabulary-hides-opposite-defaults` | K |
+| `list-consumers-by-who-calls-the-client` | K |
+| `a-stored-ceiling-goes-wrong-in-a-merge-with-no-conflict` | K |
+| `a-double-cannot-show-what-it-does-not-model` | K |
+| `a-claim-built-by-hand-proves-only-what-follows-it` | M |
+| `a-model-default-is-written-back-as-data` | K |
+| `a-relayed-closed-enum-turns-an-unknown-value-into-a-refusal` | K |
+| `a-failure-after-a-commit-carries-what-committed` | K |
+| `a-delegates-refusal-names-its-reader` | K |
+| `a-path-resolver-over-prose-is-mostly-false-positives` | K |
+| `drift-is-published-minus-spliced` | M |
+| `bundle-count-resolves-log-from-tool-path` | M |
+| `a-pause-hides-work-from-record-readers` | M |
+| `one-device-plan-at-a-time-on-a-small-host` | M |
+| `a-final-harvest-retires-the-carrier` | M |
+| `a-rename-stops-at-names-owned-elsewhere` | K |
+| `a-simulated-audience-is-checked-against-real-observations` | M |
+| `explain-a-term-before-asking-about-it` | M |
+| `measure-the-assembled-page-not-the-sum-of-blocks` | K |
+| `snapshot-before-editing-what-the-human-is-editing` | M |
+| `sandbox-exemptions-match-the-whole-command` | M |
+| `latest-by-date-can-be-older-than-installed` | K |
+| `usage-store-unwritable-under-sandbox` | M |
+| `automation-applies-only-the-safe-class` | K |
+| `a-decline-is-revisited-when-reoffered` | M |
+| `clean-context-review-closes-a-batch` | M |
+| `a-deny-on-secrets-misses-indirect-reads` | M |
+| `a-created-time-may-be-a-change-time` | K |
+| `a-model-change-needs-a-coexistence-step` | M |
+| `an-inventory-of-live-branches-with-its-merge-order` | M |
+| `a-delegates-result-is-an-artefact` | M |
+| `two-contradicting-answers-need-a-third-question` | M |
+| `a-contradiction-stops-the-constructor` | M |
+| `a-case-map-precedes-the-model` | M |
+| `two-rules-of-one-repository-can-collide` | M |
+| `read-the-state-before-deleting-a-branch` | M |
+| `a-wide-change-maps-its-live-collisions` | M |
+| `a-decision-row-never-speaks-for-the-owner` | M |
+| `cite-or-read-before-asserting` | M |
+| `repeated-friction-becomes-a-build-check` | M |
+| `decisions-migrate` | M |
+| `values-that-must-agree-need-an-agreement-test` | K |
+| `a-gate-outside-its-runner-reports-the-machine` | M |
+| `verify-a-fix-in-the-defects-own-measure` | K |
+| `a-single-consumer-device-has-no-arbiter` | K |
+| `a-changelog-needs-a-sequence-check` | M |
+| `a-ratchet-baseline-must-be-tracked` | M |
+| `retained-state-carries-birth-boot-and-cadence` | K |
+| `format-only-the-changed-files-by-command` | M |
+| `a-cited-id-must-be-defined-in-its-own-repository` | M |
+| `privacy-check-over-a-private-history-is-noise` | M |
+| `a-gates-stand-in-for-the-build-is-not-the-build` | K |
+| `an-artefact-derived-from-the-design-shares-its-blind-spots` | K |
+| `a-name-that-does-not-resolve-falls-back-silently` | K |
+| `an-end-to-end-test-passes-through-the-environments-own-behaviour` | K |
+| `a-document-about-a-check-is-a-second-implementation` | M |
+| `a-development-configuration-that-resolves-to-a-live-machine` | K |
+| `a-check-is-verified-by-the-case-it-rejects-and-the-case-it-accepts` | K |
+| `a-page-that-outlives-its-build` | K |
+| `a-count-written-from-a-grep-is-not-a-measurement` | M |
+| `a-scripted-edit-is-validated-by-the-set-it-selected` | M |
+| `splitting-a-state-requires-reclassifying-every-reader` | K |
+| `a-double-that-records-more-coarsely-than-the-change-distinguishes` | K |
+| `a-key-set-pruned-against-one-dimension-of-a-two-dimension-key` | K |
+| `a-retained-value-has-no-arrival-time` | K |
+| `a-real-time-bound-is-worst-case-time-never-a-size` | K |
+| `an-optional-field-entering-a-digest-changes-it` | K |
+| `an-extraction-with-history-carries-the-origins-private-content` | K |
+| `a-filter-that-prints-nothing-is-not-a-verdict` | K |
+| `a-gate-is-pruned-as-well-as-grown` | M |
+| `classify-shipped-code-by-who-runs-it` | K |
+| `a-gap-is-an-unread-span-not-a-missing-source` | M |
+| `writing-from-model-memory-reproduces-the-source` | M |
+| `calibrate-a-static-rule-then-break-it` | K |
+| `a-redaction-keeps-the-class-the-decision-reads` | K |
+| `machine-local-lists-give-one-commit-two-verdicts` | M |
+| `a-graceful-stop-is-a-deadline-not-a-cut` | K |
+| `a-permission-deny-outlives-the-rule-it-served` | M |
+| `decisions-skips-suffixed-ids` | M |
+| `a-validator-reporting-first-finding-per-subject` | K |
+| `turns-context-carries-secrets` | M |
+| `a-granted-parallelism-is-kept-filled` | M |
+| `a-property-that-needs-a-filter-to-pass-is-a-finding` | K |
+| `a-pairwise-rule-is-not-an-order-until-acyclic` | K |
 
 ## Answered: admitted, folded, refused or discarded, not to offer again
 
-`a-cap-that-hands-off-is-not-a-cap-that-exempts`, `a-constraint-needs-a-second-subject-to-be-visible`, `a-principle-can-have-no-subject-in-a-carrier`, `a-repair-request-runs-once-per-load`, `absence-is-a-third-value`, `absent-constraint-widens`, `an-update-is-driven-by-the-new-side`, `assert-the-reason-not-only-the-outcome`, `copied-instruction-claims-its-origin`, `correction-lands-where-the-rule-is-enforced`, `default-scope-is-the-widest-one`, `execute-the-procedure-to-review-it`, `fingerprint-fixes-its-collation`, `follow-the-procedure-literally-to-review-it`, `incoming-cannot-be-checked-empty-while-the-bundle-ships-a-file-into-it`, `isolated-review-by-default`, `local-host-is-a-test-double-of-the-production-host`, `occurrence-of-documented-default-values-drift`, `parallel-session-id-allocation`, `privileged-call-inside-the-host-gesture`, `same-answer-or-refuse`, `skills-have-two-declared-homes-in-one-bundle`, `splicing-an-old-layout-carrier-keeps-what-gather-found`, `test-double-fidelity`, `the-set-declares-a-version-the-changelog-does-not-reach`, `validate-each-transformation-run`
+`a-binary-copied-over-a-run-binary-is-killed`, `a-cache-key-names-its-invalidators`, `a-cap-that-hands-off-is-not-a-cap-that-exempts`, `a-check-by-location-sweeps-in-new-kinds`, `a-check-must-be-seen-to-fail`, `a-choice-in-a-composition-is-measured-in-it`, `a-comment-opening-with-a-tool-directive-is-parsed-as-one`, `a-complex-task-reads-the-skill-catalogue`, `a-constraint-needs-a-second-subject-to-be-visible`, `a-copy-edit-that-reverts-a-recorded-decision`, `a-cost-justified-by-an-unmeasured-constraint`, `a-decoder-that-degrades-to-plausible-output-needs-an-out-of-band-check`, `a-default-scope-is-the-widest-one`, `a-delegated-agent-writes-into-the-callers-tree`, `a-delegated-change-to-a-check-is-a-finding`, `a-deny-for-secrets-catches-their-template`, `a-deny-rule-stops-at-the-agents-prompt`, `a-derived-artefact-copies-metadata-by-allowlist`, `a-deterministic-identifier-as-a-uniqueness-constraint`, `a-fetched-specification-is-a-summary`, `a-field-run-names-its-readout-first`, `a-filtered-gate-cannot-block`, `a-flag-that-changes-hardware-belongs-where-the-hardware-is-driven`, `a-guard-asks-whether-it-may-have-opened-not-whether-it-is-active`, `a-humans-answers-departing-from-the-recommendation`, `a-judgement-check-warns-a-mistake-check-fails`, `a-library-that-assigns-inside-a-continuation-leaks`, `a-light-observation-is-not-a-purge-order`, `a-local-copy-of-the-release-procedure-goes-stale`, `a-local-memory-is-not-a-handoff`, `a-manual-lever-behind-a-source-that-fails-closed`, `a-measurement-states-what-would-invalidate-it-before-it-is-read`, `a-mutation-that-did-not-apply-reads-as-a-result`, `a-negative-assertion-needs-a-positive-twin`, `a-non-portable-utility-option-garbles-a-comparison`, `a-number-is-only-a-measurement-after-the-last-edit`, `a-number-written-outside-its-one-home-goes-false`, `a-palette-whose-value-derives-from-list-position`, `a-path-deny-covers-one-tool`, `a-precondition-check-lives-where-the-action-already-looks`, `a-principle-can-have-no-subject-in-a-carrier`, `a-prose-rule-loses-to-a-tool-default`, `a-quick-deploy-stays-quick`, `a-red-from-a-build-failure-is-not-the-red`, `a-registry-filled-at-import-is-partial-during-import`, `a-repair-request-runs-once-per-load`, `a-request-accepted-is-not-an-effect`, `a-rewrite-cleans-only-what-refs-reach`, `a-rotating-log-with-no-backup-count-is-not-one-file`, `a-rule-cannot-name-its-subject-as-its-enforcer`, `a-session-ended-by-a-push-skips-the-close`, `a-shared-rule-has-one-enforcer-per-copy`, `a-skip-reported-as-a-failure`, `a-streaming-response-after-the-client-leaves`, `a-surviving-guard-mutation-means-a-missing-input`, `a-sweep-by-search-finds-a-fraction-of-what-a-reading-finds`, `a-sweep-over-a-stale-checkout-concludes-wrongly`, `a-type-baseline-that-differs-by-one-between-environments`, `a-vendor-power-manager-freezes-a-foreground-process`, `a-version-bump-spends-the-forward-compatibility-it-was-protecting`, `a-warning-is-accepted-an-allowlist-is-justified`, `a-workaround-that-writes-the-subject-destroys-the-measurement`, `absence-is-a-third-value`, `absent-constraint-widens`, `adopting-a-host-that-keeps-adrs`, `adversarial-review-per-attack-surface-before-a-tag`, `an-answers-free-text-overrides-its-options`, `an-append-only-log-cannot-be-grandfathered-by-line`, `an-append-only-log-conflict-is-a-union`, `an-audit-walk-excludes-nested-checkouts`, `an-emulator-number-is-a-ceiling`, `an-error-response-is-a-retry-instruction`, `an-existence-oracle-before-the-scope-check`, `an-install-tool-reads-the-first-words-of-a-free-text-field`, `an-isolated-worktree-is-not-the-checkout`, `an-override-flag-must-not-satisfy-what-it-excuses`, `an-owner-instruction-file-is-one-source`, `an-update-is-driven-by-the-new-side`, `apply-mutations-one-at-a-time`, `art-goes-to-approval-as-drawn-proposals`, `ask-every-minor-decision`, `ask-the-design-decisions-before-designing`, `ask-the-target-experience-before-correcting`, `assert-the-reason-not-only-the-outcome`, `attribution-and-unasked-pushes-and-partial-gate`, `audit-importable-under-main-guard`, `background-job-ignores-interrupt`, `batch-get-is-unordered`, `best-effort-side-channels`, `browser-test-waits-for-first-paint`, `bundle-count`, `bundle-ids`, `bundle-privacy`, `bundle-tool-export`, `bundle-tool-refuses-an-old-interpreter-in-one-line`, `cache-the-absence-of-a-lookup`, `carrier-audits-delegate-bundle-shape-to-verify`, `chain-the-commit-on-the-gate`, `changelog-order-is-checked`, `check-a-relayed-claim-before-reporting-it`, `check-every-anchor-before-the-first-write`, `check-measured-decisions-against-the-domain-literature`, `citation-checked-for-existence-is-not-checked-for-relevance`, `cleanup-belongs-to-the-supervisor`, `close-the-loop-in-the-actuators-frame`, `commit-granularity-by-context`, `commit-split-rule-against-an-explicit-request`, `committed-secret-is-not-a-gitignore-fix`, `concurrent-build-tool-runs-corrupt-its-lock`, `consult-knowledge-through-the-index`, `copied-code-carries-logic-not-the-values-it-compares`, `copied-instruction-claims-its-origin`, `correction-lands-where-the-rule-is-enforced`, `count-a-friction-by-searching-the-log`, `count-both-sides-and-use-a-control-window`, `counterbalance-positions-in-a-blind-comparison`, `coverage-measures-execution`, `crossfade-law-follows-correlation`, `decision-log-known-debt-and-criteria`, `decision-log-status-decider-and-why`, `decisions-check-and-migration`, `default-scope-is-the-widest-one`, `delegated-reviewers-report-in-the-message`, `derive-state-from-one-clock`, `derived-copy-goes-stale-silently`, `derived-over-chosen-identifiers`, `detect-by-observation-not-build-flag`, `device-suite-uninstalls-the-app`, `document-language-is-its-readers`, `documented-defaults-drift-from-code`, `domain-listening-findings`, `dry-run-a-procedure-by-an-agent-before-release`, `edit-deny-also-blocks-shell-writes`, `empty-success-retried-write`, `error-message-names-the-right-remedy`, `every-request-has-a-timeout`, `execute-the-procedure-to-review-it`, `expected-failure-names-its-exception`, `expected-value-copied-from-a-wrong-comment`, `extend-reproduce-the-checkout-not-only`, `fail-closed-defaults`, `fetched-content-carries-instructions`, `find-carriers-by-searching-not-by-the-manifest`, `fingerprint-fixes-its-collation`, `fix-stale-note-path-in-bootstrap`, `follow-the-procedure-literally-to-review-it`, `formatter-run-by-a-parallel-agent`, `gate-sequence-stops-at-the-first-red-step`, `gather-reads-a-branch-not-only-the-checkout`, `gather-reads-the-remote-not-a-stale-checkout`, `golden-image-reads-the-real-clock`, `harness-attribution-needs-a-root-rule`, `harness-time-limit-stops-a-background-service`, `hidden-is-not-deferred`, `host-shell-traps`, `identical-needs-a-negative-control-in-end-to-end-tests`, `identity-preserving-copy-is-a-no-op-mutation`, `ids-misses-the-roadmap-heading`, `ids-reports-a-cited-id-defined-nowhere`, `ids-typed-by-hand-before-minting`, `ids-written-before-minted`, `incoming-cannot-be-checked-empty-while-the-bundle-ships-a-file-into-it`, `interactive-tool-without-subcommand-hangs`, `isolated-review-by-default`, `kernel-log-shows-the-current-boot`, `known-defects-as-must-fail-checks`, `line-breaking-strategy-pitfalls`, `local-host-is-a-test-double-of-the-production-host`, `long-gates-run-where-a-watchdog-cannot-stop-them`, `match-rendered-units-to-source-by-content`, `measure-a-ui-change-as-a-task`, `measure-delay-with-broadband-not-tones`, `merge-by-content-after-a-squash`, `merge-by-shared-fact-not-shared-shape`, `metric-against-trivial-predictor`, `mint-registers-the-carrier`, `multi-line-messages-break-line-counts`, `nested-partial-update-replaces`, `never-block-the-session-on-a-long-wait`, `no-foreign-shell-constructs`, `no-simultaneous-deploy`, `normalise-accents-before-comparing-typed-labels`, `occurrence-of-documented-default-values-drift`, `one-concern-commits-from-hand-staged-blobs`, `one-entry-point-for-a-state-change`, `one-field-one-decision`, `one-owners-deliverable-preferences`, `one-place-defines-a-record-id`, `one-rule-two-readers-agree-on-the-verdict-not-the-refusal`, `only-grows-shrinks-under-late-delivery`, `order-writes-by-failure-residue`, `own-fields-have-two-homes`, `own-log-format-hides-new-method-fields`, `paginate-by-timestamp-skips-ties`, `parallel-agents-get-disjoint-scratch`, `parallel-agents-on-disjoint-files`, `parallel-agents-pick-the-same-number`, `parallel-session-id-allocation`, `patch-a-vendored-tool-at-build-from-its-pristine-source`, `pause-means-pause`, `permission-rules-catch-by-products`, `persist-inputs-derive-verdicts`, `pixel-identical-capture-proves-no-change`, `place-a-score-by-the-rankings-own-method`, `platform-affordance-first-triage`, `preview-the-build-on-real-records`, `private-records-and-privacy-layers`, `privileged-call-inside-the-host-gesture`, `probe-a-privilege-with-the-exact-operation`, `profile-before-optimising-per-frame-work`, `prompt-context`, `prompt-harvest`, `prompt-update`, `proposals-readme`, `prose-language-rule-held-only-by-the-ratchet`, `prove-a-content-change-is-in-the-history-before-reverting`, `prune-cannot-lift-into-a-body-it-may-not-edit`, `publishing-through-a-review-rather-than-a-direct-push`, `pull-a-database-and-its-log-in-one-read`, `questions-go-together-priced-and-before-the-writing`, `ratchet-in-a-pinned-environment`, `readout-per-silent-outcome`, `recursive-scan-skips-nested-checkouts`, `redundant-comments-are-worse-than-lost-ones`, `refusal-must-not-read-like-an-answer`, `refuse-only-on-unassertable-evidence`, `register-resolves-a-worktree-to-its-repository`, `release-the-handle-before-deleting`, `render-explanations-from-the-test-simulator`, `report-coverage-before-findings`, `reproduce-the-checkout-not-only-the-environment`, `reproducibility-runs-straddle-the-clock`, `reread-the-source-case-before-recording-an-answer`, `research-before-a-sensitive-choice-and-offer-the-middle`, `restore-a-planted-defect-from-a-copy-not-from-version-control`, `retry-budget-for-a-probabilistic-step`, `retry-over-irreversible-effect`, `review-each-carrier-in-execution-before-propagating`, `review-the-merged-change-after-the-task-reviews`, `review-turn-comprehension-check`, `review-turn-shape-and-planning-skills`, `roadmap-heading-id-position`, `same-answer-or-refuse`, `scripts-committed-without-exec-bit`, `scripts-run-under-an-older-system-shell`, `secrets-survive-rotation`, `shared-mutable-default-carries-credentials`, `shared-pool-pressure-reads-as-test-failure`, `skills-have-two-declared-homes-in-one-bundle`, `splice-dry-run-lists-what-it-removes`, `splicing-an-old-layout-carrier-keeps-what-gather-found`, `split-a-checked-file-and-the-check-goes-blind`, `stale-roadmap-claims-cost-real-work`, `status-command-that-installs`, `steps-readable-by-a-permission-layer`, `stored-timestamp-key-never-matches`, `summaries-of-reference-pages-invent-syntax`, `suspect-the-harness-first`, `sweep-the-rendered-extremes`, `taken-in-rows-wait-outside-build-inputs`, `template-id-format-matches-the-checker`, `test-double-fidelity`, `the-call-site-is-untested-when-the-function-is`, `the-set-declares-a-version-the-changelog-does-not-reach`, `tick-every-part-of-the-request`, `tolerant-of-absent-is-not-tolerant-of-malformed`, `tool-specific-traps-of-one-toolchain`, `two-readers-of-one-source-correct-each-other`, `typesetting-engine-quirks`, `unconsulted-parameter-is-still-a-contract`, `undo-a-planted-violation-by-editing-forward`, `unmerged-work-is-reviewed-by-default`, `unrunnable-system-moves-the-gate`, `update-branch-tracks-previous-release`, `validate-each-transformation-run`, `verify-an-api-against-the-compiled-artefact`, `verify-enforces-the-carrier-record`, `wait-for-the-response-not-network-idle`, `walk-the-rulings-before-the-plan-runs`, `weight-a-defect-count-by-usage`, `word-counter-counts-markup`, `write-permission-rules-match-nothing`

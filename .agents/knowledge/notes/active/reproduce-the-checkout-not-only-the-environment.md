@@ -5,7 +5,8 @@ topic: "verification"
 claim: "A number from a check is a function of the commit, the environment and the checkout; reproducing it elsewhere means reproducing all three — pin the environment, and run from a clean export of the commit, because the working tree holds every untracked file the real runner will not have."
 confidence: "measured"
 check: "the number a gate is quoted for was taken from a clean export of the commit, in the declared environment, with the interpreter path and the collation recorded"
-boundary: "A hermetic build system already does this · When the artefact under test is the working tree · When the untracked file is the point"
+boundary: "A hermetic build system already does this · When the artefact under test is the working tree · When the input is committed, or fetched by a pinned digest · When the untracked file is the point"
+cues: ["ci passes locally", "works on my machine", "clean checkout", "git archive", "untracked files", "docker image", "python version", "locale", "collation", "lockfile", "gitignored", "env differs", "flaky ci", "git stash", "reproduce failure"]
 ---
 
 # Reproduce the checkout, not only the environment
@@ -16,7 +17,9 @@ A check that runs somewhere else has two inputs, and only one of them is ever di
 
 The difference between the two is exactly the set of files nobody declared. Credentials, caches, local datasets, editor state, generated artefacts, a stale virtual environment, the output of the last experiment — every one of them is untracked or ignored, which is another way of saying that the remote runner will not have it. A check that reads one of them gives an answer locally for a reason that does not exist there, and the answer looks like every other answer.
 
-It fails in both directions, and the permissive one is worse. A replica built in the tree has **more** than the real runner, so a check passes because something is present; the report says green, the remote gate says red, and the difference is a file nobody thought of as an input. The strict direction — a leftover file the runner will not have making a check fail — at least announces itself.
+It fails in both directions, and the permissive one is worse. A replica built in the tree has **more** than the real runner, so a check passes because something is present; the report says green, the remote gate says red, and the difference is a file nobody thought of as an input. The strict direction — a leftover file the runner will not have making a check fail — at least announces itself. And the commit can lack what the tree has, not only the reverse: a commit made with an explicit path list leaves out a new untracked file, and the gate run in the tree stays green because the file is on disk.
+
+A fourth input sits beside the commit, the environment and the checkout: **a machine-local file that is never committed on purpose** — a list of private terms, a local allow-list — which changes on its own schedule and can be absent. A check that reads it holds only for the version it read: its verdict names that version (a count or a digest) wherever it is quoted, and a run on a machine where the file is absent reports itself as partial, never as green.
 
 The fix is cheap enough that there is no reason to discuss it: export the commit into a scratch directory (`git archive HEAD | tar -x -C …` or an equivalent), and run the replica there. That is seconds, and it is the one operation that reproduces the checkout exactly, because it reproduces it by definition — what is in the commit, and nothing else.
 
@@ -25,7 +28,8 @@ The environment has its own quiet forms. Two environments on one machine — a s
 ## When it does NOT apply
 
 - **A hermetic build system already does this**, by declaring every input and sandboxing every action (see *Literature*). Where the tool guarantees that the host and the tree cannot leak in, reproducing the checkout by hand is repeating work that is already done.
-- **When the artefact under test is the working tree** — a formatter over uncommitted work, a check on staged changes, a pre-commit hook. The tree is the subject, not the contamination.
+- **When the artefact under test is the working tree** — a formatter over uncommitted work. The tree is the subject, not the contamination. A check on staged changes or a pre-commit hook is not this case: its subject is the staged snapshot, and the checker it runs is part of that snapshot, so a hook that reads the disk, or runs the working tree's copy of the checker, is a replica of the commit (occurrences in *Evidence*, 2026-11-24, one owner's repositories).
+- **When the input is committed, or fetched by a pinned digest** — then it is part of the commit, and the export carries it.
 - **When the untracked file is the point**: reproducing someone's local state to debug their failure. Then the export is the wrong direction, and what is worth writing down is which file made the difference.
 
 ## What it costs

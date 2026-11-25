@@ -6,6 +6,7 @@ claim: "Count both sides of an event before joining them on a key one side may l
 confidence: "measured"
 check: "per-side counts, per-side key coverage and a control window accompany the finding"
 boundary: "Joins on a key the schema guarantees on both sides from the start of the data (the control window is still cheap insurance)"
+cues: ["join on key", "left join", "reconcile", "discrepancy", "incident window", "row count", "missing join key", "compare counts", "control period", "before and after", "mismatch", "null key", "outage analysis", "orphan rows"]
 ---
 
 # Count both sides, and use a control window

@@ -3,9 +3,10 @@
 slug: "derived-over-chosen-identifiers"
 topic: "identity-and-naming"
 claim: "An identifier that must be unique across boundaries is derived from something already unique, never chosen by whoever creates it."
-confidence: "reasoned"
+confidence: "measured"
 check: "a check fails when a derived identifier drifts from its source"
 boundary: "When humans type it · When the source of derivation is not stable · When the source of derivation is content that will be edited · When the source is private, guessable, and the identifier travels in public · When the namespace is genuinely closed and small"
+cues: ["unique id", "uuid", "slug", "namespace", "name collision", "derive id", "hash of", "package name", "bucket name", "global identifier", "id format", "naming scheme", "client_id", "prefix"]
 ---
 
 # Derived over chosen identifiers
@@ -16,14 +17,16 @@ A chosen identifier is chosen independently by each party, from the same small p
 
 Deriving it from something already globally unique — a remote URL, a UUID, a content hash — removes the choice and therefore the collision. It also survives renaming: the derived value tracks the identity, not the label someone typed.
 
+An artefact's own declared name and version are the extreme case. Each author chooses them in a namespace the registry does not own, so they collide across projects, their version strings follow per-project conventions the registry does not share, and one declared version can map to several published files, one per platform. An installed artefact is identified by a digest of its bytes, looked up in the registry it came from, never by what it says about itself.
+
 ## When it does NOT apply
 
 - **When humans type it.** A derived id nobody can read is a derived id that gets copied wrong, and readability is worth real money in anything people operate under pressure. Prefer chosen names for things humans address, derived ids for things systems match.
 - **When the source of derivation is not stable.** Deriving from a directory path or a branch name produces an identifier that changes when nothing important did — worse than a chosen one, because it changes *silently*.
 - **When the source of derivation is content that will be edited.** An identifier derived from a record's own text changes the moment the text is corrected, and every reference to it breaks — silently, which is the previous boundary again. Derive it **once, at creation, and freeze it**: later edits never recompute it, and a check verifies only its format, its prefix and its uniqueness, never that it still matches the content.
 - **When the source is private, guessable, and the identifier travels in public.** A short hash of something drawn from a small candidate space — a repository remote, an email address, a host name — is reversed by hashing the candidates, so a published identifier names what it was only meant to distinguish. Mint a random value once, store it with the thing it names, and check its presence and format rather than its derivation: it is still not *chosen*, which is what the claim is about.
-- **When the namespace is genuinely closed and small.** Three services owned by one team, with a list in one place, do not need this.
+- **When the namespace is genuinely closed and small.** Three services owned by one team, with a list in one place, do not need this. Nor does a registry that indexes the declared identifiers itself and guarantees their uniqueness: it owns the namespace.
 
 ## What it costs
 
-Readability, and it is not a small cost: `d-abcdef-123456` does not tell you which repository it belongs to or what it records, where a chosen word and a sequence number name their owner at a glance. Pay for it by making the derivation **checkable** — where the source is stable, have something re-derive the identifier from it on every run and fail if the stored value has drifted; where the source is content that will be edited, freeze the value at creation and check its format, prefix and uniqueness instead. A derived id that is verified is worth more than a legible one that silently goes stale; a derived id that is *not* verified is the worst of both.
+Readability, and it is not a small cost: `d-abcdef-123456` does not tell you which repository it belongs to or what it records, where a chosen word and a sequence number name their owner at a glance. Pay for it by making the derivation **checkable** — where the source is stable, have something re-derive the identifier from it on every run and fail if the stored value has drifted; where the source is content that will be edited, freeze the value at creation and check its format, prefix and uniqueness instead. A derived id that is verified is worth more than a legible one that silently goes stale; a derived id that is *not* verified is the worst of both. A digest of an artefact needs its whole content, which is a full download where the host exposes no checksum; caching the digest by path, size and modification time bounds that cost, and buys the blind spot of `derived-copy-goes-stale-silently`.

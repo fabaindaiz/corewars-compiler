@@ -77,15 +77,8 @@ summary says.
 
 ---
 
-**This is the front door.** Run it before anything else, on any repository,
-including one you did not write and do not own. The report it produces is what
-tells you which of the other documents you need — and sometimes the answer is
-none of them.
-
-**What you get back:** one file, `.agents/evaluation-<date>-<content6>.md`, under about
-200 lines, whose first paragraph is enough to decide what to do. Then a maturity
-table, what is working, what is not, what is already false, and a next-steps
-list ordered cheapest-first with the rows that need a decision from you marked.
+**This is the front door.** Run it before anything else, on every repository but
+an empty one, including one you did not write and do not own.
 
 ---
 
@@ -102,13 +95,15 @@ Before I evaluate, five things — reply **`defaults`** to take all of them as
 proposed.
 
 1. **Scope.** I will evaluate the whole repository. *(If this is a monorepo, say
-   which package or say "all".)*
+   which package.)*
 2. **May I run the gate?** I will run only commands that write nothing — a
    `--check` formatter, a linter, a type checker. **I will not run tests, a
    build, or anything that touches the network** unless you say so, because I
    cannot tell from here what they cost or what they write.
 3. **Report.** I will write it to `.agents/evaluation-<today>-<content6>.md`, in the
-   language you are writing to me in, and change nothing else.
+   language this repository's documents are written in (the one you are writing
+   to me in, if they do not say), with headings and keywords a tool parses left
+   in the tool's language, and change nothing else.
 4. **Off limits.** I will read everything the repository's own ignore rules do
    not exclude. Tell me if any path must not be read.
 5. **Agents.** I will check the instruction surfaces of Claude Code, Cursor and
@@ -118,9 +113,6 @@ proposed.
 Not asking, because the repository answers them: what the stack is, what the
 commands are, what conventions exist, and which instruction files are present.
 ~~~
-
-Ask **fewer** when the repository answers one: in a single-package repo, drop
-question 1 entirely rather than asking it and answering it yourself.
 
 ---
 
@@ -141,9 +133,7 @@ the scores mean.
 ## What this is for
 
 An agent's usefulness in a repository is capped by what the repository tells it:
-usually nothing, or a great deal that is no longer true. From the inside the
-first looks like "the AI is not very good here" and the second like "the AI
-keeps doing the wrong thing confidently". This evaluation names which you have
+usually nothing, or a great deal that is no longer true. This evaluation names which you have
 and how far from useful you are. **It is deliberately read-only** — that is
 what makes it safe on somebody else's repository, without a plan — and the
 report is the one file it writes.
@@ -152,12 +142,10 @@ report is the one file it writes.
 
 ## Rules for the evaluation
 
-Non-negotiable, and every one of them exists because the opposite produces a
-report that gets ignored:
+Non-negotiable:
 
 1. **Change nothing.** No fixes, no tidying, not even a typo, not even the
-   obvious one-line improvement. A read-only tool that sometimes writes is a
-   tool nobody runs on a repository they care about.
+   obvious one-line improvement.
 2. **Quote, never invent.** Every command, path and rule in the report is copied
    from where it is defined. If the README names a command that the task runner
    does not have, **that is a finding**, not something to quietly correct.
@@ -168,16 +156,11 @@ report that gets ignored:
    have.
 5. **Lead with what is good, and mean it.** A repository that has survived years
    of work is doing several things right, and some of them are better than this
-   method's defaults. A report that is only criticism is a report that gets
-   skimmed and closed — and it also misses the most valuable finding, which is
-   the convention worth copying elsewhere.
-6. **Rank by cost, not by severity.** The reader wants to know what to do on
-   Monday morning, not what is theoretically most broken.
-7. **No secrets in the report.** Do not copy credentials, tokens, customer
-   names, personal data or internal URLs into it, even when you found them in a
-   file. **If you find a secret committed to the repository, say that one is
-   there and where — never what it is.** That is a finding with a severity of
-   its own.
+   method's defaults. A report that is only criticism gets skimmed and closed, and misses the convention worth copying elsewhere.
+6. **Rank by cost, not by severity.**
+7. **No secrets in the report.** **If you find a secret committed to the
+   repository, say that one is there and where — never what it is.** That is a
+   finding with a severity of its own.
 8. **The report is about the repository, not about the people.** Nothing in it
    should read as an assessment of whoever wrote the code.
 
@@ -196,9 +179,6 @@ In this order. Stop early if the repository is small; say so if you did.
   `commands/`, `hooks/`, `logs/`
 - `.agents/README.md`'s frontmatter and `.agents/carrier.toml` — the `version`
   and `adopted` tell you whether this repo has been through this before
-- **Every prompt document of the method that is present**, whatever it is
-  called: list the files beside this one. Each executable prompt you find
-  defines criteria; use all of them, including any this document does not name.
 - `docs/` in full, with attention to anything that looks like decisions, ADRs,
   architecture, a roadmap, references or a changelog
 
@@ -228,18 +208,13 @@ Claude Code, Cursor and Copilot are the common set — and answer:
 
 - Which of the three has a surface here, and which has none? An agent someone
   uses with no instructions at all is working from the code alone.
-- **Is there one source, or three hand-maintained documents?** One source with
-  pointers or generated copies is healthy. Three independent files are three
-  versions of the architecture, and the one that is true today is whichever
-  editor is open.
-- **Do they contradict each other?** Quote the contradiction. This is the most
-  valuable single finding this evaluation produces, because nobody sees it from
-  the inside: no human reads more than one of those files.
+- **Is there one source, or three hand-maintained documents?** (`prompt-context.md`
+  §*Three agents, one source*.)
+- **Do they contradict each other?** Quote the contradiction: the most valuable
+  single finding this evaluation produces, since nobody sees it from the inside.
 - Does any rule depend on one agent's machinery — a hook, a glob, an exclusion
-  setting? Each exists in a different shape per agent, and on some surfaces not
-  at all (`prompt-context.md` §*Three agents, one source*). Then it does not hold
-  for the others, and that is either a deviation to record or a rule to push up
-  the ladder.
+  setting? Then it does not hold for the others: a deviation to record, or a rule
+  to push up the ladder.
 
 ### 2. Is the bundle here, and is it intact?
 
@@ -252,38 +227,23 @@ or unlisted is a finding — the next update overwrites it; name the file. So is
 a `carrier.toml`, proposals or an evaluation report copied from another
 repository (the tell: an `adapted` entry naming a file this repository lacks).
 
-The contents of `adapted` and `declined` are the most informative lines in the
-bundle: they are this repository's own record of what it changed and what it
-refused, and they are what stops the next update re-proposing both.
-
-This answer decides what the reader does next: no bundle means bootstrap, an
-older version means update, a copy on the layout before 0.0.22 (a README header
-with `lineage:`) means an update from a release through the home repository,
-and a `carrier.toml` with absent artifacts means repair.
+This answer decides what the reader does next (`prompt-context.md` §*Which
+document to run*).
 
 If `carrier.toml` claims `adopted` but the artifacts it names do not exist, say
-so plainly: **the files were copied without the work.** That is a specific and
-common state, and it is worth its own sentence.
+so plainly: **the files were copied without the work.**
 
 ### 3. Does every rule name its consequence and its enforcer?
 
-Take the rules as written and classify each on the enforcement ladder:
-
-| Rung | Form |
-|---|---|
-| 0 | an unwritten habit |
-| 1 | prose only — "the agent usually honours it" |
-| 2 | prose **plus a named enforcer** — "checked in X" |
-| 3 | an automated check that runs in the gate |
-| 4 | impossible by construction — a type, a schema, a format |
+Take the rules as written and classify each on the enforcement ladder
+(`prompt-context.md` §*The enforcement ladder*, rungs 0 to 4).
 
 Report the distribution as a count, and name the three rules where **promotion
 is cheapest**: a rung-1 rule that a ten-line script would move to rung 3 is the
 highest-yield finding this evaluation produces.
 
 A rule with no consequence stated — "use X" with no "or else" — is a rung-1 rule
-whatever it claims, because nothing tells a future session what it costs to
-ignore.
+whatever it claims.
 
 ### 4. Is any of it already false?
 
@@ -345,8 +305,7 @@ anything a tool is configured to always include. Compare against a budget of
 roughly 200 lines.
 
 Then say **which sections would move** if it needs to shrink: detail that
-belongs in a document nobody pays for until they open it. A root file of 600
-lines is not read in the middle; its author believes it is.
+belongs in a document nobody pays for until they open it.
 
 ### 9. What could not be determined?
 
@@ -371,10 +330,8 @@ adding unenforced prose.
 | 4 | The expensive mistakes are unrepresentable — types, schemas and formats in which the bad state cannot be written down. |
 
 Score each dimension separately, because repositories are rarely level in all of
-them, and the uneven ones are the interesting ones:
-
-`Coverage` · `Accuracy` · `Enforcement` · `Verification` · `Decision memory` ·
-`Process capture` · `Cost`
+them, and the uneven ones are the interesting ones (the dimensions are the
+skeleton's rows).
 
 ---
 
@@ -385,8 +342,7 @@ keeps such things, and **say in your reply where you put it.** One file, and it
 is the only thing this prompt writes.
 
 **Length: the summary fits on one screen, and the whole report stays under about
-200 lines.** A thorough report nobody finishes is a thorough report nobody acts
-on. Push the evidence into short bullets and let the detail be citable rather
+200 lines.** Push the evidence into short bullets and let the detail be citable rather
 than exhaustive.
 
 ### The skeleton
@@ -448,7 +404,6 @@ targeted fixes first, then bootstrap. With the reason.>
 - **`Effort` is in hours or days, and it is a guess** — say so. A wrong estimate
   is still more useful than none.
 - **Avoid the word "should" without an actor.** Say who does it.
-- **No secrets, no personal data, no customer names.** See rule 7.
 
 ---
 

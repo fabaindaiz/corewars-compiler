@@ -6,6 +6,7 @@ claim: "Zero findings and zero coverage read identically and mean opposite thing
 confidence: "measured"
 check: "the report's first line is \"evaluated N of M\"; a check whose subjects are found rather than listed fails on zero of them"
 boundary: "Reports whose input schema is enforced upstream, so every row is evaluable by construction"
+cues: ["scan report", "audit report", "no findings", "zero results", "evaluated n of m", "reconciliation", "data quality", "empty filter", "misspelled field", "summary line", "checked count", "validator", "items examined", "report header"]
 ---
 
 # Report coverage before findings
@@ -16,7 +17,9 @@ A scan, an audit, a reconciliation or a data-quality report that finds nothing p
 
 Putting coverage first — *evaluated N of M; found K* — makes blindness visible in the same line as the result. A report with no coverage number cannot be distinguished from a broken one, so it should not be trusted as a clean one.
 
-The same blindness has a structural form: **a check whose inputs are a hand-written list covers the day the list was written.** Everything added afterwards is outside it, and the report still says "ok". Find the population from the tree — every file of the kind, every item that exists — and have the tool name what it could not evaluate rather than skip it.
+The same blindness has a structural form: **a check whose inputs are a hand-written list covers the day the list was written.** Everything added afterwards is outside it, and the report still says "ok". Find the population from the tree — every file of the kind, every item that exists — and have the tool name what it could not evaluate rather than skip it. A removal rule judged against a hand-written list of known-good items is the same trap: it reports that nothing good was lost for everything the list omits, so its coverage is the removed items read one by one, not a count against the list.
+
+**Finding the population from the code has its own blind spot.** When the defect a check exists for removes the subject from the found population — a guard deleted, so the route is no longer registered as guarded and no longer swept — the list shrinks with the defect and the check stays green; the same holds for a guard tested on a host the test builds itself, which passes when the line installing it in the real host is deleted. Then take the expected set from a source independent of the code under test (a table in a document the test parses), compare it with the found one **both ways**, and plant the defect itself: remove the guard from the real artefact (`a-check-must-be-seen-to-fail`).
 
 **The gate form: fail on zero.** A check whose subjects are found rather than listed can still go blind with no change to itself, because its subjects disappear. A folder it scans is legitimately retired and it returns early; a marker it searches for is translated or renamed; a pattern it matches is loose enough to match the artefact that means *not yet*. It keeps reporting success over nothing, and the edit that blinded it was a correct piece of maintenance, not a regression, so no review looks at the check. The guard is one line and belongs in every such check: **count the subjects, and fail on zero** unless zero is a legitimate state that the check names. It is the coverage line turned into a gate; whether the check could go red at all is `a-check-must-be-seen-to-fail`.
 

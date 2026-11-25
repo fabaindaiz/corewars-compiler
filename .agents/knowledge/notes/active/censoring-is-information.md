@@ -6,6 +6,7 @@ claim: "An outcome that has not happened yet means \"it lasted at least this lon
 confidence: "reasoned"
 check: "no unresolved row carries a filled-in label; the horizon is applied where the label is defined"
 boundary: "Labels that resolve instantly · Objectives with no censored form · An exemption for one target is not a licence for its neighbours"
+cues: ["label", "churn", "not yet happened", "maturity horizon", "survival", "time to event", "negative class", "unresolved", "fillna", "label window", "default label 0", "newest rows", "conversion within", "outcome window"]
 ---
 
 # Censoring is information

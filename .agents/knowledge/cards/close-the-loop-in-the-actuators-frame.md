@@ -5,6 +5,6 @@
 
 **Not when.** Open-loop actions · Thresholds crossed once and not revisited · When the observer frame is what the user controls
 
-**Check.** a probe holding the input at the threshold counts mode changes: zero
+**Check.** a probe holding the input at the threshold counts zero mode changes, and applying a correction twice gives the same result as once
 
 *measured.* Open the full note only when you cannot tell whether its boundary holds here: [close-the-loop-in-the-actuators-frame](../notes/active/close-the-loop-in-the-actuators-frame.md).

@@ -3,7 +3,7 @@
 
 **Claim.** A number from a check is a function of the commit, the environment and the checkout; reproducing it elsewhere means reproducing all three — pin the environment, and run from a clean export of the commit, because the working tree holds every untracked file the real runner will not have.
 
-**Not when.** A hermetic build system already does this · When the artefact under test is the working tree · When the untracked file is the point
+**Not when.** A hermetic build system already does this · When the artefact under test is the working tree · When the input is committed, or fetched by a pinned digest · When the untracked file is the point
 
 **Check.** the number a gate is quoted for was taken from a clean export of the commit, in the declared environment, with the interpreter path and the collation recorded
 

@@ -6,6 +6,7 @@ claim: "Never report a model metric without the score a trivial predictor gets o
 confidence: "measured"
 check: "every metric table has the trivial-predictor row and an interval; each new label's base rate is asserted"
 boundary: "Balanced labels, where standard metrics are already informative (the extra row is usually kept anyway)"
+cues: ["accuracy", "auc", "f1", "baseline", "base rate", "dummy classifier", "model metric", "rare label", "imbalanced", "confidence interval", "run to run noise", "precision recall", "constant predictor", "add label", "seed"]
 ---
 
 # Metric against the trivial predictor

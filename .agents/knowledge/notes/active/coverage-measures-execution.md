@@ -6,6 +6,7 @@ claim: "Coverage measures which lines ran, not whether anything checked them —
 confidence: "reasoned"
 check: "a mutation score is reported next to any coverage figure used as quality"
 boundary: "Finding what is untested · Comparing approaches, not ranking one suite · When the tests carry real assertions by construction"
+cues: ["coverage", "coverage target", "codecov", "fail_under", "80% coverage", "line coverage", "lcov", "test quality", "mutation score", "assertions", "coverage report", "branch coverage", "pytest-cov"]
 ---
 
 # Coverage measures execution
